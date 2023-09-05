@@ -6,17 +6,17 @@ const client_id = "23RCXD"
 // Fitbit API access token
 const access_token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyM1JDWEQiLCJzdWIiOiJCUFM1V1EiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJlY2cgcnNldCByb3h5IHJudXQgcnBybyByc2xlIHJjZiByYWN0IHJsb2MgcnJlcyByd2VpIHJociBydGVtIiwiZXhwIjoxNjkzOTcwNjE1LCJpYXQiOjE2OTM5NDE4MTV9.Ws-9kDltFISGUvffNICWR02t8dIswZyGvIawz2N9lBQ"
 
-// Fetch data from the Fitbit API
 document.getElementById("generateCsvButton").addEventListener("click", () => {
     // Fetch data from the Fitbit API
-    fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/7d.json', {
+    fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/1y.json', {
         method: "GET",
         headers: { "Authorization": "Bearer " + access_token }
     })
         .then(response => response.json())
         .then(json => {
-            // Convert JSON data to CSV
-            const csvData = json["activities-steps"].map(item => {
+            // Create a CSV string with a title row
+            let csvData = "Date,Step Counter\n";
+            csvData += json["activities-steps"].map(item => {
                 return `${item.dateTime},${item.value}`;
             }).join('\n');
 
@@ -37,3 +37,4 @@ document.getElementById("generateCsvButton").addEventListener("click", () => {
         })
         .catch(error => console.error(error));
 });
+
