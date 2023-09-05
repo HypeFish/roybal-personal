@@ -8,7 +8,7 @@ const access_token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyM1JDWEQiLCJzdWIiOiJCUFM1V
 
 document.getElementById("generateCsvButton").addEventListener("click", () => {
     // Fetch data from the Fitbit API
-    fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/1y.json', {
+    fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/7d.json', {
         method: "GET",
         headers: { "Authorization": "Bearer " + access_token }
     })
