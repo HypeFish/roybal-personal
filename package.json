@@ -1,0 +1,25 @@
+{
+  "type": "module",
+  "name": "roybal",
+  "version": "1.0.0",
+  "description": "cne lab study",
+  "main": "index.html",
+  "scripts": {
+    "test": "test",
+    "run": "node index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HypeFish/roybal.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HypeFish/roybal/issues"
+  },
+  "homepage": "https://github.com/HypeFish/roybal#readme",
+  "dependencies": {
+    "json2csv": "^6.0.0-alpha.2",
+    "node-fetch": "^3.3.2"
+  }
+}
