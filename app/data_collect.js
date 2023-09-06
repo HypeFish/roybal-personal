@@ -1,15 +1,32 @@
-// Description: This file is used to collect data from Fitbit API
 
-// Fitbit API client ID
-const client_id = "23RCXD"
+// const oauthConfig = {
+//     clientId: '23RCXD',
+//     clientSecret: 'f1d4bff3fcafa03e1c92009412224b26',
+//     redirectUri: 'https://roybal.vercel.app/', // This should match the URI you registered with Fitbit
+//     authorizationUrl: 'https://www.fitbit.com/oauth2/authorize',
+//     tokenUrl: 'https://api.fitbit.com/oauth2/token',
+//     scope: 'location respiratory_rate sleep social oxygen_saturation heartrate weight cardio_fitness settings nutrition temperature profile electrocardiogram activity', // e.g., 'activity heartrate sleep'
+// };
+
+// const authorizationUrl = `${oauthConfig.authorizationUrl}?` +
+//     `client_id=${oauthConfig.clientId}` +
+//     `&redirect_uri=${encodeURIComponent(oauthConfig.redirectUri)}` +
+//     `&scope=${encodeURIComponent(oauthConfig.scope)}` +
+//     `&response_type=code`;
+
+// // Redirect the user to the authorization URL
+// window.location.href = authorizationUrl;
+
+
+
 
 // Fitbit API access token
-const access_token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyM1JDWEQiLCJzdWIiOiJCUFM1V1EiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJlY2cgcnNldCByb3h5IHJudXQgcnBybyByc2xlIHJjZiByYWN0IHJsb2MgcnJlcyByd2VpIHJociBydGVtIiwiZXhwIjoxNjkzOTcwNjE1LCJpYXQiOjE2OTM5NDE4MTV9.Ws-9kDltFISGUvffNICWR02t8dIswZyGvIawz2N9lBQ"
+const access_token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyM1JDWEQiLCJzdWIiOiJCUFM1V1EiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJlY2cgcnNldCByb3h5IHJwcm8gcm51dCByc2xlIHJjZiByYWN0IHJsb2MgcnJlcyByd2VpIHJociBydGVtIiwiZXhwIjoxNjk0MDU4NTU3LCJpYXQiOjE2OTQwMjk3NTd9.02xpzH8es-xtSlI17-0sBgsHpdE4uVO7TCWu2bF5JTk"
 
 document.getElementById("generateCsvButton").addEventListener("click", () => {
     // Fetch data from the Fitbit API
     //can use a - or "BPS5WQ" for me
-    fetch('https://api.fitbit.com/1/user/BPS5WQ/activities/steps/date/today/7d.json', {
+    fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/7d.json', {
         method: "GET",
         headers: { "Authorization": "Bearer " + access_token }
     })
