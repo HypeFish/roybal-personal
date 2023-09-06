@@ -2,7 +2,8 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const PORT = 3000;
+const path = require('path');
+const port = 3000;
 
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
@@ -38,6 +39,14 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Define a route to serve your HTML file
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
 });

@@ -1,21 +1,21 @@
 
-// const oauthConfig = {
-//     clientId: '23RCXD',
-//     clientSecret: 'f1d4bff3fcafa03e1c92009412224b26',
-//     redirectUri: 'https://roybal.vercel.app/', // This should match the URI you registered with Fitbit
-//     authorizationUrl: 'https://www.fitbit.com/oauth2/authorize',
-//     tokenUrl: 'https://api.fitbit.com/oauth2/token',
-//     scope: 'location respiratory_rate sleep social oxygen_saturation heartrate weight cardio_fitness settings nutrition temperature profile electrocardiogram activity', // e.g., 'activity heartrate sleep'
-// };
+const oauthConfig = {
+    clientId: '23RCXD',
+    clientSecret: 'f1d4bff3fcafa03e1c92009412224b26',
+    redirectUri: 'https://roybal.vercel.app/', // This should match the URI you registered with Fitbit
+    authorizationUrl: 'https://www.fitbit.com/oauth2/authorize',
+    tokenUrl: 'https://api.fitbit.com/oauth2/token',
+    scope: 'location respiratory_rate sleep social oxygen_saturation heartrate weight cardio_fitness settings nutrition temperature profile electrocardiogram activity', // e.g., 'activity heartrate sleep'
+};
 
-// const authorizationUrl = `${oauthConfig.authorizationUrl}?` +
-//     `client_id=${oauthConfig.clientId}` +
-//     `&redirect_uri=${encodeURIComponent(oauthConfig.redirectUri)}` +
-//     `&scope=${encodeURIComponent(oauthConfig.scope)}` +
-//     `&response_type=code`;
+const authorizationUrl = `${oauthConfig.authorizationUrl}?` +
+    `client_id=${oauthConfig.clientId}` +
+    `&redirect_uri=${encodeURIComponent(oauthConfig.redirectUri)}` +
+    `&scope=${encodeURIComponent(oauthConfig.scope)}` +
+    `&response_type=code`;
 
-// // Redirect the user to the authorization URL
-// window.location.href = authorizationUrl;
+// Redirect the user to the authorization URL
+window.location.href = authorizationUrl;
 
 
 
