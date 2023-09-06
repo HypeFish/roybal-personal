@@ -8,14 +8,14 @@ const oauthConfig = {
     scope: 'location respiratory_rate sleep social oxygen_saturation heartrate weight cardio_fitness settings nutrition temperature profile electrocardiogram activity', // e.g., 'activity heartrate sleep'
 };
 
-// const authorizationUrl = `${oauthConfig.authorizationUrl}?` +
-//     `client_id=${oauthConfig.clientId}` +
-//     `&redirect_uri=${encodeURIComponent(oauthConfig.redirectUri)}` +
-//     `&scope=${encodeURIComponent(oauthConfig.scope)}` +
-//     `&response_type=code`;
+const authorizationUrl = `${oauthConfig.authorizationUrl}?` +
+    `client_id=${oauthConfig.clientId}` +
+    `&redirect_uri=${encodeURIComponent(oauthConfig.redirectUri)}` +
+    `&scope=${encodeURIComponent(oauthConfig.scope)}` +
+    `&response_type=code`;
 
-// // Redirect the user to the authorization URL
-// window.location.href = authorizationUrl;
+// Redirect the user to the authorization URL
+window.location.href = authorizationUrl;
 
 
 
