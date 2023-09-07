@@ -66,6 +66,7 @@ function generateCsvButton() {
             .catch(error => console.error(error));
     });
 
+    // should be with the button 
     fetch('https://api.fitbit.com/1/user/-/activities/date/2023-09-01.json', {
         method: "GET",
         headers: { "Authorization": "Bearer " + access_token }
