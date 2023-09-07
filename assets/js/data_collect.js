@@ -66,10 +66,10 @@ function generateCsvButton() {
     //         .catch(error => console.error(error));
     // });
 
-    fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/7d.json', {
-        method: "GET",
-        headers: { "Authorization": "Bearer " + access_token }
-        })
+    // fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/7d.json', {
+    //     method: "GET",
+    //     headers: { "Authorization": "Bearer " + access_token }
+    //     })
 }
 
 // Call generateCsvButton to set up the event listener
