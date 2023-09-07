@@ -1,10 +1,3 @@
-//TODO: GENERATES THE ACCESS TOKEN INFINITE TIMES, NEED TO FIX THIS
-// TODO: NEED TO MAKE IT SO THAT THE ACCESS TOKEN IS STORED IN A COOKIE OR SOMETHING
-// TODO: FIND A WAY TO MAKE IT SO THAT THE ACCESS TOKEN IS ONLY GENERATED ONCE AND ONLY GENERATED AGAIN IF IT IS EXPIRED, USING THE REFRESH TOKEN
-
-
-
-
 //data_collect.js
 
 // Fitbit API access token and refresh token
@@ -16,7 +9,7 @@ function refreshAccessToken() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic YOUR_BASE64_ENCODED_CLIENT_ID_AND_SECRET' // Replace with your client ID and secret
+            'Authorization': 'Basic MjNSQ1hEOmYxZDRiZmYzZmNhZmEwM2UxYzkyMDA5NDEyMjI0YjI2' // Replace with your client ID and secret
         },
         body: `grant_type=refresh_token&refresh_token=${refresh_token}`
     })
@@ -31,6 +24,7 @@ function refreshAccessToken() {
         });
 }
 
+//Function to get the activity data from the Fitbit API 
 function generateCsvButton() {
     document.getElementById("generateCsvButton").addEventListener("click", () => {
         // Fetch data from the Fitbit API
@@ -73,3 +67,71 @@ function generateCsvButton() {
 
 // Call generateCsvButton to set up the event listener
 generateCsvButton();
+
+
+// Assuming you have the functions from your previous code for API calls and generating today's date.
+
+
+function getTodayDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // January is 0 in JavaScript
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function getPreviousWeekStartDate() {
+    const today = new Date();
+    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const year = lastWeek.getFullYear();
+    const month = String(lastWeek.getMonth() + 1).padStart(2, '0');
+    const day = String(lastWeek.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function generateCsv(data) {
+    // Create a CSV string with a title row
+    let csvData = "Date,Step Counter\n";
+    csvData += data.map(item => {
+        return `${item.dateTime},${item.value}`;
+    }).join('\n');
+    return csvData;
+}
+
+// Make API calls
+Promise.all([
+    fetch(`https://api.fitbit.com/1/user/-/activities/steps/date/${getTodayDate()}.json`, {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + access_token }
+    }).then(response => response.json()),
+    fetch(`https://api.fitbit.com/1/user/-/activities/steps/date/${getPreviousWeekStartDate()}/1d.json`, {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + access_token }
+    }).then(response => response.json())
+]).then(([todayData, lastWeekData]) => {
+    // Combine the results
+    const combinedData = [...todayData["activities-steps"], ...lastWeekData["activities-steps"]];
+
+    // Generate CSV
+    const csvData = generateCsv(combinedData);
+
+    // Print to console
+    console.log(csvData);
+
+    // Create a Blob with the CSV data
+    const blob = new Blob([csvData], { type: 'text/csv' });
+
+    // Create a download link for the CSV file
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'combined_steps.csv';
+
+    // Trigger the download
+    a.click();
+
+    // Release the URL object
+    window.URL.revokeObjectURL(url);
+}).catch(error => console.error(error));
