@@ -1,8 +1,8 @@
 //data_collect.js
 
 // Fitbit API access token and refresh token
-let access_token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyM1JDWEQiLCJzdWIiOiJCUFM1V1EiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJlY2cgcnNldCByb3h5IHJwcm8gcm51dCByc2xlIHJjZiByYWN0IHJyZXMgcmxvYyByd2VpIHJociBydGVtIiwiZXhwIjoxNjk0MTM4NDcxLCJpYXQiOjE2OTQxMDk2NzF9.EqiloL6Xy8UMsdYJ2e24_jDc-a_tzmWVuAGH3rPJBas"; // Your initial access token
-const refresh_token = "c4512cc217fda8219782af6a89ee1f95155c905e7c9720ee45468ad4b4cc22fc";
+let access_token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyM1JDWEQiLCJzdWIiOiJCUFM1V1EiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJlY2cgcnNldCByb3h5IHJudXQgcnBybyByc2xlIHJjZiByYWN0IHJyZXMgcmxvYyByd2VpIHJociBydGVtIiwiZXhwIjoxNjk0MjE2Njg1LCJpYXQiOjE2OTQxODc4ODV9.t3QIglHPp9BiQdKe7PVcwtqsn34nXg5iuqu9nguSjLQ"; // Your initial access token
+const refresh_token = "359de592d08bfda8bf1f90b678fb0b0470b53061c8b2c69e764add3d267244cc";
 
 function refreshAccessToken() {
     return fetch('https://api.fitbit.com/oauth2/token', {
