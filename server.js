@@ -3,7 +3,9 @@ const path = require('path');
 const app = express();
 
 // Serve static files from the 'assets' directory
+const publicPath = path.resolve(__dirname, 'assets');
 app.use(express.static(path.join(__dirname, 'assets')));
+console.log(publicPath);
 
 // Serve the main entry point
 app.get('/', (req, res) => {
