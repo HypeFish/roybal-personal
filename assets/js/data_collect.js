@@ -21,7 +21,10 @@ function refreshAccessToken() {
         })
         .then(data => {
             if (data.access_token) {
-                access_token = data.access_token;
+                access_token = data.access_token; // Update the access token
+                if (data.refresh_token) {
+                    refresh_token = data.refresh_token; // Update the refresh token
+                }
                 return access_token;
             } else {
                 throw new Error('Unable to refresh access token');
