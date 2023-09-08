@@ -2,7 +2,7 @@
 
 // Fitbit API access token and refresh token
 let access_token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyM1JDWEQiLCJzdWIiOiJCUFM1V1EiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyc29jIHJlY2cgcnNldCByb3h5IHJudXQgcnBybyByc2xlIHJjZiByYWN0IHJyZXMgcmxvYyByd2VpIHJociBydGVtIiwiZXhwIjoxNjk0MjE2Njg1LCJpYXQiOjE2OTQxODc4ODV9.t3QIglHPp9BiQdKe7PVcwtqsn34nXg5iuqu9nguSjLQ"; // Your initial access token
-const refresh_token = "359de592d08bfda8bf1f90b678fb0b0470b53061c8b2c69e764add3d267244cc";
+const refresh_token = "359de592d08bfda8bf1f90b678fb0b0470b53061c8b2c69e764add3d267244cc"; // initial refresh token 
 
 function refreshAccessToken() {
     return fetch('https://api.fitbit.com/oauth2/token', {
