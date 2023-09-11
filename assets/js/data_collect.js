@@ -14,8 +14,6 @@ fetch('/api/tokens')
     })
     .catch(error => console.error('Error:', error));
 
-let apiData = []; // Store the data from API calls
-
 function refreshAccessToken() {
     return fetch('https://api.fitbit.com/oauth2/token', {
         method: 'POST',
@@ -45,33 +43,65 @@ function refreshAccessToken() {
         .catch(error => console.error('Error:', error));
 }
 
-function makeApiCall() {
+let apiData = []; // Store the data from API calls
+
+//Calls the Fitbit API to get the user's steps for the last 7 days
+function dailyActivityCollect(clientId) {
+    const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
+
     console.log('Making API call with access token:', access_token + " " + refresh_token);
-    return fetch('https://api.fitbit.com/1/user/-/activities/steps/date/today/7d.json', {
+    return fetch(`https://api.fitbit.com/1/user/${clientId}/activities/date/${today}.json`, {
         method: "GET",
         headers: { "Authorization": "Bearer " + access_token }
     })
         .then(response => {
             if (response.status === 401) {
-                // If the token has expired, refresh it and retry the request
-                return refreshAccessToken().then(() => makeApiCall());
+                return refreshAccessToken().then(() => dailyActivityCollect(clientId));
             }
             return response.json();
         })
         .then(json => {
-            apiData.push(json); // Store the data
+            apiData.push(json);
         })
         .catch(error => console.error(error));
 }
 
+function flattenObject(obj, parentKey = '', result = {}) {
+    for (const key in obj) {
+        let propName = parentKey ? `${parentKey}_${key}` : key;
+
+        if (key === "distances" && Array.isArray(obj[key])) {
+            const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
+            obj[key].forEach((distance, index) => {
+                result[propName + "_" + distanceNames[index]] = distance.distance;
+            });
+        } else if (typeof obj[key] === 'object') {
+            flattenObject(obj[key], propName, result);
+        } else {
+            result[propName] = obj[key];
+        }
+    }
+    return result;
+}
+
+
 function generateCSV() {
-    // Consolidate data and generate CSV here
-    let csvData = "Date,Step Counter\n";
-    apiData.forEach(apiResponse => {
-        csvData += apiResponse["activities-steps"].map(item => {
-            return `${item.dateTime},${item.value}`;
-        }).join('\n');
-    });
+    let csvData = "";
+
+    // Assuming apiData contains only one item
+    const summary = apiData[0].summary;
+
+    const flattenedSummary = flattenObject(summary);
+
+    // Extract headers
+    const headers = Object.keys(flattenedSummary);
+
+    // Add headers to CSV and add date header after
+    csvData += headers.join(',') + ',date\n';
+    
+    // Add values to CSV and add date value after
+    const values = headers.map(header => flattenedSummary[header]);
+    csvData += values.join(',') + ',' + new Date().toISOString().slice(0, 10) + '\n';
 
     // Create a Blob with the CSV data
     const blob = new Blob([csvData], { type: 'text/csv' });
@@ -80,7 +110,7 @@ function generateCSV() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'steps.csv';
+    a.download = 'fitbit_data.csv';
 
     // Trigger the download
     a.click();
@@ -89,12 +119,14 @@ function generateCSV() {
     window.URL.revokeObjectURL(url);
 }
 
+
 function handleButtonClick() {
     // Fetch data from the Fitbit API
-    makeApiCall().then(() => {
-        generateCSV(); // Generate CSV after API calls are complete
-    });
+    dailyActivityCollect("BPS5WQ")
+        .then(() => generateCSV())
+        .catch(error => console.error(error));
 }
+
 
 // Attach the click event handler to the button
 document.getElementById("generateCsvButton").addEventListener("click", handleButtonClick);
