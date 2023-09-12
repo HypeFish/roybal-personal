@@ -62,7 +62,8 @@ app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.get('/auth/callback', async (req, res) => {
     console.log('Reached /auth/callback');
     res.sendFile(path.join(__dirname, 'index.html'));
-    
+    res.redirect('/');
+
     const authorizationCode = req.query.code; // Extract the authorization code from the URL
 
     // Use the authorization code to obtain access token
@@ -86,8 +87,7 @@ app.get('/auth/callback', async (req, res) => {
     console.log('Refresh Token:', process.env.REFRESH_TOKEN);
     console.log('Fitbit Response:', data);
 
-    // Redirect the user to a new page or send a response as needed
-    res.send('Authorization complete. You can now access Fitbit data.');
+    
 });
 
 app.get('/api/tokens', (req, res) => {
