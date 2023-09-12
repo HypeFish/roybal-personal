@@ -9,6 +9,10 @@ const app = express();
 
 let access_token;
 let refresh_token;
+let clientId = process.env.CLIENT_ID;
+let clientSecret = process.env.CLIENT_SECRET;
+let redirectUri = process.env.REDIRECT_URI;
+
 
 async function fetchInitialTokens() {
     let validTokens = false;
@@ -19,7 +23,7 @@ async function fetchInitialTokens() {
                 'Authorization': `Basic ${Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')}`,
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: `client_id=${process.env.CLIENT_ID}&grant_type=authorization_code&redirect_uri=https%3A%2F%2Froybal.vercel.app%2F&code=5e9199f82d0576b78e05d4e9f91305398ca533bf&code_verifier=674y2v5e2w68623k601u62643k112q3m281g010v1f4o0p424f73102v5i5i453623711i3n5a2a1n16364g1j6q0g406321392e6d17473e100i1w244c4554494e4f`
+            body: `client_id=${process.env.CLIENT_ID}&grant_type=authorization_code&redirect_uri=https%3A%2F%2Froybal.vercel.app%2F&code=46603952c7b2c753eea80e59354ce16412631d0b&code_verifier=6n072h360k124j1t38313o0z2p61706l612e5s5c5v3j2a3v552j3z1g2e220e0m4k3o1q5q3h0o053i363n6t1n3h085i5v6x435u0o236m3t3i4d1u361t3q364m15`
         });
 
         const data = await response.json();
@@ -38,10 +42,6 @@ async function fetchInitialTokens() {
         }
     }
 }
-
-fetchInitialTokens();
-
-
 
 // Call the function to fetch tokens
 fetchInitialTokens();
@@ -64,6 +64,11 @@ app.get('/', (req, res) => {
         access_token: process.env.ACCESS_TOKEN,
         refresh_token: process.env.REFRESH_TOKEN
     });
+});
+
+// Serve the callback page
+app.get('/callback', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Serve the error page

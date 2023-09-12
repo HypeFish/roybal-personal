@@ -85,7 +85,7 @@ function flattenObject(obj, parentKey = '', result = {}) {
 }
 
 
-function generateCSV() {
+function generateCSV(participantNumber) {
     let csvData = "";
 
     // Assuming apiData contains only one item
@@ -110,7 +110,7 @@ function generateCSV() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'fitbit_data.csv';
+    a.download = `fitbit_data_participant${participantNumber}.csv`;
 
     // Trigger the download
     a.click();
@@ -120,13 +120,23 @@ function generateCSV() {
 }
 
 
-function handleButtonClick() {
+function handleButtonClick(clientId, participantNumber) {
     // Fetch data from the Fitbit API
-    dailyActivityCollect("BPS5WQ")
-        .then(() => generateCSV())
+    dailyActivityCollect(clientId)
+        .then(() => generateCSV(participantNumber))
         .catch(error => console.error(error));
 }
 
+const participants = [
+    { clientId: "BPS5WQ", participantNumber: 1 },
+    { clientId: "ABC123", participantNumber: 2 },
+    // Add more participants as needed
+];
 
-// Attach the click event handler to the button
-document.getElementById("generateCsvButton").addEventListener("click", handleButtonClick);
+participants.forEach(participant => {
+    const button = document.getElementById(`Participant${participant.participantNumber}`);
+    button.addEventListener("click", () => {
+        handleButtonClick(participant.clientId, participant.participantNumber);
+    });
+});
+
