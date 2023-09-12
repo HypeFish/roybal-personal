@@ -65,19 +65,6 @@ app.get('/api/tokens', (req, res) => {
     });
 });
 
-//Serve the index page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'), {
-        access_token: process.env.ACCESS_TOKEN,
-        refresh_token: process.env.REFRESH_TOKEN
-    });
-});
-
-// Serve the error page
-app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, '404.html'));
-});
-
 // Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -107,6 +94,20 @@ app.get('/auth/callback', async (req, res) => {
 
     // Redirect the user to a new page or send a response as needed
     res.send('Authorization complete. You can now access Fitbit data.');
+});
+
+//Serve the index page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'), {
+        access_token: process.env.ACCESS_TOKEN,
+        refresh_token: process.env.REFRESH_TOKEN
+    });
+});
+
+
+// Serve the error page
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
 const port = process.env.PORT || 3000;
