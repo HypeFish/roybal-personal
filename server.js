@@ -80,6 +80,8 @@ app.use((req, res) => {
 
 // Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+    
     const authorizationCode = req.query.code; // Extract the authorization code from the URL
 
     // Use the authorization code to obtain access token
