@@ -74,14 +74,14 @@ app.get('/', (req, res) => {
 });
 
 // Serve the error page
-// app.use((req, res) => {
-//     res.status(404).sendFile(path.join(__dirname, '404.html'));
-// });
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '404.html'));
+});
 
 // Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
-
+    
     const authorizationCode = req.query.code; // Extract the authorization code from the URL
 
     // Use the authorization code to obtain access token
