@@ -1,8 +1,13 @@
 //data_collect.js
 
 // Fitbit API access token and refresh token
-let access_token;
-let refresh_token;
+let access_token = localStorage.getItem('access_token');
+let refresh_token = localStorage.getItem('refresh_token');
+
+function saveTokensToStorage(access_token, refresh_token) {
+    localStorage.setItem('access_token', access_token);
+    localStorage.setItem('refresh_token', refresh_token);
+}
 
 fetch('/api/tokens')
     .then(response => response.json())
@@ -31,40 +36,49 @@ function refreshAccessToken() {
         })
         .then(data => {
             if (data.access_token) {
-                access_token = data.access_token; // Update the access token
-                if (data.refresh_token) {
-                    refresh_token = data.refresh_token; // Update the refresh token
-                }
-                return access_token;
-            } else {
-                throw new Error('Unable to refresh access token');
-            }
-        })
-        .catch(error => console.error('Error:', error));
+            access_token = data.access_token;
+            refresh_token = data.refresh_token;
+            saveTokensToStorage(access_token, refresh_token); // Save the tokens to storage
+            return access_token;
+        } else {
+            throw new Error('Unable to refresh access token');
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 let apiData = []; // Store the data from API calls
 
-//Calls the Fitbit API to get the user's steps for the last 7 days
 function dailyActivityCollect(clientId) {
-    const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().slice(0, 10);
 
-    console.log('Making API call with access token:', access_token + " " + refresh_token);
+    console.log('Making API call with access token:', access_token);
     return fetch(`https://api.fitbit.com/1/user/${clientId}/activities/date/${today}.json`, {
         method: "GET",
         headers: { "Authorization": "Bearer " + access_token }
     })
         .then(response => {
-            if (response.status === 401) {
-                return refreshAccessToken().then(() => dailyActivityCollect(clientId));
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Attempt to refresh the access token
+                    return refreshAccessToken()
+                        .then(() => dailyActivityCollect(clientId)); // Retry the API call
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
             }
             return response.json();
         })
         .then(json => {
             apiData.push(json);
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+            console.error(error);
+            throw error; // Rethrow the error to be caught by the calling function
+        });
 }
+
+
 
 function flattenObject(obj, parentKey = '', result = {}) {
     for (const key in obj) {
@@ -129,7 +143,7 @@ function handleButtonClick(clientId, participantNumber) {
 
 const participants = [
     { clientId: "BPS5WQ", participantNumber: 1 },
-    { clientId: "ABC123", participantNumber: 2 },
+    { clientId: "BP63G3", participantNumber: 2 },
     // Add more participants as needed
 ];
 
