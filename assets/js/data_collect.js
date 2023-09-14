@@ -3,9 +3,9 @@
 let allIDs = [];
 let allTokens = [];
 
-function fetchUserIDs() {
-    return fetch('/api/user_ids')
-        .then(response => response.json());
+async function fetchUserIDs() {
+    const response = await fetch('/api/user_ids');
+    return await response.json();
 }
 
 // Fetch all user IDs
