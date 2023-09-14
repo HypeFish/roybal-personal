@@ -1,6 +1,6 @@
+package.json
+package-lock.json
 .vscode/launch.json
 node_modules
 env/
-package.json
-package-lock.json
 ```
