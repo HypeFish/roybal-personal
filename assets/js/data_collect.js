@@ -1,23 +1,36 @@
 //data_collect.js
 
-// Fitbit API access token and refresh token
-let access_token = localStorage.getItem('access_token');
-let refresh_token = localStorage.getItem('refresh_token');
+let allIDs = [];
+let allTokens = [];
 
-function saveTokensToStorage(access_token, refresh_token) {
-    localStorage.setItem('access_token', access_token);
-    localStorage.setItem('refresh_token', refresh_token);
+function fetchUserIDs() {
+    return fetch('/api/user_ids')
+        .then(response => response.json());
 }
 
-fetch('/api/tokens')
-    .then(response => response.json())
+// Fetch all user IDs
+fetchUserIDs()
     .then(data => {
-        access_token = data.access_token;
-        refresh_token = data.refresh_token;
+        const userIDs = data.userIDs;
 
-        // Use the tokens as needed
+        // Use the user IDs as needed in your client-side code
+        userIDs.forEach(user_id => {
+            // Perform actions with each user_id
+            allIDs.push(user_id);
+        });
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => console.error('Error fetching user IDs:', error));
+
+
+function fetchTokens(user_id) {
+    return fetch(`/api/tokens/${user_id}`)
+        .then(response => response.json());
+}
+
+function refreshAccessToken(user_id) {
+    return fetch(`/api/refresh_token/${user_id}`)
+        .then(response => response.json());
+}
 
 function refreshAccessToken() {
     return fetch('https://api.fitbit.com/oauth2/token', {
@@ -49,35 +62,44 @@ function refreshAccessToken() {
 
 let apiData = []; // Store the data from API calls
 
-function dailyActivityCollect(clientId) {
+// Function to make API call with user_id
+function dailyActivityCollect(user_id) {
     const today = new Date().toISOString().slice(0, 10);
 
-    console.log('Making API call with access token:', access_token);
-    return fetch(`https://api.fitbit.com/1/user/${clientId}/activities/date/${today}.json`, {
-        method: "GET",
-        headers: { "Authorization": "Bearer " + access_token }
+    return fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${today}.json`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${access_token}` // Assuming access_token is available
+        }
     })
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) {
-                    // Attempt to refresh the access token
-                    return refreshAccessToken()
-                        .then(() => dailyActivityCollect(clientId)); // Retry the API call
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401) {
+                // Attempt to refresh the access token
+                return refreshAccessToken(user_id)
+                    .then(() => dailyActivityCollect(user_id)); // Retry the API call
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            return response.json();
-        })
-        .then(json => {
-            apiData.push(json);
-        })
-        .catch(error => {
-            console.error(error);
-            throw error; // Rethrow the error to be caught by the calling function
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Send the data to the server for storage
+        return fetch(`/api/fitbit-data/${user_id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data) // Send the data as JSON
         });
+    })
+    .catch(error => {
+        console.error(error);
+        throw error;
+    });
 }
-
 
 
 function flattenObject(obj, parentKey = '', result = {}) {
@@ -134,23 +156,28 @@ function generateCSV(participantNumber) {
 }
 
 
-function handleButtonClick(clientId, participantNumber) {
-    // Fetch data from the Fitbit API
-    dailyActivityCollect(clientId)
+function handleButtonClick(user_id, participantNumber) {
+    // Fetch tokens for the specific user_id
+    fetchTokens(user_id)
+        .then(data => {
+            access_token = data.access_token;
+            refresh_token = data.refresh_token;
+
+            // Perform Fitbit API call with the obtained tokens
+            return dailyActivityCollect(user_id);
+        })
         .then(() => generateCSV(participantNumber))
         .catch(error => console.error(error));
 }
 
-const participants = [
-    { clientId: "BPS5WQ", participantNumber: 1 },
-    { clientId: "BP63G3", participantNumber: 2 },
-    // Add more participants as needed
-];
+// ... (your existing code)
 
-participants.forEach(participant => {
-    const button = document.getElementById(`Participant${participant.participantNumber}`);
+// Modify your event listener setup like this:
+
+document.querySelectorAll('.participant-button').forEach(button => {
     button.addEventListener("click", () => {
-        handleButtonClick(participant.clientId, participant.participantNumber);
+        const user_id = button.dataset.userId;
+        const participantNumber = button.dataset.participantNumber;
+        handleButtonClick(user_id, participantNumber);
     });
 });
-
