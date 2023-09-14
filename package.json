@@ -21,9 +21,11 @@
     "axios": "^1.5.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "fetch": "^1.1.0",
     "json2csv": "^6.0.0-alpha.2",
     "mongodb": "^6.0.0",
     "mongoose": "^7.5.1",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.7.0",
+    "path": "^0.12.7"
   }
 }
