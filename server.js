@@ -4,13 +4,13 @@ const path = require('path');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const app = express();
-dotenv.config({ path: 'env/user1.env' }); // This will read the env/user1.env file and set the environment variables
-dotenv.config({ path: 'env/user2.env' }); // This will read the env/user2.env file and set the environment variables
+dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
 const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}9@cluster.evnujdo.mongodb.net/`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
+const client = new MongoClient(uri);
 
 let participantsCollection;
+let dataCollection;
 
 async function connectToDatabase() {
     try {
@@ -27,6 +27,8 @@ async function connectToDatabase() {
 // Call the connectToDatabase function
 connectToDatabase();
 
+
+
 let access_token;
 let refresh_token;
 let user_id;
@@ -36,6 +38,57 @@ let user_id;
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
+
+// Add a new route to refresh the access token
+app.post('/api/refresh_token/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+
+    try {
+        const user = await participantsCollection.findOne({ user_id });
+
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        const response = await fetch('https://api.fitbit.com/oauth2/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Basic ' + Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')
+            },
+            body: `grant_type=refresh_token&refresh_token=${user.refresh_token}`
+        });
+
+        const data = await response.json();
+
+        if (data.access_token) {
+            const newAccessToken = data.access_token;
+            const newRefreshToken = data.refresh_token || user.refresh_token;
+
+            const result = await participantsCollection.updateOne(
+                { user_id: user_id },
+                { $set: { access_token: newAccessToken, refresh_token: newRefreshToken } }
+            );
+
+            if (result.modifiedCount > 0) {
+                console.log(`Updated access token and refresh token for user ${user_id}`);
+            } else {
+                console.log(`User ${user_id} not found or access token/refresh token not updated`);
+            }
+
+            res.json({ newAccessToken, newRefreshToken });
+        } else {
+            console.error('Error refreshing access token:', data.error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    } catch (error) {
+        console.error('Error refreshing access token:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 
 app.post('/api/fitbit-data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
@@ -160,6 +213,53 @@ app.get('/', (req, res) => {
 // Serve the error page
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
+});
+
+// Define a cron job to run once every 24 hours
+cron.schedule('0 0 * * *', async () => {
+    console.log('Running scheduled task...');
+
+    // Fetch all user IDs
+    try {
+        const response = await fetch('http://localhost:3000/api/user_ids');
+        const data = await response.json();
+        const userIDs = data.userIDs;
+
+        // Use the user IDs to collect Fitbit data for each user
+        for (const user_id of userIDs) {
+            try {
+                // Fetch tokens for the specific user_id
+                const tokensResponse = await fetch(`http://localhost:3000/api/tokens/${user_id}`);
+                const tokensData = await tokensResponse.json();
+                const access_token = tokensData.access_token;
+
+                // Perform Fitbit API call with the obtained access token
+                const today = new Date().toISOString().slice(0, 10);
+                const fitbitDataResponse = await fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${today}.json`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${access_token}`
+                    }
+                });
+
+                if (fitbitDataResponse.ok) {
+                    const fitbitData = await fitbitDataResponse.json();
+
+                    // Assuming you have a function to store the data in your database
+                    // You can reuse the logic from your button click handler
+                    await storeDataInDatabase(user_id, fitbitData);
+                    console.log(`Data stored in the database for user ${user_id} successfully.`);
+                } else {
+                    console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
+                }
+            } catch (error) {
+                console.error(`Error fetching data for user ${user_id}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching user IDs:', error);
+    }
 });
 
 const port = process.env.PORT || 3000;

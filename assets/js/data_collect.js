@@ -2,6 +2,8 @@
 
 let allIDs = [];
 let allTokens = [];
+let access_token;
+let refresh_token;
 
 async function fetchUserIDs() {
     const response = await fetch('/api/user_ids');
@@ -22,42 +24,14 @@ fetchUserIDs()
     .catch(error => console.error('Error fetching user IDs:', error));
 
 
-function fetchTokens(user_id) {
-    return fetch(`/api/tokens/${user_id}`)
-        .then(response => response.json());
+async function fetchTokens(user_id) {
+    const response = await fetch(`/api/tokens/${user_id}`);
+    return await response.json();
 }
 
-function refreshAccessToken(user_id) {
-    return fetch(`/api/refresh_token/${user_id}`)
-        .then(response => response.json());
-}
-
-function refreshAccessToken() {
-    return fetch('https://api.fitbit.com/oauth2/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic MjNSQ1hEOmYxZDRiZmYzZmNhZmEwM2UxYzkyMDA5NDEyMjI0YjI2'
-        },
-        body: `grant_type=refresh_token&refresh_token=${refresh_token}`
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.access_token) {
-            access_token = data.access_token;
-            refresh_token = data.refresh_token;
-            saveTokensToStorage(access_token, refresh_token); // Save the tokens to storage
-            return access_token;
-        } else {
-            throw new Error('Unable to refresh access token');
-        }
-    })
-    .catch(error => console.error('Error:', error));
+async function refreshAccessToken(user_id) {
+    const response = await fetch(`/api/refresh_token/${user_id}`);
+    return await response.json();
 }
 
 let apiData = []; // Store the data from API calls
