@@ -265,9 +265,9 @@ cron.schedule('0 0 * * *', async () => {
 //     res.status(404).sendFile(path.join(__dirname, '404.html'));
 // });
 
-const port = process.env.PORT || 3000;
+// const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-    console.log('Press Ctrl+C to quit.');
-});
+// app.listen(port, () => {
+//     console.log(`Server running on http://localhost:${port}`);
+//     console.log('Press Ctrl+C to quit.');
+// });
