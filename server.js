@@ -7,11 +7,12 @@ const cron = require('node-cron');
 const app = express();
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
 const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:KR65fmTreB0LKVyc@cluster.evnujdo.mongodb.net/`;
+const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
 const client = new MongoClient(uri);
 
 let participantsCollection;
 let dataCollection;
+
 
 async function connectToDatabase() {
     try {
