@@ -1,4 +1,14 @@
 //server.js
+
+//Serve the index page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'), {
+        // access_token: access_token,
+        // refresh_token: refresh_token
+    });
+});
+
+
 const express = require('express');
 const path = require('path');
 const fetch = require('node-fetch');
@@ -203,14 +213,6 @@ app.get('/api/tokens/:user_id', (req, res) => {
             console.error('Error fetching tokens:', error);
             res.status(500).json({ error: 'Internal server error' });
         });
-});
-
-//Serve the index page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'), {
-        access_token: access_token,
-        refresh_token: refresh_token
-    });
 });
 
 // Define a cron job to run once every 24 hours
