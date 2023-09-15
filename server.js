@@ -1,14 +1,4 @@
 //server.js
-
-//Serve the index page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'), {
-        // access_token: access_token,
-        // refresh_token: refresh_token
-    });
-});
-
-
 const express = require('express');
 const path = require('path');
 const fetch = require('node-fetch');
@@ -22,6 +12,18 @@ const client = new MongoClient(uri);
 
 let participantsCollection;
 let dataCollection;
+let access_token;
+let refresh_token;
+let user_id;
+
+
+//Serve the index page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'), {
+        access_token: access_token,
+        refresh_token: refresh_token
+    });
+});
 
 
 async function connectToDatabase() {
@@ -38,10 +40,6 @@ async function connectToDatabase() {
 
 // Call the connectToDatabase function
 connectToDatabase();
-
-let access_token;
-let refresh_token;
-let user_id;
 
 // Serve static files from the 'assets' directory
 const publicPath = '/assets'; // Set the correct public path
