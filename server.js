@@ -124,7 +124,7 @@ app.post('/api/fitbit-data/:user_id', async (req, res) => {
 
 
 // Add a new route for the authorization callback
-app.get('/auth/callback', async (req, res) => {
+app.get('https://roybal.vercel.app/auth/callback', async (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
     res.redirect('/');
 
