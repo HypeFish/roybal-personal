@@ -1,7 +1,4 @@
 //server.js
-
-console.log("server.js")
-
 const express = require('express');
 const path = require('path');
 const fetch = require('node-fetch');
