@@ -214,7 +214,7 @@ app.get('/api/tokens/:user_id', (req, res) => {
 });
 
 // Define a cron job to run once every 24 hours
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('0 8 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
