@@ -127,7 +127,7 @@ app.post('/api/fitbit-data/:user_id', async (req, res) => {
 
 
 // Add a new route for the authorization callback
-app.get('https://roybal.vercel.app/auth/callback', async (req, res) => {
+app.get('/auth/callback', async (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
     res.redirect('/');
 
@@ -263,14 +263,14 @@ cron.schedule('0 0 * * *', async () => {
     }
 });
 
-// // Serve the error page
-// app.use((req, res) => {
-//     res.status(404).sendFile(path.join(__dirname, '404.html'));
-// });
+// Serve the error page
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '404.html'));
+});
 
-// const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-// app.listen(port, () => {
-//     console.log(`Server running on http://localhost:${port}`);
-//     console.log('Press Ctrl+C to quit.');
-// });
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+    console.log('Press Ctrl+C to quit.');
+});
