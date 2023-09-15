@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
+const cron = require('node-cron');
 const app = express();
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
 const { MongoClient } = require('mongodb');
@@ -27,12 +28,9 @@ async function connectToDatabase() {
 // Call the connectToDatabase function
 connectToDatabase();
 
-
-
 let access_token;
 let refresh_token;
 let user_id;
-
 
 // Serve static files from the 'assets' directory
 const publicPath = '/assets'; // Set the correct public path
@@ -41,6 +39,8 @@ app.use(express.json());
 
 // Add a new route to refresh the access token
 app.post('/api/refresh_token/:user_id', async (req, res) => {
+    console.log('Reached the refresh_token route'); // Add this line
+
     const user_id = req.params.user_id;
 
     try {
@@ -79,10 +79,12 @@ app.post('/api/refresh_token/:user_id', async (req, res) => {
 
             res.json({ newAccessToken, newRefreshToken });
         } else {
+            console.log("block 1!")
             console.error('Error refreshing access token:', data.error);
             res.status(500).json({ error: 'Internal server error' });
         }
     } catch (error) {
+        console.log("block 2!")
         console.error('Error refreshing access token:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -92,21 +94,21 @@ app.post('/api/refresh_token/:user_id', async (req, res) => {
 
 app.post('/api/fitbit-data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
-    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
     const data = req.body; // Assuming the Fitbit data is sent in the request body
 
     try {
-        const existingDocument = await dataCollection.findOne({ user_id, date: today });
+        const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
 
         if (existingDocument) {
-            console.log(`Data for user ${user_id} on ${today} already exists.`);
+            console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
             res.status(200).json({ success: true, message: 'Data already exists' });
             return;
         }
 
         const document = {
             user_id: user_id,
-            date: today,
+            date: yesterday,
             ...data
         };
 
@@ -209,12 +211,6 @@ app.get('/', (req, res) => {
     });
 });
 
-
-// Serve the error page
-app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, '404.html'));
-});
-
 // Define a cron job to run once every 24 hours
 cron.schedule('0 0 * * *', async () => {
     console.log('Running scheduled task...');
@@ -229,13 +225,13 @@ cron.schedule('0 0 * * *', async () => {
         for (const user_id of userIDs) {
             try {
                 // Fetch tokens for the specific user_id
-                const tokensResponse = await fetch(`http://localhost:3000/api/tokens/${user_id}`);
+                const tokensResponse = await fetch(`/api/tokens/${user_id}`);
                 const tokensData = await tokensResponse.json();
                 const access_token = tokensData.access_token;
 
                 // Perform Fitbit API call with the obtained access token
-                const today = new Date().toISOString().slice(0, 10);
-                const fitbitDataResponse = await fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${today}.json`, {
+                const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
+                const fitbitDataResponse = await fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -261,6 +257,11 @@ cron.schedule('0 0 * * *', async () => {
         console.error('Error fetching user IDs:', error);
     }
 });
+
+// // Serve the error page
+// app.use((req, res) => {
+//     res.status(404).sendFile(path.join(__dirname, '404.html'));
+// });
 
 const port = process.env.PORT || 3000;
 

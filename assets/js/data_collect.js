@@ -25,54 +25,77 @@ fetchUserIDs()
 
 
 async function fetchTokens(user_id) {
-    const response = await fetch(`/api/tokens/${user_id}`);
-    return await response.json();
+    try {
+        const response = await fetch(`/api/tokens/${user_id}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching tokens:', error);
+        throw error; // Rethrow the error so it can be caught by the caller
+    }
 }
 
 async function refreshAccessToken(user_id) {
-    const response = await fetch(`/api/refresh_token/${user_id}`);
-    return await response.json();
+    console.log("refresh time")
+    try {
+        const response = await fetch(`/api/refresh_token/${user_id}`, {
+            method: 'POST'});
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error refreshing access token:', error);
+        throw error; // Rethrow the error so it can be caught by the caller
+    }
 }
+
 
 let apiData = []; // Store the data from API calls
 
 // Function to make API call with user_id
 function dailyActivityCollect(user_id) {
-    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
 
-    return fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${today}.json`, {
+    return fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${access_token}` // Assuming access_token is available
         }
     })
-    .then(response => {
-        if (!response.ok) {
-            if (response.status === 401) {
-                // Attempt to refresh the access token
-                return refreshAccessToken(user_id)
-                    .then(() => dailyActivityCollect(user_id)); // Retry the API call
-            } else {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Attempt to refresh the access token
+                    return refreshAccessToken(user_id)
+                        .then(() => dailyActivityCollect(user_id)); // Retry the API call
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
             }
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Send the data to the server for storage
-        return fetch(`/api/fitbit-data/${user_id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data) // Send the data as JSON
+            return response.json();
+        })
+        .then(data => {
+            // Send the data to the server for storage
+            return fetch(`/api/fitbit-data/${user_id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data) // Send the data as JSON
+            });
+        })
+        .catch(error => {
+            console.error(error);
+            throw error;
         });
-    })
-    .catch(error => {
-        console.error(error);
-        throw error;
-    });
 }
 
 
@@ -108,7 +131,7 @@ function generateCSV(participantNumber) {
 
     // Add headers to CSV and add date header after
     csvData += headers.join(',') + ',date\n';
-    
+
     // Add values to CSV and add date value after
     const values = headers.map(header => flattenedSummary[header]);
     csvData += values.join(',') + ',' + new Date().toISOString().slice(0, 10) + '\n';
@@ -131,20 +154,17 @@ function generateCSV(participantNumber) {
 
 
 function handleButtonClick(user_id, participantNumber) {
-    // Fetch tokens for the specific user_id
     fetchTokens(user_id)
         .then(data => {
             access_token = data.access_token;
             refresh_token = data.refresh_token;
-
-            // Perform Fitbit API call with the obtained tokens
             return dailyActivityCollect(user_id);
         })
         .then(() => generateCSV(participantNumber))
         .catch(error => console.error(error));
 }
 
-// ... (your existing code)
+
 
 // Modify your event listener setup like this:
 
