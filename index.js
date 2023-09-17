@@ -219,7 +219,7 @@ cron.schedule('0 8 * * *', async () => {
 
     // Fetch all user IDs
     try {
-        const response = await fetch('http://localhost:3000/api/user_ids');
+        const response = await fetch('/api/user_ids');
         const data = await response.json();
         const userIDs = data.userIDs;
 
