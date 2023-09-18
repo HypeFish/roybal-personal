@@ -8,38 +8,11 @@ const cron = require('node-cron');
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
-// const { connectToDatabase, participantsCollection, dataCollection } = require('./assets/js/databse');
+const { connectToDatabase, participantsCollection, dataCollection } = require('./assets/js/databse');
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
 let access_token;
 let refresh_token;
 let user_id;
-
-
-const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
-const client = new MongoClient(uri);
-
-let participantsCollection;
-let dataCollection;
-
-async function connectToDatabase() {
-    try {
-        await client.connect();
-        participantsCollection = client.db('Roybal').collection('participants');
-        dataCollection = client.db('Roybal').collection('data');
-        console.log('Connected to MongoDB');
-    } catch (error) {
-        console.error('Error connecting to MongoDB:', error);
-        throw error;
-    }
-}
-
-module.exports = {
-    connectToDatabase,
-    participantsCollection,
-    dataCollection
-};
-
 
 //Serve the index page
 app.get('/', (req, res) => {
@@ -294,6 +267,32 @@ cron.schedule('0 8 * * *', async () => {
         console.error('Error fetching user IDs:', error);
     }
 });
+
+// Add a new route to fetch combined Fitbit data for a user
+app.get('/api/fetch_combined_data/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+
+    try {
+        const userDocuments = await dataCollection.find({ user_id }).toArray();
+
+        if (userDocuments.length === 0) {
+            console.error(`No data found for user ${user_id}`);
+            res.status(404).json({ error: `No data found for user ${user_id}` });
+            return;
+        }
+
+        let combinedData = [];
+        for (const document of userDocuments) {
+            combinedData.push(document.fitbitData);
+        }
+
+        res.json({ success: true, data: combinedData });
+    } catch (error) {
+        console.error(`Error fetching combined data for user ${user_id}:`, error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
 
 // Serve the error page
 app.use((req, res) => {

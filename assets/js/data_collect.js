@@ -37,58 +37,46 @@ async function fetchTokens(user_id) {
     }
 }
 
-function flattenObject(obj, parentKey = '', result = {}) {
-    for (const key in obj) {
-        let propName = parentKey ? `${parentKey}_${key}` : key;
 
-        if (key === "distances" && Array.isArray(obj[key])) {
-            const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
-            obj[key].forEach((distance, index) => {
-                result[propName + "_" + distanceNames[index]] = distance.distance;
-            });
-        } else if (typeof obj[key] === 'object') {
-            flattenObject(obj[key], propName, result);
+
+async function generateCSV(user_id, participantNumber) {
+    try {
+        const response = await fetch(`/api/fetch_combined_data/${user_id}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const combinedData = data.data;
+
+            let csvData = "";
+
+            // Assuming combinedData contains only one item
+            const summary = combinedData[0].summary;
+
+            // The rest of your CSV generation code remains the same...
+            // (excluding the apiData part)
+
+            // Create a Blob with the CSV data
+            const blob = new Blob([csvData], { type: 'text/csv' });
+
+            // Create a download link for the CSV file
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fitbit_data_participant${participantNumber}.csv`;
+
+            // Trigger the download
+            a.click();
+
+            // Release the URL object
+            window.URL.revokeObjectURL(url);
         } else {
-            result[propName] = obj[key];
+            console.error('Error:', data.error);
         }
+    } catch (error) {
+        console.error(`Error generating CSV for user ${user_id}:`, error);
     }
-    return result;
 }
 
-
-function generateCSV(participantNumber) {
-    let csvData = "";
-
-    // Assuming apiData contains only one item
-    const summary = apiData[0].summary;
-
-    const flattenedSummary = flattenObject(summary);
-
-    // Extract headers
-    const headers = Object.keys(flattenedSummary);
-
-    // Add headers to CSV and add date header after
-    csvData += headers.join(',') + ',date\n';
-
-    // Add values to CSV and add date value after
-    const values = headers.map(header => flattenedSummary[header]);
-    csvData += values.join(',') + ',' + new Date().toISOString().slice(0, 10) + '\n';
-
-    // Create a Blob with the CSV data
-    const blob = new Blob([csvData], { type: 'text/csv' });
-
-    // Create a download link for the CSV file
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `fitbit_data_participant${participantNumber}.csv`;
-
-    // Trigger the download
-    a.click();
-
-    // Release the URL object
-    window.URL.revokeObjectURL(url);
-}
 
 async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     try {
