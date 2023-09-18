@@ -121,7 +121,7 @@ async function handleButtonClick(user_id, participantNumber) {
         const result = await makeFitbitAPICall(user_id, access_token, participantNumber);
         
         if (result.success) {
-            generateCSV(participantNumber);
+            generateCSV(user_id, participantNumber);
         } else {
             console.error('Error:', result.error);
         }
