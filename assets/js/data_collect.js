@@ -124,6 +124,25 @@ function flattenObject(obj, parentKey = '', result = {}) {
     return result;
 }
 
+function flattenObject(obj, parentKey = '', result = {}) {
+    for (const key in obj) {
+        let propName = parentKey ? `${parentKey}_${key}` : key;
+
+        if (key === 'heartRateZones' || key === 'distances') {
+            continue; // Skip heartRateZones and distances properties
+        }
+
+        if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+            flattenObject(obj[key], propName, result);
+        } else {
+            result[propName] = obj[key];
+        }
+    }
+    return result;
+}
+
+
+
 async function generateCSV(user_id, participantNumber) {
     try {
         const response = await fetch(`/api/combined_data/${user_id}`);
@@ -134,30 +153,50 @@ async function generateCSV(user_id, participantNumber) {
 
             let csvData = '';
 
-            // Loop through combinedData and add a row for each item
-            combinedData.forEach(item => {
-
-                const user_id = item.user_id;
-                const date = item.date;
-                const summary = item.summary;
-
-                // Extract all keys from the summary object
-                const summaryKeys = Object.keys(summary);
-
-                // Generate headers based on summary keys
-                const headers = flattenObject(summary, '', {});
-
-                // Generate values array
-                const values = [user_id, date, ...summaryKeys.map(key => summary[key])];
+            // Extract headers from the first item
+            if (combinedData.length > 0) {
+                const item = combinedData[0];
+                const flattenedSummary = flattenObject(item.summary);
+                const headers = ['user_id', 'date', ...Object.keys(flattenedSummary), 'Out of Range', 'Fat Burn', 'Cardio', 'Peak', 'total_distance', 'tracker_distance', 'loggedActivities_distance', 'veryActive_distance', 'moderatelyActive_distance', 'lightlyActive_distance', 'sedentaryActive_distance'];
 
                 // Add headers to CSV (only once)
-                if (!csvData) {
-                    csvData += headers.join(',') + '\n';
-                }
+                csvData += headers.join(',') + '\n';
+            }
+
+            // Loop through combinedData and add a row for each item
+            combinedData.forEach(item => {
+                const flattenedSummary = flattenObject(item.summary);
+                const values = Object.values(flattenedSummary);
+                const user_id = item.user_id;
+                const date = item.date;
+
+                // Handle heartRateZones
+                const heartRateZones = item.summary.heartRateZones || [];
+                const hrzValues = Array(4).fill(0); // Initialize with 0's
+                heartRateZones.forEach(zone => {
+                    const index = ['Out of Range', 'Fat Burn', 'Cardio', 'Peak'].indexOf(zone.name);
+                    if (index !== -1) {
+                        hrzValues[index] = zone.minutes;
+                    }
+                });
+
+                // Handle distances
+                const distances = item.summary.distances || [];
+                const distanceValues = {
+                    total_distance: 0,
+                    tracker_distance: 0,
+                    loggedActivities_distance: 0,
+                    veryActive_distance: 0,
+                    moderatelyActive_distance: 0,
+                    lightlyActive_distance: 0,
+                    sedentaryActive_distance: 0
+                };
+                distances.forEach(distance => {
+                    distanceValues[`${distance.activity}_distance`] = distance.distance;
+                });
 
                 // Add values to CSV
-                csvData += values.join(',') + '\n';
-                console.log(csvData)
+                csvData += [user_id, date, ...values, ...hrzValues, ...Object.values(distanceValues)].join(',') + '\n';
             });
 
             // Create a Blob with the CSV data
@@ -184,8 +223,8 @@ async function generateCSV(user_id, participantNumber) {
 
 
 
-// Modify your event listener setup like this:
 
+// Modify your event listener setup like this:
 document.querySelectorAll('.participant-button').forEach(button => {
     button.addEventListener("click", () => {
         const user_id = button.dataset.userId;

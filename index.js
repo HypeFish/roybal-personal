@@ -7,11 +7,11 @@ const dotenv = require('dotenv');
 const cron = require('node-cron');
 const publicPath = '/assets'; // Set the correct public path
 const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
+const uri = `mongodb+srv://skyehigh:KR65fmTreB0LKVyc@cluster.evnujdo.mongodb.net/`;
 const client = new MongoClient(uri);
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
-dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
+dotenv.config({ path: 'env/user.env' }); // This will read the env/user.env file and set the environment variables
 
 let access_token;
 let refresh_token;
