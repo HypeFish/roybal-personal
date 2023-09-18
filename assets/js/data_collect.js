@@ -138,7 +138,12 @@ async function generateCSV(user_id, participantNumber) {
 
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
-                
+                const summary = item.summary;
+                const flattenedSummary = flattenObject(summary);
+                const headers = Object.keys(flattenedSummary);
+                const values = headers.map(header => flattenedSummary[header]);
+                const date = item.date;
+
                 // Add headers to CSV
                 if (!csvData) {
                     csvData += headers.join(',') + ',date\n';
