@@ -146,7 +146,7 @@ async function generateCSV(user_id, participantNumber) {
                 const summaryKeys = Object.keys(summary);
 
                 // Generate headers based on summary keys
-                const headers = ['id', 'user_id', 'date', ...summaryKeys];
+                const headers = ['user_id', 'date', ...summaryKeys];
 
                 // Generate values array
                 const values = [id, user_id, date, ...summaryKeys.map(key => summary[key])];
