@@ -225,6 +225,7 @@ app.post('/api/collect_data/:user_id', async (req, res) => {
         if (fitbitDataResponse.ok) {
             const fitbitData = await fitbitDataResponse.json();
 
+        
             // Assuming you have a function to store the data in your database
             // You can reuse the logic from your button click handler
             await storeDataInDatabase(user_id, fitbitData);
