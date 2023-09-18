@@ -43,17 +43,33 @@ function flattenObject(obj, parentKey = '', result = {}) {
         if (key === "distances" && Array.isArray(obj[key])) {
             const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
             obj[key].forEach((distance, index) => {
-                result[propName + "_" + distanceNames[index]] = distance.distance === 0 ? '0' : distance.distance;
+                result[propName + "_" + distanceNames[index]] = distance.distance || '0';
             });
         } else if (typeof obj[key] === 'object') {
             flattenObject(obj[key], propName, result);
         } else {
-            result[propName] = obj[key] === 0 ? '0' : obj[key];
+            result[propName] = obj[key] || '0';
         }
     }
     return result;
 }
 
+function flattenHeartRateZones(obj, parentKey = '', result = {}) {
+    for (const key in obj) {
+        let propName = parentKey ? `${parentKey}_${key}` : key;
+        if (key === "heartRateZones" && Array.isArray(obj[key])) {
+            const zoneNames = ['Out of Range', 'Fat Burn', 'Cardio', 'Peak'];
+            obj[key].forEach((zone, index) => {
+                result[propName + "_" + zoneNames[index]] = zone.minutes || '0';
+            });
+        } else if (typeof obj[key] === 'object') {
+            flattenHeartRateZones(obj[key], propName, result);
+        } else {
+            result[propName] = obj[key] || '0';
+        }
+    }
+    return result;
+}
 
 async function generateCSV(user_id, participantNumber) {
     try {
@@ -68,9 +84,11 @@ async function generateCSV(user_id, participantNumber) {
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
                 const summary = item.summary;
+                const heartRateZones = item.heartRateZones;
                 const flattenedSummary = flattenObject(summary);
-                const headers = Object.keys(flattenedSummary);
-                const values = headers.map(header => flattenedSummary[header]);
+                const flattenedHeartRateZones = flattenHeartRateZones(heartRateZones);
+                const headers = Object.keys(flattenedSummary).concat(Object.keys(flattenedHeartRateZones));
+                const values = headers.map(header => flattenedSummary[header] || '0');
                 const date = item.date;
 
                 // Add headers to CSV
