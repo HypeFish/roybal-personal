@@ -5,6 +5,9 @@ const path = require('path');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
+const publicPath = '/assets'; // Set the correct public path
+app.use(publicPath, express.static(path.join(__dirname, 'assets')));
+app.use(express.json());
 const { connectToDatabase, participantsCollection, dataCollection } = require('./assets/js/databse');
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
 let access_token;
@@ -46,11 +49,6 @@ async function storeDataInDatabase(user_id, fitbitData) {
         throw error; // Rethrow the error so it can be caught by the caller
     }
 }
-
-// Serve static files from the 'assets' directory
-const publicPath = '/assets'; // Set the correct public path
-app.use(publicPath, express.static(path.join(__dirname, 'assets')));
-app.use(express.json());
 
 // Add a new route to refresh the access token
 app.post('/api/refresh_token/:user_id', async (req, res) => {
