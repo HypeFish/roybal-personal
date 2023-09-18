@@ -136,6 +136,7 @@ async function generateCSV(user_id, participantNumber) {
 
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
+                console.log("hello")
                 const id = item._id["$oid"]; // Assuming there is an id field in the document
                 const user_id = item.user_id;
                 const date = item.date;
@@ -157,6 +158,7 @@ async function generateCSV(user_id, participantNumber) {
 
                 // Add values to CSV
                 csvData += values.join(',') + '\n';
+                console.log(csvData)
             });
 
             // Create a Blob with the CSV data
