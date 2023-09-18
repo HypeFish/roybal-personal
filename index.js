@@ -242,7 +242,7 @@ app.post('/api/collect_data/:user_id', async (req, res) => {
 });
 
 // Add a new route to fetch combined Fitbit data for a user
-app.get('/api/fetch_combined_data/:user_id', async (req, res) => {
+app.get('/api/combined_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
 
     try {
