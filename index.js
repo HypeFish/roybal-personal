@@ -237,6 +237,36 @@ app.post('/api/collect_data/:user_id', async (req, res) => {
     }
 });
 
+// Add a new route to fetch combined Fitbit data for a user
+app.get('/api/fetch_combined_data/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+
+    try {
+        const userDocuments = await dataCollection.find({ user_id }).toArray();
+
+        if (userDocuments.length === 0) {
+            console.error(`No data found for user ${user_id}`);
+            res.status(404).json({ error: `No data found for user ${user_id}` });
+            return;
+        }
+
+        let combinedData = [];
+        for (const document of userDocuments) {
+            combinedData.push(document);
+        }
+
+        res.json({ success: true, data: combinedData });
+    } catch (error) {
+        console.error(`Error fetching combined data for user ${user_id}:`, error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+
+// Serve the error page
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '404.html'));
+});
 
 // Define a cron job to run once every 24 hours
 cron.schedule('0 8 * * *', async () => {
@@ -283,37 +313,6 @@ cron.schedule('0 8 * * *', async () => {
     } catch (error) {
         console.error('Error fetching user IDs:', error);
     }
-});
-
-// Add a new route to fetch combined Fitbit data for a user
-app.get('/api/fetch_combined_data/:user_id', async (req, res) => {
-    const user_id = req.params.user_id;
-
-    try {
-        const userDocuments = await dataCollection.find({ user_id }).toArray();
-
-        if (userDocuments.length === 0) {
-            console.error(`No data found for user ${user_id}`);
-            res.status(404).json({ error: `No data found for user ${user_id}` });
-            return;
-        }
-
-        let combinedData = [];
-        for (const document of userDocuments) {
-            combinedData.push(document.fitbitData);
-        }
-
-        res.json({ success: true, data: combinedData });
-    } catch (error) {
-        console.error(`Error fetching combined data for user ${user_id}:`, error);
-        res.status(500).json({ success: false, error: 'Internal server error' });
-    }
-});
-
-
-// Serve the error page
-app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
 const port = process.env.PORT || 3000;
