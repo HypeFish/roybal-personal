@@ -7,8 +7,6 @@ const dotenv = require('dotenv');
 const cron = require('node-cron');
 const { connectToDatabase, participantsCollection, dataCollection } = require('./assets/js/databse');
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
-const { getFitbitData } = require('./assets/js/fitbit');
-
 let access_token;
 let refresh_token;
 let user_id;
@@ -48,13 +46,6 @@ async function storeDataInDatabase(user_id, fitbitData) {
         throw error; // Rethrow the error so it can be caught by the caller
     }
 }
-
-const fitbitData = await getFitbitData(user_id, access_token);
-
-if (fitbitData) {
-    await storeDataInDatabase(user_id, fitbitData);
-}
-
 
 // Serve static files from the 'assets' directory
 const publicPath = '/assets'; // Set the correct public path
