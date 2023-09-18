@@ -43,12 +43,12 @@ function flattenObject(obj, parentKey = '', result = {}) {
         if (key === "distances" && Array.isArray(obj[key])) {
             const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
             obj[key].forEach((distance, index) => {
-                result[propName + "_" + distanceNames[index]] = distance.distance || '0';
+                result[propName + "_" + distanceNames[index]] = distance.distance === 0 ? 0 : (distance.distance || '');
             });
         } else if (typeof obj[key] === 'object') {
             flattenObject(obj[key], propName, result);
         } else {
-            result[propName] = obj[key] || '0';
+            result[pƒropName] = obj[key] === 0 ? 0 : (obj[key] || '');
         }
     }
     return result;
@@ -60,12 +60,12 @@ function flattenHeartRateZones(obj, parentKey = '', result = {}) {
         if (key === "heartRateZones" && Array.isArray(obj[key])) {
             const zoneNames = ['Out of Range', 'Fat Burn', 'Cardio', 'Peak'];
             obj[key].forEach((zone, index) => {
-                result[propName + "_" + zoneNames[index]] = zone.minutes || '0';
+                result[propName + "_" + zoneNames[index]] = zone.minutes === 0 ? 0 : (zone.minutes || '');
             });
         } else if (typeof obj[key] === 'object') {
             flattenHeartRateZones(obj[key], propName, result);
         } else {
-            result[propName] = obj[key] || '0';
+            result[propName] = obj[key] === 0 ? 0 : (obj[key] || '');
         }
     }
     return result;
@@ -88,7 +88,7 @@ async function generateCSV(user_id, participantNumber) {
                 const flattenedSummary = flattenObject(summary);
                 const flattenedHeartRateZones = flattenHeartRateZones(heartRateZones);
                 const headers = Object.keys(flattenedSummary).concat(Object.keys(flattenedHeartRateZones));
-                const values = headers.map(header => flattenedSummary[header] || '0');
+                const values = headers.map(header => flattenedSummary[header] === 0 ? 0 : (flattenedSummary[header] || ''));
                 const date = item.date;
 
                 // Add headers to CSV
@@ -121,6 +121,7 @@ async function generateCSV(user_id, participantNumber) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
+
 
 
 async function makeFitbitAPICall(user_id, access_token, participantNumber) {
