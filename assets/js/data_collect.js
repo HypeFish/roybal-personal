@@ -105,7 +105,17 @@ async function refreshAccessToken(user_id) {
 function flattenObject(obj, parentKey = '', result = {}) {
     for (const key in obj) {
         let propName = parentKey ? `${parentKey}_${key}` : key;
-        if (typeof obj[key] === 'object') {
+        
+        if (key === 'heartRateZones') {
+            continue; // Skip heartRateZones property
+        }
+        
+        if (key === "distances" && Array.isArray(obj[key])) {
+            const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
+            obj[key].forEach((distance, index) => {
+                result[propName + "_" + distanceNames[index]] = distance.distance;
+            });
+        } else if (typeof obj[key] === 'object') {
             flattenObject(obj[key], propName, result);
         } else {
             result[propName] = obj[key];
@@ -114,46 +124,55 @@ function flattenObject(obj, parentKey = '', result = {}) {
     return result;
 }
 
-async function generateCSV(user_id, participantNumber, combinedData) {
+
+async function generateCSV(user_id, participantNumber) {
     try {
-        let csvData = '';
+        const response = await fetch(`/api/combined_data/${user_id}`);
+        const data = await response.json();
 
-        // Loop through combinedData and add a row for each item
-        combinedData.forEach(item => {
-            const summary = item.summary;
-            const flattenedSummary = flattenObject(summary);
-            const headers = Object.keys(flattenedSummary);
-            const values = headers.map(header => flattenedSummary[header]);
-            const date = item.date;
+        if (data.success) {
+            const combinedData = data.data;
 
-            // Add headers to CSV
-            if (!csvData) {
-                csvData += headers.join(',') + ',date\n';
-            }
+            let csvData = '';
 
-            // Add values to CSV and add date value after
-            csvData += values.join(',') + ',' + date + '\n';
-        });
+            // Loop through combinedData and add a row for each item
+            combinedData.forEach(item => {
+                const summary = item.summary;
+                const flattenedSummary = flattenObject(summary);
+                const headers = Object.keys(flattenedSummary);
+                const values = headers.map(header => flattenedSummary[header]);
+                const date = item.date;
 
-        // Create a Blob with the CSV data
-        const blob = new Blob([csvData], { type: 'text/csv' });
+                // Add headers to CSV
+                if (!csvData) {
+                    csvData += headers.join(',') + ',date\n';
+                }
 
-        // Create a download link for the CSV file
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `fitbit_data_participant${participantNumber}.csv`;
+                // Add values to CSV and add date value after
+                csvData += values.join(',') + ',' + date + '\n';
+            });
 
-        // Trigger the download
-        a.click();
+            // Create a Blob with the CSV data
+            const blob = new Blob([csvData], { type: 'text/csv' });
 
-        // Release the URL object
-        window.URL.revokeObjectURL(url);
+            // Create a download link for the CSV file
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fitbit_data_participant${participantNumber}.csv`;
+
+            // Trigger the download
+            a.click();
+
+            // Release the URL object
+            window.URL.revokeObjectURL(url);
+        } else {
+            console.error('Error:', data.error);
+        }
     } catch (error) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
-
 
 // Modify your event listener setup like this:
 
