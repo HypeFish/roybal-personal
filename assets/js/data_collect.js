@@ -37,8 +37,6 @@ async function fetchTokens(user_id) {
     }
 }
 
-
-
 async function generateCSV(user_id, participantNumber) {
     try {
         const response = await fetch(`/api/fetch_combined_data/${user_id}`);
@@ -52,8 +50,17 @@ async function generateCSV(user_id, participantNumber) {
             // Assuming combinedData contains only one item
             const summary = combinedData[0].summary;
 
-            // The rest of your CSV generation code remains the same...
-            // (excluding the apiData part)
+            const flattenedSummary = flattenObject(summary);
+
+            // Extract headers
+            const headers = Object.keys(flattenedSummary);
+        
+            // Add headers to CSV and add date header after
+            csvData += headers.join(',') + ',date\n';
+        
+            // Add values to CSV and add date value after
+            const values = headers.map(header => flattenedSummary[header]);
+            csvData += values.join(',') + ',' + new Date().toISOString().slice(0, 10) + '\n';
 
             // Create a Blob with the CSV data
             const blob = new Blob([csvData], { type: 'text/csv' });
@@ -76,7 +83,6 @@ async function generateCSV(user_id, participantNumber) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
-
 
 async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     try {
