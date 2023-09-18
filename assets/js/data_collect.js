@@ -71,8 +71,7 @@ async function generateCSV(user_id, participantNumber) {
                 const flattenedSummary = flattenObject(summary);
                 const headers = Object.keys(flattenedSummary);
                 const values = headers.map(header => flattenedSummary[header]);
-                
-                console.log(date)
+                const date = item.date;
 
                 // Add headers to CSV
                 if (!csvData) {
