@@ -136,8 +136,7 @@ async function generateCSV(user_id, participantNumber) {
 
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
-                console.log("hello")
-                const id = item._id["$oid"]; // Assuming there is an id field in the document
+
                 const user_id = item.user_id;
                 const date = item.date;
                 const summary = item.summary;
@@ -149,7 +148,7 @@ async function generateCSV(user_id, participantNumber) {
                 const headers = ['user_id', 'date', ...summaryKeys];
 
                 // Generate values array
-                const values = [id, user_id, date, ...summaryKeys.map(key => summary[key])];
+                const values = [user_id, date, ...summaryKeys.map(key => summary[key])];
 
                 // Add headers to CSV (only once)
                 if (!csvData) {
