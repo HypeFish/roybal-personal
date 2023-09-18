@@ -8,37 +8,13 @@ const cron = require('node-cron');
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
-
-const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
-const client = new MongoClient(uri);
-
-let participantsCollection;
-let dataCollection;
-
-async function connectToDatabase() {
-    try {
-        await client.connect();
-        participantsCollection = client.db('Roybal').collection('participants');
-        dataCollection = client.db('Roybal').collection('data');
-        console.log('Connected to MongoDB');
-    } catch (error) {
-        console.error('Error connecting to MongoDB:', error);
-        throw error;
-    }
-}
-
-// module.exports = {
-//     connectToDatabase,
-//     participantsCollection,
-//     dataCollection
-// };
-
-// const { connectToDatabase, participantsCollection, dataCollection } = require('./assets/js/databse');
+const { connectToDatabase, participantsCollection, dataCollection } = require('./assets/js/databse');
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
 let access_token;
 let refresh_token;
 let user_id;
+// Call the connectToDatabase function
+await connectToDatabase();
 
 //Serve the index page
 app.get('/', (req, res) => {
@@ -47,9 +23,6 @@ app.get('/', (req, res) => {
         refresh_token: refresh_token
     });
 });
-
-// Call the connectToDatabase function
-connectToDatabase();
 
 async function storeDataInDatabase(user_id, fitbitData) {
     try {
