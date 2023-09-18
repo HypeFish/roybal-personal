@@ -65,20 +65,23 @@ async function generateCSV(user_id, participantNumber) {
 
             let csvData = "";
 
-            // Assuming combinedData contains only one item
+            // Extract headers only once
             const summary = combinedData[0].summary;
-
             const flattenedSummary = flattenObject(summary);
-
-            // Extract headers
             const headers = Object.keys(flattenedSummary);
-        
+            
             // Add headers to CSV and add date header after
             csvData += headers.join(',') + ',date\n';
-        
-            // Add values to CSV and add date value after
-            const values = headers.map(header => flattenedSummary[header]);
-            csvData += values.join(',') + ',' + new Date().toISOString().slice(0, 10) + '\n';
+
+            // Loop through combinedData and add a row for each item
+            combinedData.forEach(item => {
+                const summary = item.summary;
+                const flattenedSummary = flattenObject(summary);
+                const values = headers.map(header => flattenedSummary[header]);
+
+                // Add values to CSV and add date value after
+                csvData += values.join(',') + ',' + new Date().toISOString().slice(0, 10) + '\n';
+            });
 
             // Create a Blob with the CSV data
             const blob = new Blob([csvData], { type: 'text/csv' });
