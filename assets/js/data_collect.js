@@ -37,6 +37,24 @@ async function fetchTokens(user_id) {
     }
 }
 
+function flattenObject(obj, parentKey = '', result = {}) {
+    for (const key in obj) {
+        let propName = parentKey ? `${parentKey}_${key}` : key;
+        if (key === "distances" && Array.isArray(obj[key])) {
+            const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
+            obj[key].forEach((distance, index) => {
+                result[propName + "_" + distanceNames[index]] = distance.distance;
+            });
+        } else if (typeof obj[key] === 'object') {
+            flattenObject(obj[key], propName, result);
+        } else {
+            result[propName] = obj[key];
+        }
+    }
+    return result;
+}
+
+
 async function generateCSV(user_id, participantNumber) {
     try {
         const response = await fetch(`/api/fetch_combined_data/${user_id}`);
