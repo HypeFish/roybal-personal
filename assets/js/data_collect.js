@@ -105,11 +105,11 @@ async function refreshAccessToken(user_id) {
 function flattenObject(obj, parentKey = '', result = {}) {
     for (const key in obj) {
         let propName = parentKey ? `${parentKey}_${key}` : key;
-        
+
         if (key === 'heartRateZones') {
             continue; // Skip heartRateZones property
         }
-        
+
         if (key === "distances" && Array.isArray(obj[key])) {
             const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
             obj[key].forEach((distance, index) => {
@@ -125,6 +125,7 @@ function flattenObject(obj, parentKey = '', result = {}) {
 }
 
 
+
 async function generateCSV(user_id, participantNumber) {
     try {
         const response = await fetch(`/api/combined_data/${user_id}`);
@@ -137,12 +138,7 @@ async function generateCSV(user_id, participantNumber) {
 
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
-                const summary = item.summary;
-                const flattenedSummary = flattenObject(summary);
-                const headers = Object.keys(flattenedSummary);
-                const values = headers.map(header => flattenedSummary[header]);
-                const date = item.date;
-
+                
                 // Add headers to CSV
                 if (!csvData) {
                     csvData += headers.join(',') + ',date\n';
