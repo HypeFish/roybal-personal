@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
 async function storeDataInDatabase(user_id, fitbitData) {
     try {
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-        
+
         const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
 
         if (existingDocument) {
@@ -53,10 +53,13 @@ async function storeDataInDatabase(user_id, fitbitData) {
             return; // Data already exists, no need to store it again
         }
 
+        // Assign the Fitbit data directly to the corresponding fields in the document
         const document = {
             user_id: user_id,
             date: yesterday,
-            fitbitData: fitbitData // Assuming you want to store the Fitbit data
+            activities: fitbitData.activities,
+            goals: fitbitData.goals,
+            summary: fitbitData.summary
         };
 
         await dataCollection.insertOne(document);
@@ -66,6 +69,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
         throw error; // Rethrow the error so it can be caught by the caller
     }
 }
+
 
 // Add a new route to refresh the access token
 app.post('/api/refresh_token/:user_id', async (req, res) => {

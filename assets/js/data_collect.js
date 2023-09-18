@@ -124,8 +124,6 @@ function flattenObject(obj, parentKey = '', result = {}) {
     return result;
 }
 
-
-
 async function generateCSV(user_id, participantNumber) {
     try {
         const response = await fetch(`/api/combined_data/${user_id}`);
@@ -138,19 +136,23 @@ async function generateCSV(user_id, participantNumber) {
 
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
-                const summary = item.summary;
-                const flattenedSummary = flattenObject(summary);
-                const headers = Object.keys(flattenedSummary);
-                const values = headers.map(header => flattenedSummary[header]);
-                const date = item.date;
+                const headers = Object.keys(item);
+                const values = headers.map(header => {
+                    if (typeof item[header] === 'object') {
+                        // If the value is an object (e.g., summary), stringify it
+                        return JSON.stringify(item[header]);
+                    } else {
+                        return item[header];
+                    }
+                });
 
                 // Add headers to CSV
                 if (!csvData) {
-                    csvData += headers.join(',') + ',date\n';
+                    csvData += headers.join(',') + '\n';
                 }
 
-                // Add values to CSV and add date value after
-                csvData += values.join(',') + ',' + date + '\n';
+                // Add values to CSV
+                csvData += values.join(',') + '\n';
             });
 
             // Create a Blob with the CSV data
@@ -174,6 +176,7 @@ async function generateCSV(user_id, participantNumber) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
+
 
 // Modify your event listener setup like this:
 
