@@ -1,9 +1,7 @@
 //data_collect.js
 
 let allIDs = [];
-let allTokens = [];
-let access_token;
-let refresh_token;
+let apiData = []; // Store the data from API calls
 
 async function fetchUserIDs() {
     const response = await fetch('/api/user_ids');
@@ -13,7 +11,7 @@ async function fetchUserIDs() {
 // Fetch all user IDs
 fetchUserIDs()
     .then(data => {
-        const userIDs = data.userIDs;
+        let userIDs = data.userIDs;
 
         // Use the user IDs as needed in your client-side code
         userIDs.forEach(user_id => {
@@ -38,69 +36,6 @@ async function fetchTokens(user_id) {
         throw error; // Rethrow the error so it can be caught by the caller
     }
 }
-
-async function refreshAccessToken(user_id) {
-    console.log("refresh time")
-    try {
-        const response = await fetch(`/api/refresh_token/${user_id}`, {
-            method: 'POST'});
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        access_token = response.access_token;
-        refresh_token = response.refresh_token;
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error refreshing access token:', error);
-        throw error; // Rethrow the error so it can be caught by the caller
-    }
-}
-
-
-let apiData = []; // Store the data from API calls
-
-// Function to make API call with user_id
-function dailyActivityCollect(user_id) {
-    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-
-    return fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${access_token}` // Assuming access_token is available
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) {
-                    // Attempt to refresh the access token
-                    return refreshAccessToken(user_id)
-                        .then(() => dailyActivityCollect(user_id)); // Retry the API call
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Send the data to the server for storage
-            return fetch(`/api/fitbit-data/${user_id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data) // Send the data as JSON
-            });
-        })
-        .catch(error => {
-            console.error(error);
-            throw error;
-        });
-}
-
 
 function flattenObject(obj, parentKey = '', result = {}) {
     for (const key in obj) {
@@ -155,18 +90,70 @@ function generateCSV(participantNumber) {
     window.URL.revokeObjectURL(url);
 }
 
-
-function handleButtonClick(user_id, participantNumber) {
-    fetchTokens(user_id)
-        .then(data => {
-            access_token = data.access_token;
-            refresh_token = data.refresh_token;
-            return dailyActivityCollect(user_id);
+async function makeFitbitAPICall(user_id, access_token, participantNumber) {
+    try {
+        const response = await fetch(`/api/collect_data/${user_id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token}`
+            }
         })
-        .then(() => generateCSV(participantNumber))
-        .catch(error => console.error(error));
+
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, data };
+
+        } else if (response.status === 401) {
+            // Access token expired, trigger token refresh
+            const newAccessToken = await refreshAccessToken(user_id);
+            
+            if (newAccessToken) {
+                return await makeFitbitAPICall(user_id, newAccessToken, participantNumber);
+            } else {
+                return { success: false, error: 'Error refreshing access token' };
+            }
+        } else {
+            return { success: false, error: `HTTP error! status: ${response.status}` };
+        }
+    } catch (error) {
+        return { success: false, error: 'Internal server error' };
+    }
 }
 
+async function handleButtonClick(user_id, participantNumber) {
+    try {
+        const { access_token } = await fetchTokens(user_id);
+        const result = await makeFitbitAPICall(user_id, access_token, participantNumber);
+        
+        if (result.success) {
+            generateCSV(participantNumber);
+        } else {
+            console.error('Error:', result.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function refreshAccessToken(user_id) {
+    try {
+        const response = await fetch(`/api/refresh_token/${user_id}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.newAccessToken;
+        } else {
+            console.error('Error refreshing access token:', data.error);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error refreshing access token:', error);
+        return null;
+    }
+}
 
 
 // Modify your event listener setup like this:

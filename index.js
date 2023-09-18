@@ -1,21 +1,17 @@
 //index.js
 const express = require('express');
+const app = express();
 const path = require('path');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
-const app = express();
+const { connectToDatabase, participantsCollection, dataCollection } = require('./assets/js/databse');
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user1.env file and set the environment variables
-const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
-const client = new MongoClient(uri);
+const { getFitbitData } = require('./assets/js/fitbit');
 
-let participantsCollection;
-let dataCollection;
 let access_token;
 let refresh_token;
 let user_id;
-
 
 //Serve the index page
 app.get('/', (req, res) => {
@@ -25,21 +21,40 @@ app.get('/', (req, res) => {
     });
 });
 
+// Call the connectToDatabase function
+connectToDatabase();
 
-async function connectToDatabase() {
+async function storeDataInDatabase(user_id, fitbitData) {
     try {
-        await client.connect();
-        participantsCollection = client.db('Roybal').collection('participants');
-        dataCollection = client.db('Roybal').collection('data');
-        console.log('Connected to MongoDB');
+        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
+        
+        const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
+
+        if (existingDocument) {
+            console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
+            return; // Data already exists, no need to store it again
+        }
+
+        const document = {
+            user_id: user_id,
+            date: yesterday,
+            fitbitData: fitbitData // Assuming you want to store the Fitbit data
+        };
+
+        await dataCollection.insertOne(document);
+        console.log(`Data stored in the database for user ${user_id} successfully.`);
     } catch (error) {
-        console.error('Error connecting to MongoDB:', error);
-        throw error; // Rethrow the error so it can be caught by the calling function
+        console.error('Error storing data in database:', error);
+        throw error; // Rethrow the error so it can be caught by the caller
     }
 }
 
-// Call the connectToDatabase function
-connectToDatabase();
+const fitbitData = await getFitbitData(user_id, access_token);
+
+if (fitbitData) {
+    await storeDataInDatabase(user_id, fitbitData);
+}
+
 
 // Serve static files from the 'assets' directory
 const publicPath = '/assets'; // Set the correct public path
@@ -98,38 +113,6 @@ app.post('/api/refresh_token/:user_id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-
-
-app.post('/api/fitbit-data/:user_id', async (req, res) => {
-    const user_id = req.params.user_id;
-    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-    const data = req.body; // Assuming the Fitbit data is sent in the request body
-
-    try {
-        const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
-
-        if (existingDocument) {
-            console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
-            res.status(200).json({ success: true, message: 'Data already exists' });
-            return;
-        }
-
-        const document = {
-            user_id: user_id,
-            date: yesterday,
-            ...data
-        };
-
-        dataCollection.insertOne(document);
-        res.status(200).json({ success: true, message: 'Data recorded successfully' });
-    } catch (error) {
-        console.error('Error saving data to database:', error);
-        res.status(500).json({ success: false, error: 'Internal server error' });
-    }
-});
-
-
 
 // Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
@@ -212,6 +195,42 @@ app.get('/api/tokens/:user_id', (req, res) => {
             res.status(500).json({ error: 'Internal server error' });
         });
 });
+
+// Add a new route for collecting Fitbit data
+app.post('/api/collect_data/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+    const access_token = req.headers.authorization.split(' ')[1]; // Extract the access token from the Authorization header
+
+    try {
+        // Perform Fitbit API call with the obtained access token
+        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
+        const fitbitDataResponse = await fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token}`
+            }
+        });
+
+        if (fitbitDataResponse.ok) {
+            const fitbitData = await fitbitDataResponse.json();
+
+            // Assuming you have a function to store the data in your database
+            // You can reuse the logic from your button click handler
+            await storeDataInDatabase(user_id, fitbitData);
+            console.log(`Data stored in the database for user ${user_id} successfully.`);
+
+            res.json({ success: true, message: 'Data collected and stored successfully.' });
+        } else {
+            console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
+            res.status(500).json({ success: false, error: 'Error collecting data' });
+        }
+    } catch (error) {
+        console.error(`Error fetching data for user ${user_id}:`, error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
 
 // Define a cron job to run once every 24 hours
 cron.schedule('0 8 * * *', async () => {
