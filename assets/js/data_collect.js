@@ -49,6 +49,9 @@ async function refreshAccessToken(user_id) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        access_token = response.access_token;
+        refresh_token = response.refresh_token;
+        
         return await response.json();
     } catch (error) {
         console.error('Error refreshing access token:', error);
