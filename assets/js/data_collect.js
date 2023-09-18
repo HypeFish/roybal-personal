@@ -43,12 +43,12 @@ function flattenObject(obj, parentKey = '', result = {}) {
         if (key === "distances" && Array.isArray(obj[key])) {
             const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
             obj[key].forEach((distance, index) => {
-                result[propName + "_" + distanceNames[index]] = distance.distance;
+                result[propName + "_" + distanceNames[index]] = distance.distance === 0 ? '0' : distance.distance;
             });
         } else if (typeof obj[key] === 'object') {
             flattenObject(obj[key], propName, result);
         } else {
-            result[propName] = obj[key];
+            result[propName] = obj[key] === 0 ? '0' : obj[key];
         }
     }
     return result;
