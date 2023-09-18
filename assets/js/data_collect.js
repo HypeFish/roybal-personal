@@ -65,22 +65,21 @@ async function generateCSV(user_id, participantNumber) {
 
             let csvData = "";
 
-            // Extract headers only once
-            const summary = combinedData[0].summary;
-            const flattenedSummary = flattenObject(summary);
-            const headers = Object.keys(flattenedSummary);
-            
-            // Add headers to CSV and add date header after
-            csvData += headers.join(',') + ',date\n';
-
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
                 const summary = item.summary;
                 const flattenedSummary = flattenObject(summary);
+                const headers = Object.keys(flattenedSummary);
                 const values = headers.map(header => flattenedSummary[header]);
+                const date = item.date;
+
+                // Add headers to CSV
+                if (!csvData) {
+                    csvData += headers.join(',') + ',date\n';
+                }
 
                 // Add values to CSV and add date value after
-                csvData += values.join(',') + ',' + new Date().toISOString().slice(0, 10) + '\n';
+                csvData += values.join(',') + ',' + date + '\n';
             });
 
             // Create a Blob with the CSV data
@@ -104,6 +103,7 @@ async function generateCSV(user_id, participantNumber) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
+
 
 async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     try {
