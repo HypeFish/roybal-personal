@@ -134,41 +134,25 @@ async function generateCSV(user_id, participantNumber) {
 
             let csvData = '';
 
-            // Define the header columns (id, user_id, date, and summary keys)
-            const headers = ['id', 'user_id', 'date'];
-            const summaryHeaders = [];
+            // Define the header columns
+            const headers = ['id', 'user_id', 'date', 'activities', 'goals', 'summary'];
 
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
-                const id = item._id; // Assuming there is an id field in the document
+                const id = item._id["$oid"]; // Assuming there is an id field in the document
                 const user_id = item.user_id;
                 const date = item.date;
-                const summary = item.summary;
-
-                // Extract keys from summary and its nested objects
-                Object.keys(summary).forEach(key => {
-                    if (typeof summary[key] === 'object') {
-                        // If the value is an object, extract its keys
-                        Object.keys(summary[key]).forEach(subKey => {
-                            summaryHeaders.push(`${key}_${subKey}`);
-                        });
-                    } else {
-                        summaryHeaders.push(key);
-                    }
-                });
+                const activities = JSON.stringify(item.activities);
+                const goals = JSON.stringify(item.goals);
+                const summary = JSON.stringify(item.summary);
 
                 // Add headers to CSV (only once)
                 if (!csvData) {
-                    csvData += [...headers, ...summaryHeaders].join(',') + '\n';
+                    csvData += headers.join(',') + '\n';
                 }
 
                 // Generate values array
-                const values = [id, user_id, date];
-                summaryHeaders.forEach(header => {
-                    // If the value is an object, stringify it
-                    const value = typeof summary[header] === 'object' ? JSON.stringify(summary[header]) : summary[header];
-                    values.push(value);
-                });
+                const values = [id, user_id, date, activities, goals, summary];
 
                 // Add values to CSV
                 csvData += values.join(',') + '\n';
