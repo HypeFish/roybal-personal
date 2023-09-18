@@ -134,25 +134,26 @@ async function generateCSV(user_id, participantNumber) {
 
             let csvData = '';
 
-            // Define the header columns
-            const headers = ['id', 'user_id', 'date', 'activities', 'goals', 'summary'];
-
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
                 const id = item._id["$oid"]; // Assuming there is an id field in the document
                 const user_id = item.user_id;
                 const date = item.date;
-                const activities = JSON.stringify(item.activities);
-                const goals = JSON.stringify(item.goals);
-                const summary = JSON.stringify(item.summary);
+                const summary = item.summary;
+
+                // Extract all keys from the summary object
+                const summaryKeys = Object.keys(summary);
+
+                // Generate headers based on summary keys
+                const headers = ['id', 'user_id', 'date', ...summaryKeys];
+
+                // Generate values array
+                const values = [id, user_id, date, ...summaryKeys.map(key => summary[key])];
 
                 // Add headers to CSV (only once)
                 if (!csvData) {
                     csvData += headers.join(',') + '\n';
                 }
-
-                // Generate values array
-                const values = [id, user_id, date, activities, goals, summary];
 
                 // Add values to CSV
                 csvData += values.join(',') + '\n';
