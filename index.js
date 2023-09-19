@@ -1,5 +1,6 @@
 //index.js
 const express = require('express');
+const session = require('express-session');
 const app = express();
 const path = require('path');
 const fetch = require('node-fetch');
@@ -12,19 +13,25 @@ dotenv.config({ path: 'env/user.env' }); // This will read the env/user.env file
 const { MongoClient } = require('mongodb');
 const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
 const client = new MongoClient(uri);
+const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 let access_token;
 let refresh_token;
 let user_id;
+
+
 let participantsCollection;
 let dataCollection;
+let adminCollection;
 
 async function connectToDatabase() {
     try {
         await client.connect();
         participantsCollection = client.db('Roybal').collection('participants');
         dataCollection = client.db('Roybal').collection('data');
+        adminCollection = client.db('Roybal').collection('admin');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
@@ -35,12 +42,64 @@ async function connectToDatabase() {
 // Call the connectToDatabase function
 connectToDatabase();
 
+// Add session middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true
+}));
+
+app.use((req, res, next) => {
+    res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '-1');
+    next();
+});
+
+
+// Middleware to check if user is authenticated
+function requireAuth(req, res, next) {
+    if (req.session?.user) {
+        return next(); // User is authenticated, proceed to the next middleware or route handler
+    } else {
+        return res.redirect('/login'); // User is not authenticated, redirect to login page
+    }
+}
+
+// Define the login route
+app.get('/login', (req, res) => {
+    // Serve the login page (index.html with login form)
+    res.sendFile(__dirname + '/assets/pages/login.html');
+});
+
+// Handle login form submission
+app.post('/login', async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    try {
+        const admin = await adminCollection.findOne({ user: username, pass: password });
+        console.log(admin)
+        if (admin) {
+            req.session.user = username;
+            console.log('User authenticated successfully')
+            res.redirect('/');
+        } else {
+            console.log('Invalid username or password')
+            res.redirect('/login');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+
+
 //Serve the index page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'), {
-        access_token: access_token,
-        refresh_token: refresh_token
-    });
+app.get('/', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 async function storeDataInDatabase(user_id, fitbitData) {
@@ -211,7 +270,6 @@ app.get('/api/tokens/:user_id', (req, res) => {
 app.post('/api/collect_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
     const access_token = req.headers.authorization.split(' ')[1]; // Extract the access token from the Authorization header
-    console.log("access token: ", access_token)
 
     try {
         // Perform Fitbit API call with the obtained access token
