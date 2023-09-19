@@ -37,6 +37,25 @@ async function fetchTokens(user_id) {
     }
 }
 
+async function refreshAccessToken(user_id) {
+    try {
+        const response = await fetch(`/api/refresh_token/${user_id}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.newAccessToken;
+        } else {
+            console.error('Error refreshing access token:', data.error);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error refreshing access token:', error);
+        return null;
+    }
+}
+
 async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     try {
         const response = await fetch(`/api/collect_data/${user_id}`, {
@@ -68,40 +87,6 @@ async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     }
 }
 
-async function handleButtonClick(user_id, participantNumber) {
-    try {
-        const { access_token } = await fetchTokens(user_id);
-        const result = await makeFitbitAPICall(user_id, access_token, participantNumber);
-        
-        if (result.success) {
-            generateCSV(user_id, participantNumber);
-        } else {
-            console.error('Error:', result.error);
-        }
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-async function refreshAccessToken(user_id) {
-    try {
-        const response = await fetch(`/api/refresh_token/${user_id}`, {
-            method: 'POST'
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.newAccessToken;
-        } else {
-            console.error('Error refreshing access token:', data.error);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error refreshing access token:', error);
-        return null;
-    }
-}
-
 function flattenObject(obj, parentKey = '', result = {}) {
     for (const key in obj) {
         let propName = parentKey ? `${parentKey}_${key}` : key;
@@ -123,25 +108,6 @@ function flattenObject(obj, parentKey = '', result = {}) {
     }
     return result;
 }
-
-function flattenObject(obj, parentKey = '', result = {}) {
-    for (const key in obj) {
-        let propName = parentKey ? `${parentKey}_${key}` : key;
-
-        if (key === 'heartRateZones' || key === 'distances') {
-            continue; // Skip heartRateZones and distances properties
-        }
-
-        if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
-            flattenObject(obj[key], propName, result);
-        } else {
-            result[propName] = obj[key];
-        }
-    }
-    return result;
-}
-
-
 
 async function generateCSV(user_id, participantNumber) {
     try {
@@ -221,8 +187,20 @@ async function generateCSV(user_id, participantNumber) {
     }
 }
 
-
-
+async function handleButtonClick(user_id, participantNumber) {
+    try {
+        const { access_token } = await fetchTokens(user_id);
+        const result = await makeFitbitAPICall(user_id, access_token, participantNumber);
+        
+        if (result.success) {
+            generateCSV(user_id, participantNumber);
+        } else {
+            console.error('Error:', result.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 // Modify your event listener setup like this:
 document.querySelectorAll('.participant-button').forEach(button => {

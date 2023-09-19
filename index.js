@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 const cron = require('node-cron');
 const publicPath = '/assets'; // Set the correct public path
 const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:KR65fmTreB0LKVyc@cluster.evnujdo.mongodb.net/`;
+const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
 const client = new MongoClient(uri);
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
