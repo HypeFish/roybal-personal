@@ -87,6 +87,7 @@ async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     }
 }
 
+
 function flattenObject(obj, parentKey = '', result = {}) {
     for (const key in obj) {
         let propName = parentKey ? `${parentKey}_${key}` : key;
