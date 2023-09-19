@@ -73,7 +73,7 @@ async function makeFitbitAPICall(user_id, access_token, participantNumber) {
         } else if (response.status == 401) {
             // Access token expired, trigger token refresh
             const newAccessToken = await refreshAccessToken(user_id);
-            
+
             if (newAccessToken) {
                 return await makeFitbitAPICall(user_id, newAccessToken, participantNumber);
             } else {
@@ -88,28 +88,6 @@ async function makeFitbitAPICall(user_id, access_token, participantNumber) {
 }
 
 
-function flattenObject(obj, parentKey = '', result = {}) {
-    for (const key in obj) {
-        let propName = parentKey ? `${parentKey}_${key}` : key;
-
-        if (key === 'heartRateZones') {
-            continue; // Skip heartRateZones property
-        }
-
-        if (key === "distances" && Array.isArray(obj[key])) {
-            const distanceNames = ['total', 'tracker', 'loggedActivities', 'veryActive', 'moderatelyActive', 'lightlyActive', 'sedentaryActive'];
-            obj[key].forEach((distance, index) => {
-                result[propName + "_" + distanceNames[index]] = distance.distance;
-            });
-        } else if (typeof obj[key] === 'object') {
-            flattenObject(obj[key], propName, result);
-        } else {
-            result[propName] = obj[key];
-        }
-    }
-    return result;
-}
-
 async function generateCSV(user_id, participantNumber) {
     try {
         const response = await fetch(`/api/combined_data/${user_id}`);
@@ -123,8 +101,7 @@ async function generateCSV(user_id, participantNumber) {
             // Extract headers from the first item
             if (combinedData.length > 0) {
                 const item = combinedData[0];
-                const flattenedSummary = flattenObject(item.summary);
-                const headers = ['user_id', 'date', ...Object.keys(flattenedSummary), 'Out of Range', 'Fat Burn', 'Cardio', 'Peak', 'total_distance', 'tracker_distance', 'loggedActivities_distance', 'veryActive_distance', 'moderatelyActive_distance', 'lightlyActive_distance', 'sedentaryActive_distance'];
+                const headers = ['user_id', 'date', ...Object.keys(item.activities[0])];
 
                 // Add headers to CSV (only once)
                 csvData += headers.join(',') + '\n';
@@ -132,39 +109,26 @@ async function generateCSV(user_id, participantNumber) {
 
             // Loop through combinedData and add a row for each item
             combinedData.forEach(item => {
-                const flattenedSummary = flattenObject(item.summary);
-                const values = Object.values(flattenedSummary);
+                if (!item.activities || item.activities.length === 0) {
+                    return; // Skip documents with no activities
+                }
+                
+                const headers = Object.keys(item.activities[0]);
+                const activities = item.activities[0]
+                const values = Object.values(activities);
                 const user_id = item.user_id;
-                const date = item.date;
+                let date = item.date;
 
-                // Handle heartRateZones
-                const heartRateZones = item.summary.heartRateZones || [];
-                const hrzValues = Array(4).fill(0); // Initialize with 0's
-                heartRateZones.forEach(zone => {
-                    const index = ['Out of Range', 'Fat Burn', 'Cardio', 'Peak'].indexOf(zone.name);
-                    if (index !== -1) {
-                        hrzValues[index] = zone.minutes;
-                    }
-                });
-
-                // Handle distances
-                const distances = item.summary.distances || [];
-                const distanceValues = {
-                    total_distance: 0,
-                    tracker_distance: 0,
-                    loggedActivities_distance: 0,
-                    veryActive_distance: 0,
-                    moderatelyActive_distance: 0,
-                    lightlyActive_distance: 0,
-                    sedentaryActive_distance: 0
-                };
-                distances.forEach(distance => {
-                    distanceValues[`${distance.activity}_distance`] = distance.distance;
-                });
+                // Replace commas with semicolons in the description field
+                const descriptionIndex = headers.indexOf('description');
+                if (descriptionIndex !== -1 && values[descriptionIndex]) {
+                    values[descriptionIndex] = values[descriptionIndex].replace(/,/g, ';');
+                }
 
                 // Add values to CSV
-                csvData += [user_id, date, ...values, ...hrzValues, ...Object.values(distanceValues)].join(',') + '\n';
+                csvData += [user_id, date, ...values].join(',') + '\n';
             });
+
 
             // Create a Blob with the CSV data
             const blob = new Blob([csvData], { type: 'text/csv' });
@@ -188,11 +152,12 @@ async function generateCSV(user_id, participantNumber) {
     }
 }
 
+
 async function handleButtonClick(user_id, participantNumber) {
     try {
         const { access_token } = await fetchTokens(user_id);
         const result = await makeFitbitAPICall(user_id, access_token, participantNumber);
-        
+
         if (result.success) {
             generateCSV(user_id, participantNumber);
         } else {
