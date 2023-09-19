@@ -70,7 +70,7 @@ async function makeFitbitAPICall(user_id, access_token, participantNumber) {
             const data = await response.json();
             return { success: true, data };
 
-        } else if (response.status === 401) {
+        } else if (response.status == 401) {
             // Access token expired, trigger token refresh
             const newAccessToken = await refreshAccessToken(user_id);
             

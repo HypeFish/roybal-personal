@@ -236,11 +236,11 @@ app.post('/api/collect_data/:user_id', async (req, res) => {
             res.json({ success: true, message: 'Data collected and stored successfully.' });
         } else {
             console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
-            res.status(500).json({ success: false, error: 'Error collecting data' });
+            res.status(401).json({ success: false, error: 'Error collecting data' });
         }
     } catch (error) {
         console.error(`Error fetching data for user ${user_id}:`, error);
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(401).json({ success: false, error: 'Internal server error' });
     }
 });
 
