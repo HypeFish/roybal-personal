@@ -17,5 +17,23 @@ body {
 
 }
 
+button[type="submit"] {
+    background-color: #007bff; /* Normal state color */
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s; /* Transition for hover effect */
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3; /* Color on hover */
+}
+
+button[type="submit"]:active {
+    background-color: #003d6a; /* Color when clicked */
+}
+
+
 
 /* Add more styles as needed */
