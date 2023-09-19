@@ -183,7 +183,7 @@ app.post('/api/refresh_token/:user_id', async (req, res) => {
 
 // Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
     res.redirect('/');
 
     const authorizationCode = req.query.code; // Extract the authorization code from the URL
