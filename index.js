@@ -6,12 +6,13 @@ const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
 const publicPath = '/assets'; // Set the correct public path
-const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
-const client = new MongoClient(uri);
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user.env file and set the environment variables
+const { MongoClient } = require('mongodb');
+const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
+const client = new MongoClient(uri);
+
 
 let access_token;
 let refresh_token;
@@ -211,7 +212,7 @@ app.post('/api/collect_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
     const access_token = req.headers.authorization.split(' ')[1]; // Extract the access token from the Authorization header
     console.log("access token: ", access_token)
-    
+
     try {
         // Perform Fitbit API call with the obtained access token
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
