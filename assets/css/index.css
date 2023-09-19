@@ -16,3 +16,11 @@ body {
     border-radius: 10vmin;
     width: 30vmin;
 }
+
+.participant-button:hover {
+    background-color: #3e8e41;
+}
+
+.participant-button:active {
+    background-color: #3e8e41;
+}
