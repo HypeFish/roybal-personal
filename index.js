@@ -210,7 +210,8 @@ app.get('/api/tokens/:user_id', (req, res) => {
 app.post('/api/collect_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
     const access_token = req.headers.authorization.split(' ')[1]; // Extract the access token from the Authorization header
-
+    console.log("access token: ", access_token)
+    
     try {
         // Perform Fitbit API call with the obtained access token
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
