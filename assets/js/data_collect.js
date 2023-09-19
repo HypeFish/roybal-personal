@@ -118,25 +118,28 @@ async function generateCSV(user_id, participantNumber) {
                 if (!item.activities || item.activities.length === 0) {
                     return; // Skip documents with no activities
                 }
-            
+
                 const headers = Object.keys(item.activities[0]);
                 const activities = item.activities[0];
                 const values = Object.values(activities);
                 const user_id = item.user_id;
                 let date = item.date;
-            
-                // Convert duration from milliseconds to minutes
-                const durationIndex = headers.indexOf('duration(minutes)');
-                if (durationIndex !== -1 && values[durationIndex]) {
-                    values[durationIndex] = values[durationIndex] / 60000; // Convert to minutes
-                }
-            
+
                 // Replace commas with semicolons in the description field
                 const descriptionIndex = headers.indexOf('description');
                 if (descriptionIndex !== -1 && values[descriptionIndex]) {
                     values[descriptionIndex] = values[descriptionIndex].replace(/,/g, ';');
                 }
-            
+
+                // Convert duration from milliseconds to minutes
+                const durationIndex = headers.indexOf('duration');
+                console.log(durationIndex)
+                if (durationIndex !== -1 && values[durationIndex]) {
+                    values[durationIndex] = values[durationIndex] / 60000;
+                    //round to 2 decimal places
+                    values[durationIndex] = Math.round(values[durationIndex] * 100) / 100;
+                }
+
                 // Add values to CSV
                 csvData += [user_id, date, ...values].join(',') + '\n';
             });
