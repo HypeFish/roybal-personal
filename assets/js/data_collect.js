@@ -103,6 +103,12 @@ async function generateCSV(user_id, participantNumber) {
                 const item = combinedData[0];
                 const headers = ['user_id', 'date', ...Object.keys(item.activities[0])];
 
+                // Modify header for "duration" field
+                const durationIndex = headers.indexOf('duration');
+                if (durationIndex !== -1) {
+                    headers[durationIndex] = 'duration(minutes)';
+                }
+
                 // Add headers to CSV (only once)
                 csvData += headers.join(',') + '\n';
             }
@@ -112,19 +118,25 @@ async function generateCSV(user_id, participantNumber) {
                 if (!item.activities || item.activities.length === 0) {
                     return; // Skip documents with no activities
                 }
-                
+            
                 const headers = Object.keys(item.activities[0]);
-                const activities = item.activities[0]
+                const activities = item.activities[0];
                 const values = Object.values(activities);
                 const user_id = item.user_id;
                 let date = item.date;
-
+            
+                // Convert duration from milliseconds to minutes
+                const durationIndex = headers.indexOf('duration(minutes)');
+                if (durationIndex !== -1 && values[durationIndex]) {
+                    values[durationIndex] = values[durationIndex] / 60000; // Convert to minutes
+                }
+            
                 // Replace commas with semicolons in the description field
                 const descriptionIndex = headers.indexOf('description');
                 if (descriptionIndex !== -1 && values[descriptionIndex]) {
                     values[descriptionIndex] = values[descriptionIndex].replace(/,/g, ';');
                 }
-
+            
                 // Add values to CSV
                 csvData += [user_id, date, ...values].join(',') + '\n';
             });
