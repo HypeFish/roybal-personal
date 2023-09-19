@@ -1,0 +1,21 @@
+/* login.css */
+body {
+    font-family: Arial, sans-serif;
+}
+
+.error-message {
+    background-color: red;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    padding: 1vmin;
+    display: none;
+    width: 30vmin;
+    border-radius: 10vmin;
+    margin-top: 2vmin;
+    position:relative;
+
+}
+
+
+/* Add more styles as needed */

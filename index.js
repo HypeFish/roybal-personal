@@ -79,23 +79,20 @@ app.post('/login', async (req, res) => {
 
     try {
         const admin = await adminCollection.findOne({ user: username, pass: password });
-        console.log(admin)
+
         if (admin) {
             req.session.user = username;
             console.log('User authenticated successfully')
             res.redirect('/');
         } else {
             console.log('Invalid username or password')
-            res.redirect('/login');
+            res.status(401).json({ success: false, error: 'Invalid username or password' });
         }
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 });
-
-
-
 
 //Serve the index page
 app.get('/', requireAuth, (req, res) => {
@@ -334,7 +331,7 @@ app.use((req, res) => {
 });
 
 // Define a cron job to run once every 24 hours
-cron.schedule('0 8 * * *', async () => {
+cron.schedule('0 7 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs

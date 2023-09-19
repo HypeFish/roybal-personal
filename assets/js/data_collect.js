@@ -211,3 +211,6 @@ document.querySelectorAll('.participant-button').forEach(button => {
         handleButtonClick(user_id, participantNumber);
     });
 });
+
+
+
