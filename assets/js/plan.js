@@ -1,89 +1,81 @@
-//plan.js
-
-async function submitNewEmail() {
+async function submitNewContact() {
     const newEmail = document.getElementById('newEmail').value;
+    const newPhone = document.getElementById('newPhone').value;
 
-    if (newEmail && newEmail.length > 0 && newEmail.includes('@')) {
+    if ((newEmail && newEmail.length > 0 && newEmail.includes('@')) || newPhone) {
         try {
-            const response = await fetch('/submit-email', {
+            const response = await fetch('/submit-contact', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email: newEmail })
+                body: JSON.stringify({ email: newEmail.trim(), phone: newPhone.trim() })
             });
 
             const data = await response.json();
 
             if (data.success) {
                 alert(data.message);
-                // Add any additional handling for success here
+
             } else {
-                if (data.message === 'Email address already exists') {
-                    alert('This email address is already registered');
+                if (data.message === 'Email address already exists' ||
+                    data.message === 'Phone number already exists') {
+                    alert('This email address or phone number is already registered');
                 } else {
-                    alert('Error submitting email');
+                    alert('Error submitting contact');
                 }
-                // Add handling for error here
             }
         } catch (error) {
             console.error('Error:', error);
         }
 
-        document.getElementById('newEmail').value = ''; // Clear the input field after submission
+        document.getElementById('newEmail').value = '';
+        document.getElementById('newPhone').value = '';
     } else {
-        alert('Please enter a valid email address');
+        alert('Please enter a valid email address or phone number');
     }
 }
 
-
-
-document.getElementById('newEmail').addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent the default behavior of the Enter key
-        submitNewEmail();
-    }
-});
-
-
-async function getEmails() {
+async function getContacts() {
     try {
-        const response = await fetch('/get-emails');
+        const response = await fetch('/get-contacts');
         const data = await response.json();
 
         if (data.success) {
-            const emailSelector = document.getElementById('emailSelector');
+            const contactSelector = document.getElementById('contactSelector');
 
             // Clear existing options
-            emailSelector.innerHTML = '';
+            contactSelector.innerHTML = '';
 
             // Add new options
-            data.emails.forEach(email => {
-                const option = document.createElement('option');
-                option.value = email;
-                option.textContent = email;
-                emailSelector.appendChild(option);
+            data.data.forEach(contact => {
+                if (contact.trim() !== '') {
+                    const option = document.createElement('option');
+                    option.value = contact;
+                    option.textContent = contact;
+                    contactSelector.appendChild(option);
+                }
             });
         } else {
-            console.error('Error fetching emails:', data.error);
+            console.error('Error fetching contacts:', data.error);
         }
     } catch (error) {
         console.error('Error:', error);
     }
 }
 
-// Call the function to populate the email selector
-getEmails();
+// Call the function to populate the contact selector
+getContacts();
 
 // Add an event listener to the form submission
-document.getElementById('planForm').addEventListener('submit', function(event) {
+document.getElementById('planForm').addEventListener('submit', function (event) {
     event.preventDefault(); // Prevent the default form submission behavior
     submitPlan(); // Call your function to handle the submission
 });
 
 async function submitPlan() {
     const selectedDays = Array.from(document.querySelectorAll('input[name="selectedDays"]:checked')).map(input => input.value);
-    const selectedEmail = document.getElementById('emailSelector').value;
+    const selectedEmail = document.getElementById('contactSelector').value;
 
     if (selectedDays.length > 0 && selectedEmail) {
         try {

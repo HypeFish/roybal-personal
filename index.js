@@ -16,7 +16,7 @@ const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mon
 const client = new MongoClient(uri);
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
 
@@ -288,7 +288,7 @@ app.post('/api/collect_data/:user_id', async (req, res) => {
         if (fitbitDataResponse.ok) {
             const fitbitData = await fitbitDataResponse.json();
 
-        
+
             // Assuming you have a function to store the data in your database
             // You can reuse the logic from your button click handler
             await storeDataInDatabase(user_id, fitbitData);
@@ -355,38 +355,42 @@ app.post('/submit-plan', async (req, res) => {
     }
 });
 
+app.post('/submit-contact', async (req, res) => {
+    const { email, phone } = req.body;
 
-
-app.post('/submit-email', async (req, res) => {
-    const newEmail = req.body.email;
-
-    if (newEmail) {
-        try {
-            // Check if the email already exists
-            const existingEmail = await planCollection.findOne({ email: newEmail });
-
-            if (existingEmail) {
-                return res.json({ success: false, message: 'Email address already exists' });
-            }
-
-            // Add the new email to the plans collection
-            await planCollection.insertOne({ email: newEmail, selectedDays: [] });
-
-            res.json({ success: true, message: 'Email submitted successfully' });
-        } catch (error) {
-            res.status(500).json({ success: false, error: 'Internal Server Error' });
+    if (email) {
+        // Check if the email already exists in the database
+        const existingEmail = await planCollection.findOne({ email });
+        if (existingEmail) {
+            return res.json({ success: false, message: 'Email address already exists' });
         }
-    } else {
-        res.status(400).json({ success: false, error: 'Invalid email address' });
+    }
+
+    if (phone) {
+        // Check if the phone number already exists in the database
+        const existingPhone = await planCollection.findOne({ phone });
+        if (existingPhone) {
+            return res.json({ success: false, message: 'Phone number already exists' });
+        }
+    }
+
+    try {
+        const result = await planCollection.insertOne({ email, phone, selectedDays: [] });
+        res.json({ success: true, message: 'Contact submitted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
 
-// Define a route to get the list of emails
-app.get('/get-emails', async (req, res) => {
+app.get('/get-contacts', async (req, res) => {
     try {
         const emails = await planCollection.distinct('email');
-        res.json({ success: true, emails });
+        const phones = await planCollection.distinct('phone');
+        const combinedData = [...emails, ...phones];
+        res.json({ success: true, data: combinedData });
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
@@ -483,6 +487,36 @@ cron.schedule('0 9 * * *', async () => {
         await sendEmail(email, subject, body);
     });
 });
+
+const sendSMS = async (to, body) => {
+    try {
+        const message = await client.messages.create({
+            body: body,
+            from: process.env.TWILIO_NUMBER, // Twilio phone number
+            to: to // Recipient's phone number
+        });
+        console.log('SMS sent:', message.sid);
+    } catch (error) {
+        console.error('Error sending SMS:', error);
+    }
+};
+
+// Inside your cron job
+cron.schedule('0 9 * * *', async () => {
+    const currentDate = new Date();
+    const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
+
+    const plans = await planCollection.find({ selectedDays: dayOfWeek }).toArray();
+
+    plans.forEach(async (plan) => {
+        const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
+
+        const body = 'Don\'t forget to get your steps in today!';
+
+        await sendSMS(phone, body);
+    });
+});
+
 
 const port = process.env.PORT || 3000;
 

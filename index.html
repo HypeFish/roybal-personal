@@ -18,8 +18,8 @@
 
     <h2>Plan Your Walk</h2>
 
-    <label for="emailSelector">Select an email: </label>
-    <select id="emailSelector" name="emailSelector">
+    <label for="contactSelector">Select an Contact:</label>
+    <select id="contactSelector" name="contactSelector">
         <!-- Option elements will be dynamically added here using JavaScript -->
     </select>
 
@@ -28,7 +28,13 @@
     <label for="newEmail">Or add a new email:</label>
     <!-- small text to let the user know to refresh the page after adding a new email -->
     <small>(Refresh page after adding a new email)</small>
-    <input type="text" id="newEmail" name="newEmail">
+    <input type="text" id="newEmail" name="newEmail" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
+
+    <br><br>
+
+    <label for="newPhone">Or add a new phone number:</label>
+    <small>(Refresh page after adding a new number)</small>
+    <input type="text" id="newPhone" name="newPhone" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
 
     <br><br>
 
@@ -57,5 +63,4 @@
     <script src="assets/js/plan.js"></script>
     <script src="assets/js/data_collect.js"></script>
 </body>
-
 </html>

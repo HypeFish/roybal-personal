@@ -9,7 +9,7 @@ h1 {
 }
 
 select {
-    font-size: 1.6vmin;
+    font-size: 2.2vmin;
     margin: 0.5vmin;
     padding: 1vmin 2vmin;
     border-radius: 1.5vmin;
@@ -32,7 +32,7 @@ button:hover {
 }
 
 input[type="submit"] {
-    font-size: 1.6vmin;
+    font-size: 2.0vmin;
     margin: 0.5vmin;
     padding: 1vmin 2vmin;
     border-radius: 1.5vmin;
