@@ -75,16 +75,16 @@ document.getElementById('planForm').addEventListener('submit', function (event) 
 
 async function submitPlan() {
     const selectedDays = Array.from(document.querySelectorAll('input[name="selectedDays"]:checked')).map(input => input.value);
-    const selectedEmail = document.getElementById('contactSelector').value;
+    const selectedContact = document.getElementById('contactSelector').value; // Change to contactSelector
 
-    if (selectedDays.length > 0 && selectedEmail) {
+    if (selectedDays.length > 0 && selectedContact) {
         try {
             const response = await fetch('/submit-plan', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email: selectedEmail, selectedDays })
+                body: JSON.stringify({ contact: selectedContact, selectedDays }) // Change parameter name to contact
             });
 
             const data = await response.json();
@@ -98,6 +98,7 @@ async function submitPlan() {
             console.error('Error:', error);
         }
     } else {
-        alert('Please select at least one day and an email');
+        alert('Please select at least one day and a contact');
     }
 }
+
