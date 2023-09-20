@@ -8,26 +8,54 @@
 </head>
 <body>
     <h1>Roybal Home Page</h1>
+    <h2>Participant Data Collection</h2>
     <select id="participant-selector" title="Select Participant">
         <option value="BPS5WQ" data-participant-number="1">Participant 1</option>
         <option value="BP63G3" data-participant-number="2">Participant 2</option>
         <option value="BQ36JH" data-participant-number="3">Participant 3</option>
     </select>
     <button id="generate-csv" autofocus>Generate CSV</button>
-    <form id="planForm">
-        <label for="email">Email:</label>
-        <input type="email" id="email" required>
-        
-        <label>Days of the Week:</label>
-        <label><input type="checkbox" class="day" value="Sunday"> Sunday</label>
-        <label><input type="checkbox" class="day" value="Monday"> Monday</label>
-        <label><input type="checkbox" class="day" value="Tuesday"> Tuesday</label>
-        <label><input type="checkbox" class="day" value="Wednesday"> Wednesday</label>
-        <label><input type="checkbox" class="day" value="Thursday"> Thursday</label>
-        <label><input type="checkbox" class="day" value="Friday"> Friday</label>
-        <label><input type="checkbox" class="day" value="Saturday"> Saturday</label>  
-        <button type="submit">Submit</button>
+
+    <h2>Plan Your Walk</h2>
+
+    <label for="emailSelector">Select an email: </label>
+    <select id="emailSelector" name="emailSelector">
+        <!-- Option elements will be dynamically added here using JavaScript -->
+    </select>
+
+    <br><br>
+
+    <label for="newEmail">Or add a new email:</label>
+    <!-- small text to let the user know to refresh the page after adding a new email -->
+    <small>(Refresh page after adding a new email)</small>
+    <input type="text" id="newEmail" name="newEmail">
+
+    <br><br>
+
+    <form id="planForm"> <!-- Added form element -->
+        <label for="selectedDays">Select days:</label>
+        <input type="checkbox" id="sunday" name="selectedDays" value="Sunday">
+        <label for="sunday">Sunday</label>
+        <input type="checkbox" id="monday" name="selectedDays" value="Monday">
+        <label for="monday">Monday</label>
+        <input type="checkbox" id="tuesday" name="selectedDays" value="Tuesday">
+        <label for="tuesday">Tuesday</label>
+        <input type="checkbox" id="wednesday" name="selectedDays" value="Wednesday">
+        <label for="wednesday">Wednesday</label>
+        <input type="checkbox" id="thursday" name="selectedDays" value="Thursday">
+        <label for="thursday">Thursday</label>
+        <input type="checkbox" id="friday" name="selectedDays" value="Friday">
+        <label for="friday">Friday</label>
+        <input type="checkbox" id="saturday" name="selectedDays" value="Saturday">
+        <label for="saturday">Saturday</label>
+
+        <br><br>
+
+        <input type="submit" value="Submit Plan"> <!-- Added submit button -->
     </form>
+
+    <script src="assets/js/plan.js"></script>
     <script src="assets/js/data_collect.js"></script>
 </body>
+
 </html>

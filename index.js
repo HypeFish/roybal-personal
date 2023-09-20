@@ -327,15 +327,64 @@ app.get('/api/combined_data/:user_id', async (req, res) => {
     }
 });
 
+
 app.post('/submit-plan', async (req, res) => {
     const { email, selectedDays } = req.body;
 
+    if (email && selectedDays && selectedDays.length > 0) {
+        try {
+            const updated = await planCollection.updateOne(
+                { email: email },
+                { $addToSet: { selectedDays: { $each: selectedDays } } }
+            );
+
+            if (updated.modifiedCount > 0) {
+                res.json({ success: true, message: 'Plan submitted successfully' });
+            } else {
+                res.json({ success: false, message: 'No matching email found' });
+            }
+        } catch (error) {
+            console.error('Error updating plan:', error);
+            res.status(500).json({ success: false, error: 'Internal Server Error' });
+        }
+    } else {
+        res.status(400).json({ success: false, error: 'Invalid request' });
+    }
+});
+
+
+
+app.post('/submit-email', async (req, res) => {
+    const newEmail = req.body.email;
+
+    if (newEmail) {
+        try {
+            // Check if the email already exists
+            const existingEmail = await planCollection.findOne({ email: newEmail });
+
+            if (existingEmail) {
+                return res.json({ success: false, message: 'Email address already exists' });
+            }
+
+            // Add the new email to the plans collection
+            await planCollection.insertOne({ email: newEmail, selectedDays: [] });
+
+            res.json({ success: true, message: 'Email submitted successfully' });
+        } catch (error) {
+            res.status(500).json({ success: false, error: 'Internal Server Error' });
+        }
+    } else {
+        res.status(400).json({ success: false, error: 'Invalid email address' });
+    }
+});
+
+// Define a route to get the list of emails
+app.get('/get-emails', async (req, res) => {
     try {
-        await planCollection.insertOne({ email, selectedDays });
-        res.send({ success: true });
+        const emails = await planCollection.distinct('email');
+        res.json({ success: true, emails });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
 
