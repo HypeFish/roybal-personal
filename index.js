@@ -16,6 +16,9 @@ const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mon
 const client = new MongoClient(uri);
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const clientTwilio = require('twilio')(accountSid, authToken);
 
 
 let access_token;
