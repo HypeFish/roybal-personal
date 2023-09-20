@@ -93,94 +93,62 @@ async function generateCSV(user_id, participantNumber) {
         const response = await fetch(`/api/combined_data/${user_id}`);
         const data = await response.json();
 
-        if (data.success) {
-            const combinedData = data.data;
+        if (!data.success) {
+            console.error('Error:', data.error);
+            return;
+        }
 
-            let csvData = '';
+        const combinedData = data.data;
+        if (combinedData.length === 0) {
+            return;
+        }
 
-            // Extract headers from the first item
-            if (combinedData.length > 0) {
-                const item = combinedData[0];
-                const headers = ['user_id', 'date', ...Object.keys(item.activities[0])];
+        const item = combinedData[0];
+        const headers = ['user_id', 'date', ...Object.keys(item.activities[0])];
+        const durationIndex = headers.indexOf('duration');
+        if (durationIndex !== -1) {
+            headers[durationIndex] = 'duration(minutes)';
+        }
+        const csvData = headers.join(',') + '\n';
 
-                // Modify header for "duration" field
-                const durationIndex = headers.indexOf('duration');
-                if (durationIndex !== -1) {
-                    headers[durationIndex] = 'duration(minutes)';
-                }
-
-                // Add headers to CSV (only once)
-                csvData += headers.join(',') + '\n';
-            }
-
-            // Loop through combinedData and add a row for each item
-            combinedData.forEach(item => {
-                if (!item.activities || item.activities.length === 0) {
-                    return; // Skip documents with no activities
-                }
-
-                const headers = Object.keys(item.activities[0]);
-                const activities = item.activities[0];
-                const values = Object.values(activities);
+        const formattedData = combinedData
+            .filter(item => item.activities && item.activities.length > 0)
+            .map(item => {
+                const activity = item.activities[0];
+                const values = Object.values(activity);
                 const user_id = item.user_id;
                 let date = item.date;
-
-                // Replace commas with semicolons in the description field
                 const descriptionIndex = headers.indexOf('description');
-                if (descriptionIndex !== -1 && values[descriptionIndex]) {
+                if (descriptionIndex !== -1 && typeof values[descriptionIndex] === 'string') {
                     values[descriptionIndex] = values[descriptionIndex].replace(/,/g, ';');
                 }
-
-                // Convert duration from milliseconds to minutes
                 const durationIndex = headers.indexOf('duration');
-                console.log(durationIndex)
                 if (durationIndex !== -1 && values[durationIndex]) {
-                    values[durationIndex] = values[durationIndex] / 60000;
-                    //round to 2 decimal places
-                    values[durationIndex] = Math.round(values[durationIndex] * 100) / 100;
+                    values[durationIndex] = Math.round(values[durationIndex] / 60000 * 100) / 100;
                 }
-
-                // Add values to CSV
-                csvData += [user_id, date, ...values].join(',') + '\n';
+                return [user_id, date, ...values].join(',');
             });
 
+        const csvContent = csvData + formattedData.join('\n');
 
-            // Create a Blob with the CSV data
-            const blob = new Blob([csvData], { type: 'text/csv' });
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fitbit_data_participant${participantNumber}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
 
-            // Create a download link for the CSV file
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `fitbit_data_participant${participantNumber}.csv`;
-
-            // Trigger the download
-            a.click();
-
-            // Release the URL object
-            window.URL.revokeObjectURL(url);
-        } else {
-            console.error('Error:', data.error);
-        }
     } catch (error) {
-        console.error(`Error generating CSV for user ${user_id}:`, error);
+        //popup that says there is no data for this participant
+        alert("There is no data for this participant");
     }
 }
 
 
-async function handleButtonClick(user_id, participantNumber) {
-    try {
-        const { access_token } = await fetchTokens(user_id);
-        const result = await makeFitbitAPICall(user_id, access_token, participantNumber);
 
-        if (result.success) {
-            generateCSV(user_id, participantNumber);
-        } else {
-            console.error('Error:', result.error);
-        }
-    } catch (error) {
-        console.error(error);
-    }
+async function handleButtonClick(user_id, participantNumber) {
+    generateCSV(user_id, participantNumber);
 }
 
 // Modify your event listener setup like this:
