@@ -3,7 +3,7 @@
 async function submitNewEmail() {
     const newEmail = document.getElementById('newEmail').value;
 
-    if (newEmail) {
+    if (newEmail && newEmail.length > 0 && newEmail.includes('@')) {
         try {
             const response = await fetch('/submit-email', {
                 method: 'POST',
@@ -31,6 +31,8 @@ async function submitNewEmail() {
         }
 
         document.getElementById('newEmail').value = ''; // Clear the input field after submission
+    } else {
+        alert('Please enter a valid email address');
     }
 }
 
