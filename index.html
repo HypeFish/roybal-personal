@@ -13,7 +13,21 @@
         <option value="BP63G3" data-participant-number="2">Participant 2</option>
         <option value="BQ36JH" data-participant-number="3">Participant 3</option>
     </select>
-    <button id="generate-csv">Generate CSV</button>
+    <button id="generate-csv" autofocus>Generate CSV</button>
+    <form id="planForm">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+        
+        <label>Days of the Week:</label>
+        <label><input type="checkbox" class="day" value="Sunday"> Sunday</label>
+        <label><input type="checkbox" class="day" value="Monday"> Monday</label>
+        <label><input type="checkbox" class="day" value="Tuesday"> Tuesday</label>
+        <label><input type="checkbox" class="day" value="Wednesday"> Wednesday</label>
+        <label><input type="checkbox" class="day" value="Thursday"> Thursday</label>
+        <label><input type="checkbox" class="day" value="Friday"> Friday</label>
+        <label><input type="checkbox" class="day" value="Saturday"> Saturday</label>  
+        <button type="submit">Submit</button>
+    </form>
     <script src="assets/js/data_collect.js"></script>
 </body>
 </html>

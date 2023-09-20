@@ -6,6 +6,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
+const nodemailer = require('nodemailer');
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
@@ -25,6 +26,7 @@ let user_id;
 let participantsCollection;
 let dataCollection;
 let adminCollection;
+let planCollection;
 
 async function connectToDatabase() {
     try {
@@ -32,6 +34,7 @@ async function connectToDatabase() {
         participantsCollection = client.db('Roybal').collection('participants');
         dataCollection = client.db('Roybal').collection('data');
         adminCollection = client.db('Roybal').collection('admin');
+        planCollection = client.db('Roybal').collection('plan');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
@@ -324,6 +327,17 @@ app.get('/api/combined_data/:user_id', async (req, res) => {
     }
 });
 
+app.post('/submit-plan', async (req, res) => {
+    const { email, selectedDays } = req.body;
+
+    try {
+        await planCollection.insertOne({ email, selectedDays });
+        res.send({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 // Serve the error page
 app.use((req, res) => {
@@ -375,6 +389,47 @@ cron.schedule('0 7 * * *', async () => {
     } catch (error) {
         console.error('Error fetching user IDs:', error);
     }
+});
+
+// Create a transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL, // Your email address
+        pass: process.env.PASSWORD // Your password
+    }
+});
+
+// Function to send an email
+const sendEmail = async (to, subject, body) => {
+    try {
+        const info = await transporter.sendMail({
+            from: process.env.EMAIL, // Sender's email address
+            to, // Recipient's email address
+            subject, // Email subject
+            text: body // Plain text body
+        });
+        console.log('Email sent:', info.response);
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+};
+
+// Inside your cron job
+cron.schedule('0 9 * * *', async () => {
+    const currentDate = new Date();
+    const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
+
+    const plans = await planCollection.find({ selectedDays: dayOfWeek }).toArray();
+
+    plans.forEach(async (plan) => {
+        const email = plan.email;
+
+        const subject = 'You planned to walk today';
+        const body = 'Don\'t forget to get your steps in today!';
+
+        await sendEmail(email, subject, body);
+    });
 });
 
 const port = process.env.PORT || 3000;

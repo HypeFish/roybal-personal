@@ -153,6 +153,26 @@ document.getElementById('generate-csv').addEventListener('click', function() {
     generateCSV(selectedUserID, selectedParticipantNumber);
 });
 
+document.getElementById('planForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const selectedDays = Array.from(document.querySelectorAll('.day:checked')).map(checkbox => checkbox.value);
+
+    const response = await fetch('/submit-plan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, selectedDays })
+    });
+
+    if (response.ok) {
+        console.log('Plan submitted successfully');
+    } else {
+        console.error('Error submitting plan');
+    }
+});
 
 
 
