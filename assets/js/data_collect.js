@@ -100,33 +100,25 @@ async function generateCSV(user_id, participantNumber) {
 
         const combinedData = data.data;
         if (combinedData.length === 0) {
+            alert("There is no data for this participant");
             return;
         }
 
-        const item = combinedData[0];
-        const headers = ['user_id', 'date', ...Object.keys(item.activities[0])];
-        const durationIndex = headers.indexOf('duration');
-        if (durationIndex !== -1) {
-            headers[durationIndex] = 'duration(minutes)';
-        }
-        const csvData = headers.join(',') + '\n';
+        const csvData = 'date,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned\n';
 
         const formattedData = combinedData
             .filter(item => item.activities && item.activities.length > 0)
             .map(item => {
                 const activity = item.activities[0];
-                const values = Object.values(activity);
-                const user_id = item.user_id;
-                let date = item.date;
-                const descriptionIndex = headers.indexOf('description');
-                if (descriptionIndex !== -1 && typeof values[descriptionIndex] === 'string') {
-                    values[descriptionIndex] = values[descriptionIndex].replace(/,/g, ';');
-                }
-                const durationIndex = headers.indexOf('duration');
-                if (durationIndex !== -1 && values[durationIndex]) {
-                    values[durationIndex] = Math.round(values[durationIndex] / 60000 * 100) / 100;
-                }
-                return [user_id, date, ...values].join(',');
+                const date = item.date;
+                const startTime = activity.startTime;
+                const activityName = activity.name;
+                const totalSteps = activity.steps;
+                const distance = activity.distance !== undefined ? activity.distance : "N/A";
+                const durationInMinutes = Math.round(activity.duration / 60000 * 100) / 100; // Round to 2 decimal places
+                const caloriesBurned = activity.calories;
+
+                return `${date},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned}`;
             });
 
         const csvContent = csvData + formattedData.join('\n');
@@ -140,10 +132,10 @@ async function generateCSV(user_id, participantNumber) {
         window.URL.revokeObjectURL(url);
 
     } catch (error) {
-        //popup that says there is no data for this participant
-        alert("There is no data for this participant");
+        console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
+
 
 
 
