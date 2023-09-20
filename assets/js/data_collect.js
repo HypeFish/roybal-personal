@@ -99,7 +99,7 @@ async function generateCSV(user_id, participantNumber) {
         }
 
         const combinedData = data.data;
-        if (combinedData.length === 0) {
+        if (combinedData.length === 0 || !combinedData[0].activities || combinedData[0].activities.length === 0) {
             alert("There is no data for this participant");
             return;
         }
@@ -144,13 +144,15 @@ async function handleButtonClick(user_id, participantNumber) {
 }
 
 // Modify your event listener setup like this:
-document.querySelectorAll('.participant-button').forEach(button => {
-    button.addEventListener("click", () => {
-        const user_id = button.dataset.userId;
-        const participantNumber = button.dataset.participantNumber;
-        handleButtonClick(user_id, participantNumber);
-    });
+document.getElementById('generate-csv').addEventListener('click', function() {
+    const participantSelector = document.getElementById('participant-selector');
+    const selectedOption = participantSelector.options[participantSelector.selectedIndex];
+    const selectedUserID = selectedOption.value;
+    const selectedParticipantNumber = selectedOption.getAttribute('data-participant-number');
+
+    generateCSV(selectedUserID, selectedParticipantNumber);
 });
+
 
 
 
