@@ -332,19 +332,19 @@ app.get('/api/combined_data/:user_id', async (req, res) => {
 
 
 app.post('/submit-plan', async (req, res) => {
-    const { email, selectedDays } = req.body;
+    const { contact, selectedDays } = req.body;
 
-    if (email && selectedDays && selectedDays.length > 0) {
+    if (contact && selectedDays && selectedDays.length > 0) {
         try {
             const updated = await planCollection.updateOne(
-                { email: email },
+                { $or: [ { email: contact }, { phone: contact } ] },
                 { $addToSet: { selectedDays: { $each: selectedDays } } }
             );
 
             if (updated.modifiedCount > 0) {
                 res.json({ success: true, message: 'Plan submitted successfully' });
             } else {
-                res.json({ success: false, message: 'No matching email found' });
+                res.json({ success: false, message: 'No matching email or phone found' });
             }
         } catch (error) {
             console.error('Error updating plan:', error);
@@ -354,6 +354,7 @@ app.post('/submit-plan', async (req, res) => {
         res.status(400).json({ success: false, error: 'Invalid request' });
     }
 });
+
 
 app.post('/submit-contact', async (req, res) => {
     const { email, phone } = req.body;
