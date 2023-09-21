@@ -485,7 +485,7 @@ const sendEmail = async (to, subject, body) => {
 };
 
 // Inside your cron job
-cron.schedule('0 9 * * *', async () => {
+cron.schedule('7 9 * * *', async () => {
     const currentDate = new Date();
     const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
 
@@ -515,7 +515,7 @@ const sendSMS = async (to, body) => {
 };
 
 // Inside your cron job
-cron.schedule('0 9 * * *', async () => {
+cron.schedule('7 9 * * *', async () => {
     const currentDate = new Date();
     const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
 
