@@ -485,7 +485,7 @@ const sendEmail = async (to, subject, body) => {
 };
 
 // Inside your cron job
-cron.schedule('7 9 * * *', async () => {
+cron.schedule('12 10 * * *', async () => {
     const currentDate = new Date();
     const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
 
