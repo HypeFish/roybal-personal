@@ -28,7 +28,7 @@ let planCollection;
 setPlanCollection(planCollection);
 
 // Start the cron jobs
-fitbitDataCollectionJob.start();
+fitbitDataCollectionJob.start(storeDataInDatabase);
 emailSendingJob.start();
 smsSendingJob.start();
 
