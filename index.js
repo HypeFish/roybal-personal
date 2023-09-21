@@ -402,7 +402,7 @@ app.use((req, res) => {
 });
 
 // Define a cron job to run once every 24 hours
-cron.schedule('0 7 * * *', async () => {
+cron.schedule('25 8 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
