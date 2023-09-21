@@ -5,6 +5,12 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
 
+let dataCollection; // Declare a variable to hold the dataCollection
+
+function setDataCollection(collection) {
+    dataCollection = collection;
+}
+
 async function storeDataInDatabase(user_id, fitbitData) {
     try {
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
@@ -76,7 +82,7 @@ const sendSMS = async (to, body) => {
     }
 };
 
-const fitbitDataCollectionJob = cron.schedule('24 11 * * *', async () => {
+const fitbitDataCollectionJob = cron.schedule('30 11 * * *', async () => {
     console.log('Running scheduled Fitbit data collection task...');
     // Fetch all user IDs
     try {
@@ -129,7 +135,7 @@ const fitbitDataCollectionJob = cron.schedule('24 11 * * *', async () => {
     }
 }, null, true, 'America/New_York'); // Timezone may need adjustment
 
-const emailSendingJob = cron.schedule('24 11 * * *', async () => {
+const emailSendingJob = cron.schedule('30 11 * * *', async () => {
     console.log('Running scheduled email sending task...');
 
     const currentDate = new Date();
@@ -149,7 +155,7 @@ const emailSendingJob = cron.schedule('24 11 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Define the SMS sending cron job
-const smsSendingJob = cron.schedule('24 11 * * *', async () => {
+const smsSendingJob = cron.schedule('30 11 * * *', async () => {
     console.log('Running scheduled SMS sending task...');
 
     const currentDate = new Date();
@@ -171,6 +177,7 @@ module.exports = {
     fitbitDataCollectionJob,
     emailSendingJob,
     smsSendingJob,
+    setDataCollection, // Export the function to set the dataCollection
     setPlanCollection, // Export the function to set the planCollection
     storeDataInDatabase
 };

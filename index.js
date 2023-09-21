@@ -14,7 +14,7 @@ const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mon
 const client = new MongoClient(uri);
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
-const { fitbitDataCollectionJob, emailSendingJob, smsSendingJob, setPlanCollection, storeDataInDatabase} = require('./assets/js/cron/cron.js');
+const { fitbitDataCollectionJob, emailSendingJob, smsSendingJob, setDataCollection, setPlanCollection, storeDataInDatabase} = require('./assets/js/cron/cron.js');
 
 let access_token;
 let refresh_token;
@@ -25,6 +25,7 @@ let dataCollection;
 let adminCollection;
 let planCollection;
 
+setDataCollection(dataCollection);
 setPlanCollection(planCollection);
 
 // Start the cron jobs
