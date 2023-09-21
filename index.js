@@ -503,7 +503,7 @@ cron.schedule('7 9 * * *', async () => {
 
 const sendSMS = async (to, body) => {
     try {
-        const message = await client.messages.create({
+        const message = await clientTwilio.messages.create({
             body: body,
             from: process.env.TWILIO_NUMBER, // Twilio phone number
             to: to // Recipient's phone number
@@ -515,7 +515,7 @@ const sendSMS = async (to, body) => {
 };
 
 // Inside your cron job
-cron.schedule('23 9 * * *', async () => {
+cron.schedule('29 9 * * *', async () => {
     const currentDate = new Date();
     const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
 
