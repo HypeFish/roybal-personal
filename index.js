@@ -416,9 +416,20 @@ new CronJob('57 8 * * *', async () => {
         // Use the user IDs to collect Fitbit data for each user
         for (const user_id of userIDs) {
             try {
-                // Fetch tokens for the specific user_id
                 const tokensResponse = await axios.get(`http://roybal.vercel.app/api/tokens/${user_id}`);
-                const access_token = tokensResponse.data.access_token;
+                let { access_token, refresh_token, expires_in } = tokensResponse.data;
+        
+                // Check if access token is expired
+                if (Date.now() > expires_in) {
+                    // Call your refresh token route
+                    const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token`, {
+                        refresh_token
+                    });
+        
+                    // Update access token with the new one
+                    access_token = refreshResponse.data.access_token;
+                }
+        
 
                 // Perform Fitbit API call with the obtained access token
                 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
