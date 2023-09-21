@@ -401,36 +401,36 @@ app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
-// Define a cron job to run once every 24 hours
-cron.schedule('25 8 * * *', async () => {
+const axios = require('axios');
+
+// Define a cron job to run once every 24 hours at 8:25 AM
+const CronJob = require('cron').CronJob;
+new CronJob('38 8 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
     try {
-        const response = await fetch('/api/user_ids');
-        const data = await response.json();
-        const userIDs = data.userIDs;
+        const response = await axios.get('http://roybal.vercel.app/api/user_ids');
+        const userIDs = response.data.userIDs;
 
         // Use the user IDs to collect Fitbit data for each user
         for (const user_id of userIDs) {
             try {
                 // Fetch tokens for the specific user_id
-                const tokensResponse = await fetch(`/api/tokens/${user_id}`);
-                const tokensData = await tokensResponse.json();
-                const access_token = tokensData.access_token;
+                const tokensResponse = await axios.get(`http://roybal.vercel.app/api/tokens/${user_id}`);
+                const access_token = tokensResponse.data.access_token;
 
                 // Perform Fitbit API call with the obtained access token
                 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-                const fitbitDataResponse = await fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
-                    method: 'GET',
+                const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${access_token}`
                     }
                 });
 
-                if (fitbitDataResponse.ok) {
-                    const fitbitData = await fitbitDataResponse.json();
+                if (fitbitDataResponse.status === 200) {
+                    const fitbitData = fitbitDataResponse.data;
 
                     // Assuming you have a function to store the data in your database
                     // You can reuse the logic from your button click handler
@@ -446,7 +446,8 @@ cron.schedule('25 8 * * *', async () => {
     } catch (error) {
         console.error('Error fetching user IDs:', error);
     }
-});
+}, null, true, 'America/New_York'); // Timezone may need adjustment
+
 
 // Create a transporter
 const transporter = nodemailer.createTransport({
