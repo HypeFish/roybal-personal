@@ -106,10 +106,8 @@ async function generateCSV(user_id, participantNumber) {
 
         const csvData = 'date,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned\n';
 
-        const formattedData = combinedData
-            .filter(item => item.activities && item.activities.length > 0)
-            .map(item => {
-                const activity = item.activities[0];
+        const formattedData = combinedData.flatMap(item => {
+            return item.activities.map(activity => {
                 const date = item.date;
                 const startTime = activity.startTime;
                 const activityName = activity.name;
@@ -120,6 +118,7 @@ async function generateCSV(user_id, participantNumber) {
 
                 return `${date},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned}`;
             });
+        });
 
         const csvContent = csvData + formattedData.join('\n');
 
@@ -135,6 +134,7 @@ async function generateCSV(user_id, participantNumber) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
+
 
 
 async function handleButtonClick(user_id, participantNumber) {
