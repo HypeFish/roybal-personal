@@ -14,8 +14,8 @@
     ],
     "crons": [
         {
-            "path": "/assets/cron/cron.js",
-            "schedule": "30 11 * * *"
+            "path": "/index.js",
+            "schedule": "38 11 * * *"
 
         }
     ]
