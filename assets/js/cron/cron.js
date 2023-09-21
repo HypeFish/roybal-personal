@@ -5,6 +5,34 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
 
+async function storeDataInDatabase(user_id, fitbitData) {
+    try {
+        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
+
+        const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
+
+        if (existingDocument) {
+            console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
+            return; // Data already exists, no need to store it again
+        }
+
+        // Assign the Fitbit data directly to the corresponding fields in the document
+        const document = {
+            user_id: user_id,
+            date: yesterday,
+            activities: fitbitData.activities,
+            goals: fitbitData.goals,
+            summary: fitbitData.summary
+        };
+
+        await dataCollection.insertOne(document);
+        console.log(`Data stored in the database for user ${user_id} successfully.`);
+    } catch (error) {
+        console.error('Error storing data in database:', error);
+        throw error; // Rethrow the error so it can be caught by the caller
+    }
+}
+
 let planCollection; // Declare a variable to hold the planCollection
 
 function setPlanCollection(collection) {
@@ -48,7 +76,7 @@ const sendSMS = async (to, body) => {
     }
 };
 
-const fitbitDataCollectionJob = cron.schedule('13 11 * * *', async (storeDataInDatabase) => {
+const fitbitDataCollectionJob = cron.schedule('13 11 * * *', async () => {
     console.log('Running scheduled Fitbit data collection task...');
     // Fetch all user IDs
     try {
@@ -116,6 +144,7 @@ const emailSendingJob = cron.schedule('13 11 * * *', async () => {
         const body = 'Don\'t forget to get your steps in today!';
 
         await sendEmail(email, subject, body);
+        console.log(`Email sent to ${email} successfully.`);
     });
 }, null, true, 'America/New_York');
 
@@ -134,6 +163,7 @@ const smsSendingJob = cron.schedule('13 11 * * *', async () => {
         const body = 'Don\'t forget to get your steps in today!';
 
         await sendSMS(phone, body);
+        console.log(`SMS sent to ${phone} successfully.`);
     });
 }, null, true, 'America/New_York');
 
@@ -141,5 +171,6 @@ module.exports = {
     fitbitDataCollectionJob,
     emailSendingJob,
     smsSendingJob,
-    setPlanCollection // Export the function to set the planCollection
+    setPlanCollection, // Export the function to set the planCollection
+    storeDataInDatabase
 };

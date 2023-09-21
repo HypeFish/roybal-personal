@@ -14,7 +14,7 @@ const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mon
 const client = new MongoClient(uri);
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
-const { fitbitDataCollectionJob, emailSendingJob, smsSendingJob, setPlanCollection } = require('./assets/js/cron/cron.js');
+const { fitbitDataCollectionJob, emailSendingJob, smsSendingJob, setPlanCollection, storeDataInDatabase} = require('./assets/js/cron/cron.js');
 
 let access_token;
 let refresh_token;
@@ -28,7 +28,7 @@ let planCollection;
 setPlanCollection(planCollection);
 
 // Start the cron jobs
-fitbitDataCollectionJob.start(storeDataInDatabase);
+fitbitDataCollectionJob.start();
 emailSendingJob.start();
 smsSendingJob.start();
 
@@ -105,34 +105,6 @@ app.post('/login', async (req, res) => {
 app.get('/', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
-
-async function storeDataInDatabase(user_id, fitbitData) {
-    try {
-        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-
-        const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
-
-        if (existingDocument) {
-            console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
-            return; // Data already exists, no need to store it again
-        }
-
-        // Assign the Fitbit data directly to the corresponding fields in the document
-        const document = {
-            user_id: user_id,
-            date: yesterday,
-            activities: fitbitData.activities,
-            goals: fitbitData.goals,
-            summary: fitbitData.summary
-        };
-
-        await dataCollection.insertOne(document);
-        console.log(`Data stored in the database for user ${user_id} successfully.`);
-    } catch (error) {
-        console.error('Error storing data in database:', error);
-        throw error; // Rethrow the error so it can be caught by the caller
-    }
-}
 
 
 // Add a new route to refresh the access token
@@ -409,3 +381,7 @@ app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
     console.log('Press Ctrl+C to quit.');
 });
+
+module.exports = {
+    storeDataInDatabase
+}
