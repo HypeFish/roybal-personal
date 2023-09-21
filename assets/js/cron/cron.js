@@ -76,7 +76,7 @@ const sendSMS = async (to, body) => {
     }
 };
 
-const fitbitDataCollectionJob = cron.schedule('13 11 * * *', async () => {
+const fitbitDataCollectionJob = cron.schedule('24 11 * * *', async () => {
     console.log('Running scheduled Fitbit data collection task...');
     // Fetch all user IDs
     try {
@@ -129,7 +129,7 @@ const fitbitDataCollectionJob = cron.schedule('13 11 * * *', async () => {
     }
 }, null, true, 'America/New_York'); // Timezone may need adjustment
 
-const emailSendingJob = cron.schedule('13 11 * * *', async () => {
+const emailSendingJob = cron.schedule('24 11 * * *', async () => {
     console.log('Running scheduled email sending task...');
 
     const currentDate = new Date();
@@ -149,7 +149,7 @@ const emailSendingJob = cron.schedule('13 11 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Define the SMS sending cron job
-const smsSendingJob = cron.schedule('13 11 * * *', async () => {
+const smsSendingJob = cron.schedule('24 11 * * *', async () => {
     console.log('Running scheduled SMS sending task...');
 
     const currentDate = new Date();
