@@ -405,7 +405,7 @@ const axios = require('axios');
 
 // Define a cron job to run once every 24 hours at 8:25 AM
 const CronJob = require('cron').CronJob;
-new CronJob('53 8 * * *', async () => {
+new CronJob('57 8 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
