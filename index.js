@@ -403,7 +403,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('38 11 * * *', async () => {
+cron.schedule('0 7 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
