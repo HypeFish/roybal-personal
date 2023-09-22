@@ -337,7 +337,7 @@ app.post('/submit-plan', async (req, res) => {
     if (contact && selectedDays && selectedDays.length > 0) {
         try {
             const updated = await planCollection.updateOne(
-                { $or: [ { email: contact }, { phone: contact } ] },
+                { $or: [{ email: contact }, { phone: contact }] },
                 { $addToSet: { selectedDays: { $each: selectedDays } } }
             );
 
@@ -403,7 +403,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('0 7 * * *', async () => {
+cron.schedule('36 8 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
@@ -416,18 +416,18 @@ cron.schedule('0 7 * * *', async () => {
             try {
                 const tokensResponse = await axios.get(`http://roybal.vercel.app/api/tokens/${user_id}`);
                 let { access_token, refresh_token, expires_in } = tokensResponse.data;
-        
+
                 // Check if access token is expired
                 if (Date.now() > expires_in) {
                     // Call your refresh token route
                     const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token`, {
                         refresh_token
                     });
-        
+
                     // Update access token with the new one
                     access_token = refreshResponse.data.access_token;
                 }
-        
+
 
                 // Perform Fitbit API call with the obtained access token
                 const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
@@ -445,6 +445,33 @@ cron.schedule('0 7 * * *', async () => {
                     // You can reuse the logic from your button click handler
                     await storeDataInDatabase(user_id, fitbitData);
                     console.log(`Data stored in the database for user ${user_id} successfully.`);
+                } else if (fitbitDataResponse.status === 401) {
+                    // Handle 401 error by using the refresh token route
+                    try {
+                        const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
+                            refresh_token
+                        });
+
+                        access_token = refreshResponse.data.access_token;
+
+                        // Retry Fitbit API call with the new access token
+                        const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${access_token}`
+                            }
+                        });
+
+                        if (fitbitDataResponse.status === 200) {
+                            const fitbitData = fitbitDataResponse.data;
+                            await storeDataInDatabase(user_id, fitbitData);
+                            console.log(`Data stored in the database for user ${user_id} successfully.`);
+                        } else {
+                            console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
+                        }
+                    } catch (error) {
+                        console.error(`Error refreshing token for user ${user_id}:`, error);
+                    }
                 } else {
                     console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
                 }
@@ -452,7 +479,6 @@ cron.schedule('0 7 * * *', async () => {
                 console.error(`Error fetching data for user ${user_id}:`, error);
             }
         }
-
         const currentDate = new Date();
         const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
 
