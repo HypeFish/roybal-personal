@@ -129,3 +129,33 @@ document.getElementById('generate-csv').addEventListener('click', function() {
 
     generateCSV(selectedUserID, selectedParticipantNumber);
 });
+
+
+document.getElementById('addParticipant').addEventListener('click', function() {
+    const newParticipantID = document.getElementById('newParticipantID').value;
+
+    if (newParticipantID) {
+        const participantSelector = document.getElementById('participant-selector');
+        const newOption = document.createElement('option');
+        const participantNumber = participantSelector.options.length + 1;
+
+        newOption.value = newParticipantID;
+        newOption.setAttribute('data-participant-number', participantNumber);
+        newOption.textContent = `Participant ${participantNumber}`;
+        
+        participantSelector.appendChild(newOption);
+        document.getElementById('newParticipantID').value = '';
+
+        // Optionally, you can send the new participant data to your server for storage.
+        // fetch('/api/add_participant', {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     body: JSON.stringify({
+        //         id: newParticipantID,
+        //         name: `Participant ${participantNumber}`
+        //     })
+        // });
+    }
+});

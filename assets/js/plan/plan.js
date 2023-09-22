@@ -17,6 +17,13 @@ async function submitNewContact() {
             if (data.success) {
                 alert(data.message);
 
+                // After successfully submitting a new contact, add it to the contactSelector
+                const contactSelector = document.getElementById('contactSelector');
+                const option = document.createElement('option');
+                option.value = newEmail || newPhone;
+                option.textContent = newEmail || newPhone;
+                contactSelector.appendChild(option);
+
             } else {
                 if (data.message === 'Email address already exists' ||
                     data.message === 'Phone number already exists') {
@@ -35,6 +42,7 @@ async function submitNewContact() {
         alert('Please enter a valid email address or phone number');
     }
 }
+
 
 async function getContacts() {
     try {

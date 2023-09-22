@@ -20,36 +20,14 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
 
-
 let access_token;
 let refresh_token;
 let user_id;
-
 
 let participantsCollection;
 let dataCollection;
 let adminCollection;
 let planCollection;
-
-
-async function refreshAccessToken(user_id) {
-    try {
-        const response = await fetch(`/api/refresh_token/${user_id}`, {
-            method: 'POST'
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.newAccessToken;
-        } else {
-            console.error('Error refreshing access token:', data.error);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error refreshing access token:', error);
-        return null;
-    }
-}
 
 async function connectToDatabase() {
     try {
