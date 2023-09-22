@@ -31,6 +31,26 @@ let dataCollection;
 let adminCollection;
 let planCollection;
 
+
+async function refreshAccessToken(user_id) {
+    try {
+        const response = await fetch(`/api/refresh_token/${user_id}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.newAccessToken;
+        } else {
+            console.error('Error refreshing access token:', data.error);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error refreshing access token:', error);
+        return null;
+    }
+}
+
 async function connectToDatabase() {
     try {
         await client.connect();
@@ -135,7 +155,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
 
 
 // Add a new route to refresh the access token
-app.post('/api/refresh_token/:user_id', async (req, res) => {
+app.post('/api/refresh-token/:user_id', async (req, res) => {
     console.log('Reached the refresh_token route'); // Add this line
 
     const user_id = req.params.user_id;
@@ -403,81 +423,21 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('21 10 * * *', async () => {
+cron.schedule('14 11 * * *', async () => {
     console.log('Running scheduled task...');
 
-    // Fetch all user IDs
     try {
         const response = await axios.get('http://roybal.vercel.app/api/user_ids');
         const userIDs = response.data.userIDs;
 
-        // Use the user IDs to collect Fitbit data for each user
         for (const user_id of userIDs) {
             try {
-                const tokensResponse = await axios.get(`http://roybal.vercel.app/api/tokens/${user_id}`);
-                let { access_token, refresh_token, expires_in } = tokensResponse.data;
-
-                
-                const expirationTime = new Date(expires_in * 1000);
-
-                if (Date.now() > expirationTime) {                
-                    // Call your refresh token route
-                    const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
-                        refresh_token
-                    });
-
-                    // Update access token with the new one
-                    access_token = refreshResponse.data.access_token;
-                }
-
-
-                // Perform Fitbit API call with the obtained access token
-                const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-                const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${access_token}`
-                    }
-                });
+                const fitbitDataResponse = await collectFitbitData(user_id);
 
                 if (fitbitDataResponse.status === 200) {
                     const fitbitData = fitbitDataResponse.data;
-
-                    // Assuming you have a function to store the data in your database
-                    // You can reuse the logic from your button click handler
                     await storeDataInDatabase(user_id, fitbitData);
                     console.log(`Data stored in the database for user ${user_id} successfully.`);
-                } else if (fitbitDataResponse.status === 401) {
-                    // Handle 401 error by using the refresh token route
-                    try {
-                        const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
-                            refresh_token
-                        });
-
-                        if (refreshResponse.status === 200) {
-                            // Update access token with the new one
-                            access_token = refreshResponse.data.access_token;
-                        } else {
-                            console.error(`HTTP error! status: ${refreshResponse.status}`);
-                        }
-                        // Retry Fitbit API call with the new access token
-                        const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${access_token}`
-                            }
-                        });
-
-                        if (fitbitDataResponse.status === 200) {
-                            const fitbitData = fitbitDataResponse.data;
-                            await storeDataInDatabase(user_id, fitbitData);
-                            console.log(`Data stored in the database for user ${user_id} successfully.`);
-                        } else {
-                            console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
-                        }
-                    } catch (error) {
-                        console.error(`Error refreshing token for user ${user_id}:`, error);
-                    }
                 } else {
                     console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
                 }
@@ -485,6 +445,7 @@ cron.schedule('21 10 * * *', async () => {
                 console.error(`Error fetching data for user ${user_id}:`, error);
             }
         }
+
         const currentDate = new Date();
         const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
 
@@ -492,23 +453,76 @@ cron.schedule('21 10 * * *', async () => {
 
         plans.forEach(async (plan) => {
             // const email = plan.email;
-
             // const subject = 'You planned to walk today';
             // const body = 'Don\'t forget to get your steps in today!';
-
             // await sendEmail(email, subject, body);
 
             // const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
-
             // const smsBody = 'Don\'t forget to get your steps in today!';
-
             // await sendSMS(phone, smsBody);
-
         });
     } catch (error) {
         console.error('Error:', error);
     }
 }, null, true, 'America/New_York');
+
+
+// Function to collect Fitbit data
+async function collectFitbitData(user_id) {
+    try {
+        const tokensResponse = await axios.get(`http://roybal.vercel.app/api/tokens/${user_id}`);
+        let { access_token, refresh_token, expires_in } = tokensResponse.data;
+
+        const expirationTime = new Date(expires_in * 1000);
+
+        if (Date.now() > expirationTime) {                
+            // Call your refresh token route
+            const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
+                refresh_token
+            });
+
+            // Update access token with the new one
+            access_token = refreshResponse.data.access_token;
+        }
+
+        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
+        const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token}`
+            }
+        });
+
+        return fitbitDataResponse;
+    } catch (error) {
+        console.log('Error response status:', error.response.status)
+        if (error.response.status === 401 ) {
+            // Handle 401 error by refreshing the token
+            try {
+                // Call your refresh token route
+                console.log('Reached the refresh_token route')
+                const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
+                    refresh_token
+                });
+                console.log('refreshResponse:', refreshResponse)
+
+                if (refreshResponse.status === 200) {
+                    // Update access token with the new one
+                    access_token = refreshResponse.data.access_token;
+                    // Retry Fitbit API call with the new access token
+                    return await collectFitbitData(user_id);
+                } else {
+                    throw new Error(`HTTP error! status: ${refreshResponse.status}`);
+                }
+            } catch (refreshError) {
+                throw new Error(`Error refreshing token for user ${user_id}: ${refreshError.message}`);
+            }
+        } else {
+            throw error;
+        }
+    }
+}
+
 
 // Create a transporter
 const transporter = nodemailer.createTransport({

@@ -35,25 +35,6 @@ async function fetchTokens(user_id) {
     }
 }
 
-async function refreshAccessToken(user_id) {
-    try {
-        const response = await fetch(`/api/refresh_token/${user_id}`, {
-            method: 'POST'
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.newAccessToken;
-        } else {
-            console.error('Error refreshing access token:', data.error);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error refreshing access token:', error);
-        return null;
-    }
-}
-
 async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     try {
         const response = await fetch(`/api/collect_data/${user_id}`, {
