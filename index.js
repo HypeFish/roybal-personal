@@ -403,7 +403,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('36 8 * * *', async () => {
+cron.schedule('57 9 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
@@ -420,7 +420,7 @@ cron.schedule('36 8 * * *', async () => {
                 // Check if access token is expired
                 if (Date.now() > expires_in) {
                     // Call your refresh token route
-                    const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token`, {
+                    const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
                         refresh_token
                     });
 
@@ -452,8 +452,12 @@ cron.schedule('36 8 * * *', async () => {
                             refresh_token
                         });
 
-                        access_token = refreshResponse.data.access_token;
-
+                        if (refreshResponse.status === 200) {
+                            // Update access token with the new one
+                            access_token = refreshResponse.data.access_token;
+                        } else {
+                            console.error(`HTTP error! status: ${refreshResponse.status}`);
+                        }
                         // Retry Fitbit API call with the new access token
                         const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
                             headers: {
