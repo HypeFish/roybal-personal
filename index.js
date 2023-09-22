@@ -423,7 +423,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('18 11 * * *', async () => {
+cron.schedule('10 12 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
@@ -452,14 +452,14 @@ cron.schedule('18 11 * * *', async () => {
         const plans = await planCollection.find({ selectedDays: dayOfWeek }).toArray();
 
         plans.forEach(async (plan) => {
-            // const email = plan.email;
-            // const subject = 'You planned to walk today';
-            // const body = 'Don\'t forget to get your steps in today!';
-            // await sendEmail(email, subject, body);
+            const email = plan.email;
+            const subject = 'You planned to walk today';
+            const body = 'Don\'t forget to get your steps in today!';
+            await sendEmail(email, subject, body);
 
-            // const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
-            // const smsBody = 'Don\'t forget to get your steps in today!';
-            // await sendSMS(phone, smsBody);
+            const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
+            const smsBody = 'Don\'t forget to get your steps in today!';
+            await sendSMS(phone, smsBody);
         });
     } catch (error) {
         console.error('Error:', error);
@@ -495,16 +495,13 @@ async function collectFitbitData(user_id) {
 
         return fitbitDataResponse;
     } catch (error) {
-        console.log('Error response status:', error.response.status)
         if (error.response.status === 401 ) {
             // Handle 401 error by refreshing the token
             try {
                 // Call your refresh token route
-                console.log('Reached the refresh_token route')
                 const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
                     refresh_token
                 });
-                console.log('refreshResponse:', refreshResponse)
 
                 if (refreshResponse.status === 200) {
                     // Update access token with the new one
