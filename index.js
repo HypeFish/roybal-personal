@@ -423,7 +423,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('14 11 * * *', async () => {
+cron.schedule('18 11 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
