@@ -27,13 +27,13 @@
 
     <label for="newEmail">Or add a new email:</label>
     <!-- small text to let the user know to refresh the page after adding a new email -->
-    <small>(Refresh page after adding a new email)</small>
+    <small>(Press "enter" to submit. Refresh page after adding a new email)</small>
     <input type="text" id="newEmail" name="newEmail" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
 
     <br><br>
 
     <label for="newPhone">Or add a new phone number:</label>
-    <small>(Refresh page after adding a new number)</small>
+    <small>(Press "enter" to submit. Refresh page after adding a new number)</small>
     <input type="text" id="newPhone" name="newPhone" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
 
     <br><br>

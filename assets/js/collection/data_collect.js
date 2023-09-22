@@ -1,26 +1,24 @@
 //data_collect.js
 
 let allIDs = [];
-let apiData = []; // Store the data from API calls
 
 async function fetchUserIDs() {
-    const response = await fetch('/api/user_ids');
-    return await response.json();
+    try {
+        const response = await fetch('/api/user_ids');
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user IDs:', error);
+        throw error; // Rethrow the error so it can be caught by the caller
+    }
 }
 
 // Fetch all user IDs
 fetchUserIDs()
-    .then(data => {
-        let userIDs = data.userIDs;
-
-        // Use the user IDs as needed in your client-side code
-        userIDs.forEach(user_id => {
-            // Perform actions with each user_id
-            allIDs.push(user_id);
-        });
-    })
-    .catch(error => console.error('Error fetching user IDs:', error));
-
 
 async function fetchTokens(user_id) {
     try {

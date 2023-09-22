@@ -403,7 +403,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('57 9 * * *', async () => {
+cron.schedule('21 10 * * *', async () => {
     console.log('Running scheduled task...');
 
     // Fetch all user IDs
@@ -417,8 +417,10 @@ cron.schedule('57 9 * * *', async () => {
                 const tokensResponse = await axios.get(`http://roybal.vercel.app/api/tokens/${user_id}`);
                 let { access_token, refresh_token, expires_in } = tokensResponse.data;
 
-                // Check if access token is expired
-                if (Date.now() > expires_in) {
+                
+                const expirationTime = new Date(expires_in * 1000);
+
+                if (Date.now() > expirationTime) {                
                     // Call your refresh token route
                     const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
                         refresh_token
@@ -489,18 +491,18 @@ cron.schedule('57 9 * * *', async () => {
         const plans = await planCollection.find({ selectedDays: dayOfWeek }).toArray();
 
         plans.forEach(async (plan) => {
-            const email = plan.email;
+            // const email = plan.email;
 
-            const subject = 'You planned to walk today';
-            const body = 'Don\'t forget to get your steps in today!';
+            // const subject = 'You planned to walk today';
+            // const body = 'Don\'t forget to get your steps in today!';
 
-            await sendEmail(email, subject, body);
+            // await sendEmail(email, subject, body);
 
-            const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
+            // const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
 
-            const smsBody = 'Don\'t forget to get your steps in today!';
+            // const smsBody = 'Don\'t forget to get your steps in today!';
 
-            await sendSMS(phone, smsBody);
+            // await sendSMS(phone, smsBody);
 
         });
     } catch (error) {
