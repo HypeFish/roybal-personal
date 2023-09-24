@@ -20,11 +20,6 @@
         <li> Sign in with Google using the Participant email address and password (On Basecamp)</li>
         <li> Consent to all the following and submit the authorization form</li>
     </ol>
-
-    <h2>Add New Participant</h2>
-    <label for="newParticipantID">ID:</label>
-    <input type="text" id="newParticipantID" name="newParticipantID">
-    <button id="addParticipant">Add Participant</button>
     
     <h2>Participant Data Collection</h2>
     <select id="participant-selector" title="Select Participant">
@@ -42,21 +37,6 @@
     <select id="contactSelector" name="contactSelector">
         <!-- Option elements will be dynamically added here using JavaScript -->
     </select>
-
-    <br><br>
-    
-    <label for="newEmail">Or add a new email:</label>
-    <!-- small text to let the user know to refresh the page after adding a new email -->
-    <small>(Press "enter" to submit. Refresh page after adding a new email)</small>
-    <input type="text" id="newEmail" name="newEmail" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
-
-    <br><br>
-
-    <label for="newPhone">Or add a new phone number:</label>
-    <small>(Press "enter" to submit. Refresh page after adding a new number)</small>
-    <input type="text" id="newPhone" name="newPhone" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
-
-    <br><br>
 
     <form id="planForm"> <!-- Added form element -->
         <label for="selectedDays">Select days:</label>
@@ -79,6 +59,21 @@
 
         <input type="submit" value="Submit Plan"> <!-- Added submit button -->
     </form>
+
+    <br/>
+    <br/>
+
+    <label for="newEmail">Or add a new email:</label>
+    <!-- small text to let the user know to refresh the page after adding a new email -->
+    <small>(Press "enter" to submit. Refresh page after adding a new email)</small>
+    <input type="text" id="newEmail" name="newEmail" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
+
+    <br><br>
+
+    <label for="newPhone">Or add a new phone number:</label>
+    <small>(Press "enter" to submit. Refresh page after adding a new number)</small>
+    <input type="text" id="newPhone" name="newPhone" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
+
 
     <script src="assets/js/plan/plan.js"></script>
     <script src="assets/js/collection/data_collect.js"></script>

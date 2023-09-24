@@ -401,7 +401,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('10 12 * * *', async () => {
+cron.schedule('0 8 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
@@ -430,14 +430,14 @@ cron.schedule('10 12 * * *', async () => {
         const plans = await planCollection.find({ selectedDays: dayOfWeek }).toArray();
 
         plans.forEach(async (plan) => {
-            const email = plan.email;
-            const subject = 'You planned to walk today';
-            const body = 'Don\'t forget to get your steps in today!';
-            await sendEmail(email, subject, body);
+            // const email = plan.email;
+            // const subject = 'You planned to walk today';
+            // const body = 'Don\'t forget to get your steps in today!';
+            // await sendEmail(email, subject, body);
 
-            const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
-            const smsBody = 'Don\'t forget to get your steps in today!';
-            await sendSMS(phone, smsBody);
+            // const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
+            // const smsBody = 'Don\'t forget to get your steps in today!';
+            // await sendSMS(phone, smsBody);
         });
     } catch (error) {
         console.error('Error:', error);
@@ -464,6 +464,7 @@ async function collectFitbitData(user_id) {
         }
 
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
+        console.log(`Fetching data for user ${user_id} on ${yesterday}`);
         const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
             headers: {
                 'Content-Type': 'application/json',
