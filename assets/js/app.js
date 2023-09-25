@@ -1,6 +1,5 @@
 //app.js
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded event triggered');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     console.log('isLoggedIn:', isLoggedIn);
 
@@ -9,3 +8,4 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/';
     }
 });
+

@@ -72,8 +72,13 @@ function requireAuth(req, res, next) {
 
 // Define the login route
 app.get('/login', (req, res) => {
-    // Serve the login page (index.html with login form)
-    res.sendFile(__dirname + '/assets/pages/login.html');
+    // Check if the user is already logged in
+    if (req.session?.user) {
+        return res.redirect('/'); // Redirect to the home page if already logged in
+    }
+    else {
+        res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
+    }
 });
 
 // Handle login form submission
@@ -400,6 +405,7 @@ app.use((req, res) => {
 });
 
 const axios = require('axios');
+const e = require('express');
 
 cron.schedule('43 8 * * *', async () => {
     console.log('Running scheduled task...');
