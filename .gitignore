@@ -3,4 +3,5 @@ package-lock.json
 .vscode/launch.json
 node_modules
 env/
+Dockerfile
 ```

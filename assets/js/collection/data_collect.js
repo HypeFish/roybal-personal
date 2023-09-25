@@ -155,3 +155,34 @@ document.getElementById('generate-csv').addEventListener('click', function () {
 
     generateCSV(selectedUserID, selectedParticipantNumber);
 });
+
+
+async function getParticipants() {
+    try {
+        const response = await fetch('/api/participants');
+        const data = await response.json();
+
+        if (data.success) {
+            const participantSelector = document.getElementById('participantSelector');
+
+            // Clear existing options
+            participantSelector.innerHTML = '';
+
+            // Add new options
+            data.data.forEach(participant => {
+                const option = document.createElement('option');
+                option.value = participant.user_id;
+                option.textContent = participant.name;
+                participantSelector.appendChild(option);
+            });
+        } else {
+            console.error('Error fetching participants:', data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+
+// Call the function to populate the participant selector
+getParticipants();

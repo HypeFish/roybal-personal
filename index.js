@@ -221,6 +221,23 @@ app.post('/api/refresh-token/:user_id', async (req, res) => {
     }
 });
 
+// Add a new route to fetch all participants
+app.get('/api/participants', async (req, res) => {
+    try {
+        const participants = await participantsCollection.distinct('user_id');
+        const formattedParticipants = participants.map((user_id, index) => ({
+            user_id,
+            name: `Participant ${index + 1}`
+        }));
+        res.json({ success: true, data: formattedParticipants });
+    } catch (error) {
+        console.error('Error fetching participants:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
+
+
 // Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
     res.sendFile(path.join(__dirname, 'assets/pages/login.html'));

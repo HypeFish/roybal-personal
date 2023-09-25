@@ -10,8 +10,6 @@
 <body>
     <h1>Roybal Home Page</h1>
 
-    <h2>Participant Data Collection</h2>
-
     <h2> How to Add New Participant</h2>
     <ol>    
         <li>Click the follow link:
@@ -23,10 +21,9 @@
     </ol>
     
     <h2>Participant Data Collection</h2>
-    <select id="participant-selector" title="Select Participant">
-        <option value="BPS5WQ" data-participant-number="1">Participant 1</option>
-        <option value="BP63G3" data-participant-number="2">Participant 2</option>
-        <option value="BQ36JH" data-participant-number="3">Participant 3</option>
+    <label for="participantSelector">Select Participant:</label>
+    <select id="participantSelector" title="Select Participant">
+        <!-- Option elements will be dynamically added here using JavaScript -->
     </select>
     <button id="generate-csv" autofocus>Generate CSV</button>
     
