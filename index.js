@@ -56,15 +56,16 @@ app.use(session({
 }));
 
 app.use((req, res, next) => {
-    // res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-    // res.header('Pragma', 'no-cache');
-    // res.header('Expires', '-1');
+    res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '-1');
     next();
 });
 
 
 // Middleware to check if user is authenticated
 function requireAuth(req, res, next) {
+    console.log(req.session?.user)
     if (req.session?.user) {
         return next(); // User is authenticated, proceed to the next middleware or route handler
     } else {
