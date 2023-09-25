@@ -15,9 +15,8 @@ document.querySelector('form').addEventListener('submit', async (event) => {
     });
 
     if (response.ok) {
-        // Save login status to local storage
+        // Set flag indicating user is logged in
         localStorage.setItem('isLoggedIn', 'true');
-
         // Redirect to the home page if login is successful
         window.location.href = '/';
     } else {
