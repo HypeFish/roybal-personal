@@ -1,3 +1,4 @@
+//app.js
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded event triggered');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
