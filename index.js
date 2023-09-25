@@ -28,6 +28,7 @@ let participantsCollection;
 let dataCollection;
 let adminCollection;
 let planCollection;
+let usersCollection;
 
 async function connectToDatabase() {
     try {
@@ -36,6 +37,7 @@ async function connectToDatabase() {
         dataCollection = client.db('Roybal').collection('data');
         adminCollection = client.db('Roybal').collection('admin');
         planCollection = client.db('Roybal').collection('plan');
+        usersCollection = client.db('Roybal').collection('users');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
@@ -54,9 +56,9 @@ app.use(session({
 }));
 
 app.use((req, res, next) => {
-    res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-    res.header('Pragma', 'no-cache');
-    res.header('Expires', '-1');
+    // res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    // res.header('Pragma', 'no-cache');
+    // res.header('Expires', '-1');
     next();
 });
 
@@ -88,12 +90,20 @@ app.post('/login', async (req, res) => {
 
     try {
         const admin = await adminCollection.findOne({ user: username, pass: password });
+        const user = await usersCollection.findOne({ user: username, pass: password });
 
         if (admin) {
             req.session.user = username;
             console.log('User authenticated successfully')
             res.redirect('/');
-        } else {
+        } 
+        else if (user) {
+            //TODO: set up user portal
+            req.session.user = username;
+            console.log('User authenticated successfully')
+            res.redirect('/login');
+        }
+        else {
             console.log('Invalid username or password')
             res.status(401).json({ success: false, error: 'Invalid username or password' });
         }
