@@ -401,7 +401,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('0 8 * * *', async () => {
+cron.schedule('43 8 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
