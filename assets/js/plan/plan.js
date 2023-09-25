@@ -1,3 +1,4 @@
+//plan.js
 async function submitNewContact() {
     const newEmail = document.getElementById('newEmail').value;
     const newPhone = document.getElementById('newPhone').value;

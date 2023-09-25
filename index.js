@@ -366,13 +366,16 @@ app.get('/api/combined_data/:user_id', async (req, res) => {
 
 
 app.post('/submit-plan', async (req, res) => {
-    const { contact, selectedDays } = req.body;
+    const { contact, selectedDays, plannedActivities } = req.body;
 
-    if (contact && selectedDays && selectedDays.length > 0) {
+    if (contact && (selectedDays || plannedActivities)) {
         try {
             const updated = await planCollection.updateOne(
                 { $or: [{ email: contact }, { phone: contact }] },
-                { $addToSet: { selectedDays: { $each: selectedDays } } }
+                {
+                    $addToSet: { selectedDays: { $each: selectedDays } },
+                    $addToSet: { plannedActivities: { $each: plannedActivities } }
+                }
             );
 
             if (updated.modifiedCount > 0) {
@@ -389,6 +392,22 @@ app.post('/submit-plan', async (req, res) => {
     }
 });
 
+// Define a new route handler
+app.get('/api/planned_activities/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+
+    try {
+        const user = await planCollection.findOne({ email: user_id }); // Assuming 'email' is the unique identifier for users
+        if (!user) {
+            return res.json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ success: true, data: user.plannedActivities });
+    } catch (error) {
+        console.error('Error fetching planned activities:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
 
 app.post('/submit-contact', async (req, res) => {
     const { email, phone } = req.body;
@@ -410,7 +429,7 @@ app.post('/submit-contact', async (req, res) => {
     }
 
     try {
-        const result = await planCollection.insertOne({ email, phone, selectedDays: [] });
+        await planCollection.insertOne({ email, phone, selectedDays: [] });
         res.json({ success: true, message: 'Contact submitted successfully' });
     } catch (error) {
         console.error(error);

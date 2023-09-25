@@ -35,6 +35,23 @@ async function fetchTokens(user_id) {
     }
 }
 
+async function getPlannedActivities(user_id) {
+    try {
+        const response = await fetch(`/api/planned_activities/${user_id}`);
+        const data = await response.json();
+
+        if (data.success) {
+            return data.data;
+        } else {
+            console.error('Error fetching planned activities:', data.error);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return [];
+    }
+}
+
 async function makeFitbitAPICall(user_id, access_token, participantNumber) {
     try {
         const response = await fetch(`/api/collect_data/${user_id}`, {
@@ -69,6 +86,8 @@ async function makeFitbitAPICall(user_id, access_token, participantNumber) {
 
 async function generateCSV(user_id, participantNumber) {
     try {
+        // Fetch planned activities for the user
+        const plannedActivities = await getPlannedActivities(user_id);
         const response = await fetch(`/api/combined_data/${user_id}`);
         const data = await response.json();
 
@@ -83,11 +102,17 @@ async function generateCSV(user_id, participantNumber) {
             return;
         }
 
-        const csvData = 'date,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned\n';
+        // Add headers for new columns
+        const csvData = 'participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned\n';
 
         const formattedData = combinedData.flatMap(item => {
             return item.activities.map(activity => {
+                const formattedParticipantNumber = participantNumber.toString().padStart(2, '0'); // Pad with leading zeros
+
                 const date = item.date;
+                const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }); // Get the day of the week
+                const isPlanned = plannedActivities.includes(date);
+                // Assuming you have the function activityPlanned that checks your database for planned activities
                 const startTime = activity.startTime;
                 const activityName = activity.name;
                 const totalSteps = activity.steps;
@@ -95,7 +120,7 @@ async function generateCSV(user_id, participantNumber) {
                 const durationInMinutes = Math.round(activity.duration / 60000 * 100) / 100; // Round to 2 decimal places
                 const caloriesBurned = activity.calories;
 
-                return `${date},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned}`;
+                return `sub_${formattedParticipantNumber},${date},${dayOfWeek},${isPlanned},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned}`;
             });
         });
 
@@ -116,12 +141,13 @@ async function generateCSV(user_id, participantNumber) {
 
 
 
+
 async function handleButtonClick(user_id, participantNumber) {
     generateCSV(user_id, participantNumber);
 }
 
 // Modify your event listener setup like this:
-document.getElementById('generate-csv').addEventListener('click', function() {
+document.getElementById('generate-csv').addEventListener('click', function () {
     const participantSelector = document.getElementById('participant-selector');
     const selectedOption = participantSelector.options[participantSelector.selectedIndex];
     const selectedUserID = selectedOption.value;
