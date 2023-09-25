@@ -1,6 +1,7 @@
 //index.js
 const express = require('express');
 const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 const app = express();
 const path = require('path');
 const fetch = require('node-fetch');
@@ -47,6 +48,25 @@ async function connectToDatabase() {
 
 // Call the connectToDatabase function
 connectToDatabase();
+
+const store = new MongoDBStore({
+    uri: uri + 'Roybal',
+    collection: 'sessions' // Name of the collection to store sessions
+});
+
+store.on('error', (error) => {
+    console.error('Session store error:', error);
+});
+
+app.use(session({
+    secret: process.env.SESSION_SECRET, // Replace with your session secret
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    },
+    store: store
+}));
 
 // Add session middleware
 app.use(session({
@@ -97,7 +117,7 @@ app.post('/login', async (req, res) => {
             req.session.user = username;
             console.log('User authenticated successfully')
             res.redirect('/');
-        } 
+        }
         else if (user) {
             //TODO: set up user portal
             req.session.user = username;
@@ -470,7 +490,7 @@ async function collectFitbitData(user_id) {
 
         const expirationTime = new Date(expires_in * 1000);
 
-        if (Date.now() > expirationTime) {                
+        if (Date.now() > expirationTime) {
             // Call your refresh token route
             const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
                 refresh_token
@@ -491,7 +511,7 @@ async function collectFitbitData(user_id) {
 
         return fitbitDataResponse;
     } catch (error) {
-        if (error.response.status === 401 ) {
+        if (error.response.status === 401) {
             // Handle 401 error by refreshing the token
             try {
                 // Call your refresh token route
