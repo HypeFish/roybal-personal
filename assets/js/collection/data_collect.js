@@ -43,7 +43,6 @@ async function getPlannedActivities(user_id) {
         if (data.success) {
             return data.data;
         } else {
-            console.error('Error fetching planned activities:', data.error);
             return [];
         }
     } catch (error) {
@@ -139,16 +138,8 @@ async function generateCSV(user_id, participantNumber) {
     }
 }
 
-
-
-
-async function handleButtonClick(user_id, participantNumber) {
-    generateCSV(user_id, participantNumber);
-}
-
-// Modify your event listener setup like this:
 document.getElementById('generate-csv').addEventListener('click', function () {
-    const participantSelector = document.getElementById('participant-selector');
+    const participantSelector = document.getElementById('participantSelector');
     const selectedOption = participantSelector.options[participantSelector.selectedIndex];
     const selectedUserID = selectedOption.value;
     const selectedParticipantNumber = selectedOption.getAttribute('data-participant-number');
@@ -168,13 +159,15 @@ async function getParticipants() {
             // Clear existing options
             participantSelector.innerHTML = '';
 
-            // Add new options
-            data.data.forEach(participant => {
+            // Inside the getParticipants function after fetching data
+            data.data.forEach((participant, index) => {
                 const option = document.createElement('option');
                 option.value = participant.user_id;
-                option.textContent = participant.name;
+                option.textContent = `Participant ${index + 1}`; // Set the participant number as text
+                option.setAttribute('data-participant-number', index + 1); // Add participant number as data attribute
                 participantSelector.appendChild(option);
             });
+
         } else {
             console.error('Error fetching participants:', data.error);
         }
