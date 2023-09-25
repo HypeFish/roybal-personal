@@ -142,7 +142,7 @@ app.get('/', requireAuth, (req, res) => {
 async function storeDataInDatabase(user_id, fitbitData) {
     try {
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-
+        console.log(yesterday)
         const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
 
         if (existingDocument) {
@@ -457,7 +457,7 @@ app.use((req, res) => {
 const axios = require('axios');
 const e = require('express');
 
-cron.schedule('43 8 * * *', async () => {
+cron.schedule('0 7 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
