@@ -1,11 +1,10 @@
-// In your main JavaScript file (e.g., app.js), you can check if the user is already logged in using local storage
-// Example logout code
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded event triggered');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    console.log('isLoggedIn:', isLoggedIn);
+
     if (isLoggedIn === 'true' && window.location.pathname !== '/') {
-        // User is already logged in and not on the home page, redirect to home
+        console.log('Redirecting to home page');
         window.location.href = '/';
     }
 });
-
-
