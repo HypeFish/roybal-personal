@@ -85,7 +85,6 @@ app.use((req, res, next) => {
 
 // Middleware to check if user is authenticated
 function requireAuth(req, res, next) {
-    console.log(req.session?.user)
     if (req.session?.user) {
         return next(); // User is authenticated, proceed to the next middleware or route handler
     } else {
@@ -167,7 +166,6 @@ async function storeDataInDatabase(user_id, fitbitData) {
     }
 }
 
-
 // Add a new route to refresh the access token
 app.post('/api/refresh-token/:user_id', async (req, res) => {
     console.log('Reached the refresh_token route'); // Add this line
@@ -221,13 +219,15 @@ app.post('/api/refresh-token/:user_id', async (req, res) => {
     }
 });
 
+
 // Add a new route to fetch all participants
 app.get('/api/participants', async (req, res) => {
     try {
-        const participants = await participantsCollection.distinct('user_id');
-        const formattedParticipants = participants.map((user_id, index) => ({
+        const participants = await participantsCollection.find().sort({ number: 1 }).toArray();
+        const formattedParticipants = participants.map(({ user_id, number }, index) => ({
             user_id,
-            name: `Participant ${index + 1}`
+            number,
+            name: `Participant ${index}`
         }));
         res.json({ success: true, data: formattedParticipants });
     } catch (error) {
@@ -235,6 +235,7 @@ app.get('/api/participants', async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });
+
 
 
 
@@ -259,6 +260,7 @@ app.get('/auth/callback', async (req, res) => {
     access_token = data.access_token;
     refresh_token = data.refresh_token;
     user_id = data.user_id;
+    const participantNumber = participantsCollection.countDocuments() + 1;
 
     try {
         const result = await participantsCollection.updateOne(
@@ -267,7 +269,8 @@ app.get('/auth/callback', async (req, res) => {
                 $set: {
                     authorization_code: authorizationCode,
                     access_token: access_token,
-                    refresh_token: refresh_token
+                    refresh_token: refresh_token,
+                    number: participantNumber
                 }
             },
             { upsert: true } // Update existing record or insert new if not found
@@ -383,22 +386,24 @@ app.get('/api/combined_data/:user_id', async (req, res) => {
 
 
 app.post('/submit-plan', async (req, res) => {
-    const { contact, selectedDays, plannedActivities } = req.body;
+    const { identifier, selectedDays } = req.body;
 
-    if (contact && (selectedDays || plannedActivities)) {
+    if (identifier && selectedDays) {
         try {
             const updated = await planCollection.updateOne(
-                { $or: [{ email: contact }, { phone: contact }] },
+                { identifier },
                 {
-                    $addToSet: { selectedDays: { $each: selectedDays } },
-                    $addToSet: { plannedActivities: { $each: plannedActivities } }
+                    $addToSet: {
+                        selectedDays: { $each: selectedDays },
+                        plannedActivities: { $each: selectedDays.map(date => ({ date })) }
+                    }
                 }
             );
 
             if (updated.modifiedCount > 0) {
                 res.json({ success: true, message: 'Plan submitted successfully' });
             } else {
-                res.json({ success: false, message: 'No matching email or phone found' });
+                res.json({ success: false, message: 'No matching contact found' });
             }
         } catch (error) {
             console.error('Error updating plan:', error);
@@ -409,44 +414,33 @@ app.post('/submit-plan', async (req, res) => {
     }
 });
 
-// Define a new route handler
-app.get('/api/planned_activities/:user_id', async (req, res) => {
-    const user_id = req.params.user_id;
 
-    try {
-        const user = await planCollection.findOne({ email: user_id }); // Assuming 'email' is the unique identifier for users
-        if (!user) {
-            return res.json({ success: false, error: 'User not found' });
-        }
 
-        res.json({ success: true, data: user.plannedActivities });
-    } catch (error) {
-        console.error('Error fetching planned activities:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
-    }
-});
+
 
 app.post('/submit-contact', async (req, res) => {
-    const { email, phone } = req.body;
+    const { identifier, identifier_type, participantNumber } = req.body;
 
-    if (email) {
-        // Check if the email already exists in the database
-        const existingEmail = await planCollection.findOne({ email });
-        if (existingEmail) {
-            return res.json({ success: false, message: 'Email address already exists' });
-        }
-    }
-
-    if (phone) {
-        // Check if the phone number already exists in the database
-        const existingPhone = await planCollection.findOne({ phone });
-        if (existingPhone) {
-            return res.json({ success: false, message: 'Phone number already exists' });
+    if (identifier) {
+        // Check if the contact already exists
+        const existingContact = await planCollection.findOne({ identifier_type, identifier });
+        if (existingContact) {
+            res.json({ success: false, message: 'Contact already exists' });
+            return;
         }
     }
 
     try {
-        await planCollection.insertOne({ email, phone, selectedDays: [] });
+        // Save the data with the desired structure
+        await planCollection.insertOne({
+            identifier_type,
+            identifier,
+            participantNumber: +participantNumber,
+            selectedDays: [],
+            planned_activities_count: 0,
+            unplanned_activities_count: 0
+        });
+
         res.json({ success: true, message: 'Contact submitted successfully' });
     } catch (error) {
         console.error(error);
@@ -456,15 +450,91 @@ app.post('/submit-contact', async (req, res) => {
 
 app.get('/get-contacts', async (req, res) => {
     try {
-        const emails = await planCollection.distinct('email');
-        const phones = await planCollection.distinct('phone');
-        const combinedData = [...emails, ...phones];
-        res.json({ success: true, data: combinedData });
+        const contacts = await planCollection.find().toArray();
+        const identifiers = contacts.map(contact => contact.identifier);
+        res.json({ success: true, data: identifiers });
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching contacts:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
+
+// Add a new route for verifying completed planned activities
+app.post('/verify-completed-activity', async (req, res) => {
+    const { user_id, date } = req.body;
+
+    try {
+        // Check if any activities exist for the specified user and date
+        const activities = await dataCollection.find({
+            user_id,
+            date
+        }).toArray();
+
+        if (activities.length > 0) {
+            //convert user_id to participantNumber
+            const participantNumber = await participantsCollection.findOne({ user_id }).number;
+
+            // Mark the planned activity as completed in the plan collection by incrementing the planned_activities_count by 1
+            const updated = await planCollection.updateOne(
+                { participantNumber},
+                { $inc: { planned_activities_count: 1 } }
+            );
+
+            if (updated.modifiedCount > 0) {
+                res.json({ success: true, message: 'Planned activity verified and marked as completed' });
+            } else {
+                res.json({ success: false, message: 'No matching planned activity found' });
+            }
+        } else {
+            res.json({ success: false, message: 'Planned activity not completed' });
+        }
+    } catch (error) {
+        console.error('Error verifying completed activity:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
+
+// Define a new route handler
+app.get('/api/planned_activities/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+
+    try {
+        const user = await participantsCollection.findOne({ user_id });
+        //if we find a user there, we can get the participantNumber
+        const participantNumber = user.number;
+        //now we can find the plan for that participant
+        const plan = await planCollection.findOne({ participantNumber });
+        //now we can get the selectedDays from the plan
+        const selectedDays = plan.selectedDays;
+        //check if the selectedDays array is empty
+        if (selectedDays.length === 0) {
+            res.json({ success: true, data: [] });
+            return;
+        }
+        // Get the planned activities for the specified user
+        const plannedActivities = await dataCollection.find({
+            user_id,
+            date: { $in: selectedDays }
+        }).toArray();
+
+        // Get the unplanned activities for the specified user
+        const unplannedActivities = await dataCollection.find({
+            user_id,
+            date: { $nin: selectedDays }
+        }).toArray();
+
+        console.log(plannedActivities)
+        console.log(unplannedActivities)
+
+        
+
+        res.json({ success: true, data: plannedActivities, unplannedActivities });
+    } catch (error) {
+        console.error('Error fetching planned activities:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
+
 
 // Serve the error page
 app.use((req, res) => {
@@ -472,7 +542,6 @@ app.use((req, res) => {
 });
 
 const axios = require('axios');
-const e = require('express');
 
 cron.schedule('0 7 * * *', async () => {
     console.log('Running scheduled task...');
@@ -503,15 +572,22 @@ cron.schedule('0 7 * * *', async () => {
         const plans = await planCollection.find({ selectedDays: dayOfWeek }).toArray();
 
         plans.forEach(async (plan) => {
-            // const email = plan.email;
-            // const subject = 'You planned to walk today';
-            // const body = 'Don\'t forget to get your steps in today!';
-            // await sendEmail(email, subject, body);
+            const email = plan.email;
+            const subject = 'You planned to walk today';
+            const body = 'Don\'t forget to get your steps in today!';
+            await sendEmail(email, subject, body);
 
-            // const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
-            // const smsBody = 'Don\'t forget to get your steps in today!';
-            // await sendSMS(phone, smsBody);
+            const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
+            const smsBody = 'Don\'t forget to get your steps in today!';
+            await sendSMS(phone, smsBody);
         });
+
+        // Clear selectedDays every Sunday
+        if (dayOfWeek === 'Sunday') {
+            await planCollection.updateMany({}, { $set: { selectedDays: [] } });
+            console.log('Cleared selectedDays for all users.');
+        }
+
     } catch (error) {
         console.error('Error:', error);
     }

@@ -2,6 +2,8 @@
 async function submitNewContact() {
     const newEmail = document.getElementById('newEmail').value;
     const newPhone = document.getElementById('newPhone').value;
+    const participantNumber = document.getElementById('participantNumber').value;
+
 
     if ((newEmail && newEmail.length > 0 && newEmail.includes('@')) || newPhone) {
         try {
@@ -10,7 +12,7 @@ async function submitNewContact() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email: newEmail.trim(), phone: newPhone.trim() })
+                body: JSON.stringify({ identifier: newEmail || newPhone, identifier_type: newEmail ? 'email' : 'phone', participantNumber: participantNumber })
             });
 
             const data = await response.json();
@@ -18,16 +20,13 @@ async function submitNewContact() {
             if (data.success) {
                 alert(data.message);
 
-                // After successfully submitting a new contact, add it to the contactSelector
                 const contactSelector = document.getElementById('contactSelector');
                 const option = document.createElement('option');
                 option.value = newEmail || newPhone;
                 option.textContent = newEmail || newPhone;
                 contactSelector.appendChild(option);
-
             } else {
-                if (data.message === 'Email address already exists' ||
-                    data.message === 'Phone number already exists') {
+                if (data.message === 'Contact already exists') {
                     alert('This email address or phone number is already registered');
                 } else {
                     alert('Error submitting contact');
@@ -39,10 +38,12 @@ async function submitNewContact() {
 
         document.getElementById('newEmail').value = '';
         document.getElementById('newPhone').value = '';
+        document.getElementById('participantNumber').value = '';
     } else {
         alert('Please enter a valid email address or phone number');
     }
 }
+
 
 
 async function getContacts() {
@@ -57,11 +58,11 @@ async function getContacts() {
             contactSelector.innerHTML = '';
 
             // Add new options
-            data.data.forEach(contact => {
-                if (contact.trim() !== '') {
+            data.data.forEach(identifier => {
+                if (identifier.trim() !== '') {
                     const option = document.createElement('option');
-                    option.value = contact;
-                    option.textContent = contact;
+                    option.value = identifier;
+                    option.textContent = identifier;
                     contactSelector.appendChild(option);
                 }
             });
@@ -72,6 +73,7 @@ async function getContacts() {
         console.error('Error:', error);
     }
 }
+
 
 // Call the function to populate the contact selector
 getContacts();
@@ -84,16 +86,18 @@ document.getElementById('planForm').addEventListener('submit', function (event) 
 
 async function submitPlan() {
     const selectedDays = Array.from(document.querySelectorAll('input[name="selectedDays"]:checked')).map(input => input.value);
-    const selectedContact = document.getElementById('contactSelector').value; // Change to contactSelector
+    const selectedContact = document.getElementById('contactSelector').value;
 
     if (selectedDays.length > 0 && selectedContact) {
         try {
+            const identifier = selectedContact;
+
             const response = await fetch('/submit-plan', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ contact: selectedContact, selectedDays }) // Change parameter name to contact
+                body: JSON.stringify({ identifier, selectedDays})
             });
 
             const data = await response.json();
@@ -111,3 +115,23 @@ async function submitPlan() {
     }
 }
 
+async function planActivity(user_id, date) {
+    try {
+        const response = await fetch('/api/plan_activity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user_id, date })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error planning activity:', error);
+        throw error;
+    }
+}
