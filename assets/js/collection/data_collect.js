@@ -6,10 +6,11 @@ async function getPlannedActivities(user_id) {
         const data = await response.json();
 
         if (data.success) {
-            return data.data;
-        } else {
-            return [];
+            const plannedActivities = data.plannedActivities;
+            return plannedActivities.map(activity => activity.startDate);
         }
+
+        return [];
     } catch (error) {
         console.error('Error:', error);
         return [];
@@ -45,7 +46,6 @@ async function generateCSV(user_id, participantNumber) {
                 const dayOfWeekIndex = new Date(date).getDay(); // Get the day of the week as an index (0-6)
                 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dayOfWeek = daysOfWeek[(dayOfWeekIndex + 1) % 7]; // Get the day of the week as a string, with an offset of one day                
-                console.log(dayOfWeek)
                 const isPlanned = plannedActivities.includes(date);
                 // Assuming you have the function activityPlanned that checks your database for planned activities
                 const startTime = activity.startTime;

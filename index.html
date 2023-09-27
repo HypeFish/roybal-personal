@@ -5,87 +5,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="assets/css/index.css"> <!-- Added a new CSS file -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="assets/js/app.js"></script>
     <title>Home</title>
 </head>
 
 <body>
-    <h1>Roybal Home Page</h1>
+    <div class="container">
+        <h1>Roybal Home Page</h1>
 
-    <h2> How to Add New Participant</h2>
-    <ol>
-        <li>Click the follow link:
-            <!-- https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23RCXD&scope=activity+cardio_fitness+electrocardiogram+heartrate+location+nutrition+oxygen_saturation+profile+respiratory_rate+settings+sleep+social+temperature+weight&code_challenge=MAW4G5Jmci9QV7obCIdQshJMPKaD5jBaTQG07_TgNn4&code_challenge_method=S256&state=291q5l2z2m6l1b015l4j420d122o6o6h&redirect_uri=https%3A%2F%2Froybal.vercel.app%2Fauth%2Fcallback -->
-            <a
-                href="https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23RCXD&scope=activity+cardio_fitness+electrocardiogram+heartrate+location+nutrition+oxygen_saturation+profile+respiratory_rate+settings+sleep+social+temperature+weight&code_challenge=MAW4G5Jmci9QV7obCIdQshJMPKaD5jBaTQG07_TgNn4&code_challenge_method=S256&state=291q5l2z2m6l1b015l4j420d122o6o6h&redirect_uri=https%3A%2F%2Froybal.vercel.app%2Fauth%2Fcallback">Add
-                New Participant</a>
-        </li>
-        <li> Sign in with Google using the Participant email address and password (On Basecamp)</li>
-        <li> Consent to all the following and submit the authorization form</li>
-    </ol>
+        <div class="instructions">
+            <h2>How to Add a New Participant</h2>
+            <ol>
+                <li>Click the following link: <a href="https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23RCXD&scope=activity+cardio_fitness+electrocardiogram+heartrate+location+nutrition+oxygen_saturation+profile+respiratory_rate+settings+sleep+social+temperature+weight&code_challenge=MAW4G5Jmci9QV7obCIdQshJMPKaD5jBaTQG07_TgNn4&code_challenge_method=S256&state=291q5l2z2m6l1b015l4j420d122o6o6h&redirect_uri=https%3A%2F%2Froybal.vercel.app%2Fauth%2Fcallback">Add New Participant</a></li>
+                <li>Sign in with Google using the Participant email address and password (On Basecamp)</li>
+                <li>Consent to all the following and submit the authorization form</li>
+            </ol>
+        </div>
 
-    <h2>Participant Data Collection</h2>
-    <label for="participantSelector">Select Participant:</label>
-    <select id="participantSelector" title="Select Participant">
-        <!-- Option elements will be dynamically added here using JavaScript -->
-    </select>
-    <button id="generate-csv" autofocus>Generate CSV</button>
+        <div class="participant-data-collection">
+            <h2>Participant Data Collection</h2>
+            <label for="participantSelector">Select Participant:</label>
+            <select id="participantSelector" title="Select Participant"></select>
+            <button id="generate-csv">Generate CSV</button>
+        </div>
 
-    <br />
-    <br />
-    <h2>Plan Your Walk</h2>
+        <div class="plan-your-walk">
+            <h2>Plan Your Walk</h2>
+            <label for="contactSelector">Select a Contact:</label>
+            <select id="contactSelector" name="contactSelector"></select>
+            
+            <form id="planForm"> <!-- Added form element -->
+                <label for="datePicker">Select Date(s):</label>
+                <input type="text" id="datePicker" name="selectedDate" placeholder="MM/DD/YYYY" title="Date Picker">
+                <input type="submit" value="Submit Plan"> <!-- Added submit button -->
+            </form>
 
-    <label for="contactSelector">Select an Contact:</label>
-    <select id="contactSelector" name="contactSelector">
-        <!-- Option elements will be dynamically added here using JavaScript -->
-    </select>
+            <label for="newEmail">Or add a new email:</label>
+            <input type="text" id="newEmail" name="newEmail" class="new-input">
+            <label for="newPhone">Or add a new phone number:</label>
+            <input type="text" id="newPhone" name="newPhone" class="new-input">
+            <label for="participantNumber">Participant Number:</label>
+            <input type="number" id="participantNumber" name="participantNumber" class="new-input"> <!-- Add this field -->
+        </div>
 
-    <form id="planForm"> <!-- Added form element -->
-        <label for="selectedDays">Select days:</label>
-        <input type="checkbox" id="sunday" name="selectedDays" value="Sunday">
-        <label for="sunday">Sunday</label>
-        <input type="checkbox" id="monday" name="selectedDays" value="Monday">
-        <label for="monday">Monday</label>
-        <input type="checkbox" id="tuesday" name="selectedDays" value="Tuesday">
-        <label for="tuesday">Tuesday</label>
-        <input type="checkbox" id="wednesday" name="selectedDays" value="Wednesday">
-        <label for="wednesday">Wednesday</label>
-        <input type="checkbox" id="thursday" name="selectedDays" value="Thursday">
-        <label for="thursday">Thursday</label>
-        <input type="checkbox" id="friday" name="selectedDays" value="Friday">
-        <label for="friday">Friday</label>
-        <input type="checkbox" id="saturday" name="selectedDays" value="Saturday">
-        <label for="saturday">Saturday</label>
+        <div class="micro-incentive-collector">
+            <h2>Micro Incentive Collector</h2>
+            <small>Click the button to get the points for the current week (Saturday - Sunday)</small>
+            <label for="pointSelector">Select Participant:</label>
+            <select id="pointSelector" title="Select Participant"></select>
+            <button type="button" id="points">Points</button>
+            <div id="pointsResult"></div>
+        </div>
+    </div>
 
-        <br><br>
-
-        <input type="submit" value="Submit Plan"> <!-- Added submit button -->
-    </form>
-
-    <br />
-    <br />
-
-    <label for="newEmail">Or add a new email:</label>
-    <input type="text" id="newEmail" name="newEmail"
-        onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
-
-    <br><br>
-
-    <label for="newPhone">Or add a new phone number:</label>
-    <input type="text" id="newPhone" name="newPhone"
-        onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitNewContact(); }">
-
-    <label for="participantNumber">Participant Number:</label>
-    <input type="number" id="participantNumber" name="participantNumber"> <!-- Add this field -->
-
-    <h2> Micro Incentive Collector</h2>
-    <label for="pointSelector"> Select Participant: </label>
-    <select id="pointSelector" title="Select Participant">
-        <!-- Option elements will be dynamically added here using JavaScript -->
-    </select>
-    <button id="points">Generate Points CSV</button>
-
-    
     <script src="assets/js/collection/data_collect.js"></script>
     <script src="assets/js/plan/plan.js"></script>
     <script src="assets/js/incentive/incentive.js"></script>

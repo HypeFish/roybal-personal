@@ -141,7 +141,6 @@ app.get('/', requireAuth, (req, res) => {
 async function storeDataInDatabase(user_id, fitbitData) {
     try {
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-        console.log(yesterday)
         const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
 
         if (existingDocument) {
@@ -384,7 +383,6 @@ app.get('/api/combined_data/:user_id', async (req, res) => {
     }
 });
 
-
 app.post('/submit-plan', async (req, res) => {
     const { identifier, selectedDays } = req.body;
 
@@ -413,10 +411,6 @@ app.post('/submit-plan', async (req, res) => {
         res.status(400).json({ success: false, error: 'Invalid request' });
     }
 });
-
-
-
-
 
 app.post('/submit-contact', async (req, res) => {
     const { identifier, identifier_type, participantNumber } = req.body;
@@ -476,7 +470,7 @@ app.post('/verify-completed-activity', async (req, res) => {
 
             // Mark the planned activity as completed in the plan collection by incrementing the planned_activities_count by 1
             const updated = await planCollection.updateOne(
-                { participantNumber},
+                { participantNumber },
                 { $inc: { planned_activities_count: 1 } }
             );
 
@@ -506,29 +500,35 @@ app.get('/api/planned_activities/:user_id', async (req, res) => {
         const plan = await planCollection.findOne({ participantNumber });
         //now we can get the selectedDays from the plan
         const selectedDays = plan.selectedDays;
-        //check if the selectedDays array is empty
-        if (selectedDays.length === 0) {
-            res.json({ success: true, data: [] });
+
+        //obtain all the documents for the specified user_id
+        const userDocuments = await dataCollection.find({ user_id }).toArray();
+
+        //if there are no documents, return an empty array
+        if (userDocuments.length === 0) {
+            res.json({ success: true, plannedActivities: [], unplannedActivities: [] });
             return;
         }
-        // Get the planned activities for the specified user
-        const plannedActivities = await dataCollection.find({
-            user_id,
-            date: { $in: selectedDays }
-        }).toArray();
 
-        // Get the unplanned activities for the specified user
-        const unplannedActivities = await dataCollection.find({
-            user_id,
-            date: { $nin: selectedDays }
-        }).toArray();
+        //from the documents, get each activity and add it to the combinedActivities array
+        let combinedActivities = [];
+        for (const document of userDocuments) {
+            combinedActivities.push(...document.activities);
+        }
 
-        console.log(plannedActivities)
-        console.log(unplannedActivities)
+        //filter the combinedActivities array to get only the activities that were planned
+        const plannedActivities = combinedActivities.filter(activity => selectedDays.includes(activity.startDate.split('T')[0]));
 
-        
+        //filter the combinedActivities array to get only the activities that were unplanned
+        const unplannedActivities = combinedActivities.filter(activity => !selectedDays.includes(activity.startDate.split('T')[0]));
 
-        res.json({ success: true, data: plannedActivities, unplannedActivities });
+        //check if the selectedDays array is empty
+        if (selectedDays.length === 0) {
+            res.json({ success: true, plannedActivities: [], unplannedActivities: [] });
+            return;
+        }
+
+        res.json({ success: true, plannedActivities, unplannedActivities });
     } catch (error) {
         console.error('Error fetching planned activities:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -543,7 +543,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('0 7 * * *', async () => {
+cron.schedule('57 11 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
@@ -567,26 +567,20 @@ cron.schedule('0 7 * * *', async () => {
         }
 
         const currentDate = new Date();
-        const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()];
+        const formattedDate = currentDate.toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
-        const plans = await planCollection.find({ selectedDays: dayOfWeek }).toArray();
+        const plans = await planCollection.find({ selectedDays: formattedDate }).toArray();
 
         plans.forEach(async (plan) => {
-            const email = plan.email;
-            const subject = 'You planned to walk today';
-            const body = 'Don\'t forget to get your steps in today!';
-            await sendEmail(email, subject, body);
+            const identifierType = plan.identifier_type;
+            const identifier = plan.identifier;
 
-            const phone = plan.phone; // Assuming the phone number is stored in 'phone' field
-            const smsBody = 'Don\'t forget to get your steps in today!';
-            await sendSMS(phone, smsBody);
+            const body = `Hi,\n\nYou have a planned activity today! \n Best, \n Roybal`;
+            await sendEmail(identifier, 'Daily Activity Reminder', body);
+            await sendSMS(identifier, body);
+
         });
 
-        // Clear selectedDays every Sunday
-        if (dayOfWeek === 'Sunday') {
-            await planCollection.updateMany({}, { $set: { selectedDays: [] } });
-            console.log('Cleared selectedDays for all users.');
-        }
 
     } catch (error) {
         console.error('Error:', error);
@@ -669,8 +663,8 @@ const sendEmail = async (to, subject, body) => {
         });
         console.log('Email sent:', info.response);
     } catch (error) {
-        console.error('Error sending email:', error);
-    }
+        console.log("No email sent")
+    };
 };
 
 const sendSMS = async (to, body) => {
@@ -682,7 +676,7 @@ const sendSMS = async (to, body) => {
         });
         console.log('SMS sent:', message.sid);
     } catch (error) {
-        console.error('Error sending SMS:', error);
+        console.log("No SMS sent", error)
     }
 };
 

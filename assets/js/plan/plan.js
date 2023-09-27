@@ -85,10 +85,13 @@ document.getElementById('planForm').addEventListener('submit', function (event) 
 });
 
 async function submitPlan() {
-    const selectedDays = Array.from(document.querySelectorAll('input[name="selectedDays"]:checked')).map(input => input.value);
-    const selectedContact = document.getElementById('contactSelector').value;
+    const selectedDates = document.getElementById('datePicker').value;
+    //add the dates to an array
+    const dates = selectedDates.split(',');
 
-    if (selectedDays.length > 0 && selectedContact) {
+    if (selectedDates) {
+        const selectedContact = document.getElementById('contactSelector').value;
+
         try {
             const identifier = selectedContact;
 
@@ -97,7 +100,7 @@ async function submitPlan() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ identifier, selectedDays})
+                body: JSON.stringify({ identifier, selectedDays: dates })
             });
 
             const data = await response.json();
@@ -111,9 +114,10 @@ async function submitPlan() {
             console.error('Error:', error);
         }
     } else {
-        alert('Please select at least one day and a contact');
+        alert('Please select at least one date and a contact');
     }
 }
+
 
 async function planActivity(user_id, date) {
     try {
@@ -135,3 +139,16 @@ async function planActivity(user_id, date) {
         throw error;
     }
 }
+
+
+flatpickr("#datePicker", {
+    mode: 'multiple', // Enable multiple date selection
+    enable: [
+        function(date) {
+            // Enable all dates for now, you can add custom logic here later
+            return true;
+        }
+    ],
+    dateFormat: "Y-m-d", // Set the date format as needed
+});
+

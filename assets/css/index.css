@@ -1,69 +1,68 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 2vmin;
-    background-color: #f0f0f0;
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2vw;
+    background-color: #ffffff46;
+    border-radius: 2vw;
+    box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-    margin-bottom: 2vmin;
+.instructions, .participant-data-collection, .plan-your-walk, .micro-incentive-collector {
+    margin-bottom: 4vw;
 }
 
-select {
-    font-size: 1.6vmin;
-    margin: 0.5vmin;
-    padding: 1vmin;
-    border-radius: 1.5vmin;
-    background-color: #052844;
-    color: #fffbea;
+.instructions h2, .participant-data-collection h2, .plan-your-walk h2, .micro-incentive-collector h2 {
+    margin-bottom: 2vw;
+}
+
+select, input {
+    display: block;
+    margin-bottom: 2vw;
+    max-width: max-content;
+    border-radius: 1vw;
+}
+
+/* for the input named "submit */
+input[type=submit] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 2vw 2vw;
     cursor: pointer;
+    border-radius: 1vw;
 }
+
+label {
+    display: block;
+    margin-bottom: 2vw;
+    width: 100%;
+    font-size: 2vw; /* Increase font size for emphasis */
+    color: #007bff; /* Fun and vibrant color */
+    font-weight: bold; /* Make the text bold */
+    text-transform: uppercase; /* Uppercase text */
+    letter-spacing: 0.1vw; /* Add some letter spacing */
+}
+
 
 button {
-    font-size: 1.6vmin;
-    margin: 0.5vmin;
-    padding: 1vmin 2vmin;
-    border-radius: 1.5vmin;
-    background-color: #fffbea;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 2vw 2vw;
     cursor: pointer;
+    border-radius: 1vw;
 }
 
 button:hover {
-    background-color: #f7f1db;
+    background-color: #0056b3;
 }
 
-input[type="submit"] {
-    font-size: 2.0vmin;
-    margin: 0.5vmin;
-    padding: 1vmin 2vmin;
-    border-radius: 1.5vmin;
-    background-color: #fffbea;
-    cursor: pointer;
-}
-
-input[type="submit"]:hover {
-    background-color: #f7f1db;
+.small-text {
+    font-size: 2vw;
+    color: #777;
 }
 
 h1 {
-    margin-bottom: 2vmin;
     text-align: center;
-    border-bottom: 0.2vmin solid #052844;
-}
-
-.participant-selector {
-    display: inline-block;
-    margin-bottom: 1vmin;
-}
-
-.participant-button {
-    font-size: 1.6vmin;
-    margin: 0.5vmin;
-    padding: 1vmin 2vmin;
-    border: none;
-    border-radius: 0.5vmin;
-    cursor: pointer;
-}
-
-.participant-button:hover {
-    background-color: #ddd;
+    margin-bottom: 4vw;
 }
