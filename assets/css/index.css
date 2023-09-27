@@ -2,7 +2,7 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 2vw;
-    background-color: #ffffff46;
+    background-color: #8a838346;
     border-radius: 2vw;
     box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1);
 }
@@ -20,14 +20,15 @@ select, input {
     margin-bottom: 2vw;
     max-width: max-content;
     border-radius: 1vw;
+    padding: .4vw;
 }
 
 /* for the input named "submit */
 input[type=submit] {
     background-color: #007bff;
     color: #fff;
-    border: none;
-    padding: 2vw 2vw;
+    border:#000000;
+    padding: 1vw 1vw;
     cursor: pointer;
     border-radius: 1vw;
 }
@@ -39,7 +40,6 @@ label {
     font-size: 2vw; /* Increase font size for emphasis */
     color: #007bff; /* Fun and vibrant color */
     font-weight: bold; /* Make the text bold */
-    text-transform: uppercase; /* Uppercase text */
     letter-spacing: 0.1vw; /* Add some letter spacing */
 }
 
@@ -48,7 +48,7 @@ button {
     background-color: #007bff;
     color: #fff;
     border: none;
-    padding: 2vw 2vw;
+    padding: 1vw 1vw;
     cursor: pointer;
     border-radius: 1vw;
 }
@@ -65,4 +65,25 @@ button:hover {
 h1 {
     text-align: center;
     margin-bottom: 4vw;
+}
+
+h2 {
+    /* underline the whole area */
+    border-bottom: 0.2vw solid #000000;
+    padding-bottom: 0.5vw;
+    margin-bottom: 2vw;
+
+}
+
+.pointsResult {
+    font-size: 2vw;
+    color: #007bff;
+    font-weight: bold;
+    letter-spacing: 0.1vw;
+    padding-top: 1vw;
+}
+
+li {
+    margin-bottom: 1vw;
+    
 }
