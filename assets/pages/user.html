@@ -1,0 +1,20 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Portal</title>
+</head>
+<body>
+    <h1>Welcome to Your Portal</h1>
+    <p>User ID: <%= user.user_id %></p>
+    <p>Participant Number: <%= user.participantNumber %></p>
+
+    <!-- Add placeholders for planned activities, completed activities, and total points -->
+
+    <p>Total Points: <%= calculateTotalPoints(user.completedActivities) %> / 2500</p>
+
+    <script src="/assets/js/user/portal.js"></script>
+</body>
+</html>

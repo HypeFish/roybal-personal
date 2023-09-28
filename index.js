@@ -92,17 +92,6 @@ function requireAuth(req, res, next) {
     }
 }
 
-// Define the login route
-app.get('/login', (req, res) => {
-    // Check if the user is already logged in
-    if (req.session?.user) {
-        return res.redirect('/'); // Redirect to the home page if already logged in
-    }
-    else {
-        res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
-    }
-});
-
 // Handle login form submission
 app.post('/login', async (req, res) => {
     const username = req.body.username;
@@ -116,14 +105,11 @@ app.post('/login', async (req, res) => {
             req.session.user = username;
             console.log('User authenticated successfully')
             res.redirect('/');
-        }
-        else if (user) {
-            //TODO: set up user portal
+        } else if (user) {
             req.session.user = username;
             console.log('User authenticated successfully')
-            res.redirect('/login');
-        }
-        else {
+            res.redirect(`/user_portal/${user}`); //They're user is the user ID
+        } else {
             console.log('Invalid username or password')
             res.status(401).json({ success: false, error: 'Invalid username or password' });
         }
@@ -132,6 +118,7 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 //Serve the index page
 app.get('/', requireAuth, (req, res) => {
@@ -534,7 +521,6 @@ app.get('/api/planned_activities/:user_id', async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
-
 
 // Serve the error page
 app.use((req, res) => {
