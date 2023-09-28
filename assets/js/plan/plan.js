@@ -7,7 +7,7 @@ async function submitNewContact() {
 
     if ((newEmail && newEmail.length > 0 && newEmail.includes('@')) || newPhone) {
         try {
-            const response = await fetch('/submit-contact', {
+            const response = await fetch('/admin/submit-contact', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -48,7 +48,7 @@ async function submitNewContact() {
 
 async function getContacts() {
     try {
-        const response = await fetch('/get-contacts');
+        const response = await fetch('/admin/get-contacts');
         const data = await response.json();
 
         if (data.success) {
@@ -84,6 +84,12 @@ document.getElementById('planForm').addEventListener('submit', function (event) 
     submitPlan(); // Call your function to handle the submission
 });
 
+document.getElementById('addContact').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    submitNewContact(); // Call your function to handle the submission
+});
+
+
 async function submitPlan() {
     const selectedDates = document.getElementById('datePicker').value;
     //add the dates to an array
@@ -95,7 +101,7 @@ async function submitPlan() {
         try {
             const identifier = selectedContact;
 
-            const response = await fetch('/submit-plan', {
+            const response = await fetch('/admin/submit-plan', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -121,7 +127,7 @@ async function submitPlan() {
 
 async function planActivity(user_id, date) {
     try {
-        const response = await fetch('/api/plan_activity', {
+        const response = await fetch('/admin/api/plan_activity', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

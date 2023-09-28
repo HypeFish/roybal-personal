@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Welcome, User!</h1>
+    <div>
+        <h2>User Information</h2>
+        <p>User ID: <span id="user-id"></span></p>
+        <p>Participant Number: <span id="participant-number"></span></p>
+    </div>
+    <div>
+        <h2>Activity Days</h2>
+        <p>Planned Activity Days: <span id="planned-activity-days"></span></p>
+        <p>Completed Activity Days: <span id="completed-activity-days"></span></p>
+    </div>
+    <div>
+        <h2>Points</h2>
+        <p>Points for the Week: <span id="points"></span></p>
+        <canvas id="point-chart"></canvas>
+    </div>
+
+    <script src="/assets/js/user/portal.js"></script>
+</body>
+</html>

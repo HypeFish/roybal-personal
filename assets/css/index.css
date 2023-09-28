@@ -1,10 +1,11 @@
 .container {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 2vw;
     background-color: #8a838346;
     border-radius: 2vw;
     box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 .instructions, .participant-data-collection, .plan-your-walk, .micro-incentive-collector {
@@ -51,6 +52,7 @@ button {
     padding: 1vw 1vw;
     cursor: pointer;
     border-radius: 1vw;
+    margin-bottom: 2vw;
 }
 
 button:hover {
@@ -86,4 +88,9 @@ h2 {
 li {
     margin-bottom: 1vw;
     
+}
+
+.signout {
+    text-align: center;
+    margin-top: 2vw;
 }

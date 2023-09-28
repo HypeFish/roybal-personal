@@ -2,7 +2,7 @@
 
 async function getPlannedActivities(user_id) {
     try {
-        const response = await fetch(`/api/planned_activities/${user_id}`);
+        const response = await fetch(`/admin/api/planned_activities/${user_id}`);
         const data = await response.json();
 
         if (data.success) {
@@ -21,7 +21,7 @@ async function generateCSV(user_id, participantNumber) {
     try {
         // Fetch planned activities for the user
         const plannedActivities = await getPlannedActivities(user_id);
-        const response = await fetch(`/api/combined_data/${user_id}`);
+        const response = await fetch(`/admin/api/combined_data/${user_id}`);
         const data = await response.json();
 
         if (!data.success) {
@@ -35,8 +35,16 @@ async function generateCSV(user_id, participantNumber) {
             return;
         }
 
+        let plannedPointsCount = 0;
+        let unplannedPointsCount = 0;
+
+        //calculate last saturday
+        const today = new Date();
+        let lastSaturdayOutsideLoop;
+
+
         // Add headers for new columns
-        const csvData = 'participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned\n';
+        const csvData = 'participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned,points\n';
 
         const formattedData = combinedData.flatMap(item => {
             return item.activities.map(activity => {
@@ -47,7 +55,6 @@ async function generateCSV(user_id, participantNumber) {
                 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dayOfWeek = daysOfWeek[(dayOfWeekIndex + 1) % 7]; // Get the day of the week as a string, with an offset of one day                
                 const isPlanned = plannedActivities.includes(date);
-                // Assuming you have the function activityPlanned that checks your database for planned activities
                 const startTime = activity.startTime;
                 const activityName = activity.name;
                 const totalSteps = activity.steps;
@@ -55,7 +62,37 @@ async function generateCSV(user_id, participantNumber) {
                 const durationInMinutes = Math.round(activity.duration / 60000 * 100) / 100; // Round to 2 decimal places
                 const caloriesBurned = activity.calories;
 
-                return `sub_${formattedParticipantNumber},${date},${dayOfWeek},${isPlanned},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned}`;
+                //calculate last saturday
+                const today = new Date(date);
+                const lastSaturdayInsideLoop = new Date(today);
+                lastSaturdayInsideLoop.setDate(today.getDate() - (today.getDay() + 1) % 7);
+
+                console.log({ lastSaturdayOutsideLoop, lastSaturdayInsideLoop })
+                //if the last saturday is not the same as the last saturday, reset the counters
+                if (lastSaturdayOutsideLoop === undefined) {
+                    lastSaturdayOutsideLoop = new Date(lastSaturdayInsideLoop);
+                    plannedPointsCount = 0;
+                    unplannedPointsCount = 0;
+                } else
+                    if (lastSaturdayOutsideLoop.getTime() !== lastSaturdayInsideLoop.getTime()) {
+                        lastSaturdayOutsideLoop = new Date(lastSaturdayInsideLoop);
+                        plannedPointsCount = 0;
+                        unplannedPointsCount = 0;
+                    }
+                // Check if points have reached max
+                const plannedPoints = plannedPointsCount < 5 && isPlanned ? 400 : 0;
+                const unplannedPoints = unplannedPointsCount < 2 && !isPlanned ? 250 : 0;
+
+                // Update counters based on activity type
+                if (isPlanned && plannedPoints > 0) {
+                    plannedPointsCount++;
+                } else if (!isPlanned && unplannedPoints > 0) {
+                    unplannedPointsCount++;
+                }
+
+                const totalPoints = plannedPoints + unplannedPoints;
+
+                return `sub_${formattedParticipantNumber},${date},${dayOfWeek},${isPlanned},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned},${totalPoints}`;
             });
         });
 
@@ -74,9 +111,13 @@ async function generateCSV(user_id, participantNumber) {
     }
 }
 
+
+
+
+
 async function getParticipants() {
     try {
-        const response = await fetch('/api/participants');
+        const response = await fetch('/admin/api/participants');
         const data = await response.json();
 
         if (data.success) {

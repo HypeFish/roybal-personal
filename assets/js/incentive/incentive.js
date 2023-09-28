@@ -1,6 +1,6 @@
 async function calculatePoints(user_id) {
     try {
-        const response = await fetch(`/api/planned_activities/${user_id}`);
+        const response = await fetch(`/admin/api/planned_activities/${user_id}`);
         const plannedAndUnplanned = await response.json();
 
         if (plannedAndUnplanned.success) {
@@ -28,6 +28,18 @@ async function calculatePoints(user_id) {
             const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
 
             console.log(unplannedActivitiesThisWeek)
+
+            //send the points back to the server
+
+            const response = await fetch(`/admin/api/points/${user_id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ plannedPoints, unplannedPoints })
+            });
+
+            
             return plannedPoints + unplannedPoints;
         } else {
             return 0;

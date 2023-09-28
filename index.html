@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="assets/css/index.css"> <!-- Added a new CSS file -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="assets/js/app.js"></script>
     <title>Home</title>
 </head>
 
@@ -39,8 +38,8 @@
             <form id="planForm"> <!-- Added form element -->
                 <label for="datePicker">Select Date(s):</label>
                 <input type="text" id="datePicker" name="selectedDate" placeholder="MM/DD/YYYY" title="Date Picker">
-                <input type="submit" value="Submit Plan"> <!-- Added submit button -->
-            </form>
+                <button type="submit" id="plan">Submit Plan</button>
+            </form>   
 
             <label for="newEmail">Or add a new email:</label>
             <input type="text" id="newEmail" name="newEmail" class="new-input">
@@ -48,6 +47,7 @@
             <input type="text" id="newPhone" name="newPhone" class="new-input">
             <label for="participantNumber">Participant Number:</label>
             <input type="number" id="participantNumber" name="participantNumber" class="new-input"> <!-- Add this field -->
+            <button type="submit" id="addContact">Add Contact</button>
         </div>
 
         <div class="micro-incentive-collector">
@@ -57,6 +57,11 @@
             <select id="pointSelector" title="Select Participant"></select>
             <button type="button" id="points">Points</button>
             <div class="pointsResult" id="pointsResult"></div>
+        </div>
+
+        <div class="signout">
+            <!-- sign out of the session using the logout route -->
+            <a href="/logout">Sign Out</a>
         </div>
     </div>
 

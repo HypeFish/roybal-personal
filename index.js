@@ -68,13 +68,6 @@ app.use(session({
     store: store
 }));
 
-// Add session middleware
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true
-}));
-
 app.use((req, res, next) => {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     res.header('Pragma', 'no-cache');
@@ -82,17 +75,28 @@ app.use((req, res, next) => {
     next();
 });
 
+//signout route
+app.get('/logout', (req, res) => {
+    res.redirect('/login');
+    req.session.destroy();
+});
 
-// Middleware to check if user is authenticated
-function requireAuth(req, res, next) {
+// Define the login route
+app.get('/login', (req, res) => {
+    // Check if the user is already logged in
     if (req.session?.user) {
-        return next(); // User is authenticated, proceed to the next middleware or route handler
-    } else {
-        return res.redirect('/login'); // User is not authenticated, redirect to login page
+        if (req.session.user === 'cnelab') {
+            res.redirect('/admin');
+        }
+        else {
+            res.redirect('/user_portal');
+        }
     }
-}
+    else {
+        res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
+    }
+});
 
-// Handle login form submission
 app.post('/login', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
@@ -103,26 +107,77 @@ app.post('/login', async (req, res) => {
 
         if (admin) {
             req.session.user = username;
-            console.log('User authenticated successfully')
-            res.redirect('/');
+            req.session.isAdmin = true; // Set isAdmin property for admins
+            res.redirect('/admin');
         } else if (user) {
             req.session.user = username;
-            console.log('User authenticated successfully')
-            res.redirect(`/user_portal/${user}`); //They're user is the user ID
-        } else {
-            console.log('Invalid username or password')
+            req.session.isAdmin = false; // Set isAdmin property for regular users
+            res.redirect('/user_portal'); // Redirect to the user portal
+        }
+        else {
             res.status(401).json({ success: false, error: 'Invalid username or password' });
         }
     } catch (error) {
-        console.error(error);
         res.status(500).send('Internal Server Error');
     }
 });
 
+function requireAuth(req, res, next) {
+    if (req.session?.user && req.session?.isAdmin) {
+        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
+    } else {
+        return res.redirect('/login'); // User is not authenticated, redirect to login page
+    }
+}
 
-//Serve the index page
-app.get('/', requireAuth, (req, res) => {
+function requireUserAuth(req, res, next) {
+    if (req.session?.user && !req.session?.isAdmin) {
+        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
+    } else {
+        return res.redirect('/login'); // User is not authenticated or is an admin, redirect to login page
+    }
+}
+
+
+app.get('/user_portal', requireUserAuth, (req, res) => {
+    const user_id = req.session.user; // Use the user ID from the session
+
+    console.log('User ID:', user_id);
+
+    participantsCollection.findOne({ user_id })
+        .then(user => {
+            console.log('User:', user);
+            if (user) {
+                res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
+            } else {
+                console.log('User not found');
+                res.status(404).sendFile(path.join(__dirname, '404.html'));
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user:', error);
+            res.status(500).sendFile(path.join(__dirname, '500.html'));
+        });
+});
+
+// Serve the index page
+app.get('/admin', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+//If the user is not logged in, redirect to the login page
+app.get('/', (req, res) => {
+    if (req.session?.user) {
+        if (req.session.user === 'cnelab') {
+            res.redirect('/admin');
+        }
+        else {
+            res.redirect('/user_portal');
+        }
+    }
+    else {
+        res.redirect('/login');
+    }
 });
 
 async function storeDataInDatabase(user_id, fitbitData) {
@@ -153,7 +208,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
 }
 
 // Add a new route to refresh the access token
-app.post('/api/refresh-token/:user_id', async (req, res) => {
+app.post('/admin/api/refresh-token/:user_id', async (req, res) => {
     console.log('Reached the refresh_token route'); // Add this line
 
     const user_id = req.params.user_id;
@@ -205,9 +260,8 @@ app.post('/api/refresh-token/:user_id', async (req, res) => {
     }
 });
 
-
 // Add a new route to fetch all participants
-app.get('/api/participants', async (req, res) => {
+app.get('/admin/api/participants', async (req, res) => {
     try {
         const participants = await participantsCollection.find().sort({ number: 1 }).toArray();
         const formattedParticipants = participants.map(({ user_id, number }, index) => ({
@@ -221,9 +275,6 @@ app.get('/api/participants', async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });
-
-
-
 
 // Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
@@ -276,7 +327,7 @@ app.get('/auth/callback', async (req, res) => {
 
 
 // Add a new route to fetch all user IDs
-app.get('/api/user_ids', async (req, res) => {
+app.get('/admin/api/user_ids', async (req, res) => {
     try {
         const userIDs = await participantsCollection.distinct('user_id');
         res.json({ userIDs });
@@ -287,7 +338,7 @@ app.get('/api/user_ids', async (req, res) => {
 });
 
 
-app.get('/api/tokens/:user_id', (req, res) => {
+app.get('/admin/api/tokens/:user_id', (req, res) => {
     const user_id = req.params.user_id;
 
     // Fetch tokens for the specified user_id from the database
@@ -310,7 +361,7 @@ app.get('/api/tokens/:user_id', (req, res) => {
 });
 
 // Add a new route for collecting Fitbit data
-app.post('/api/collect_data/:user_id', async (req, res) => {
+app.post('/admin/api/collect_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
     const access_token = req.headers.authorization.split(' ')[1]; // Extract the access token from the Authorization header
 
@@ -346,7 +397,7 @@ app.post('/api/collect_data/:user_id', async (req, res) => {
 });
 
 // Add a new route to fetch combined Fitbit data for a user
-app.get('/api/combined_data/:user_id', async (req, res) => {
+app.get('/admin/api/combined_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
 
     try {
@@ -370,7 +421,7 @@ app.get('/api/combined_data/:user_id', async (req, res) => {
     }
 });
 
-app.post('/submit-plan', async (req, res) => {
+app.post('/admin/submit-plan', async (req, res) => {
     const { identifier, selectedDays } = req.body;
 
     if (identifier && selectedDays) {
@@ -378,9 +429,8 @@ app.post('/submit-plan', async (req, res) => {
             const updated = await planCollection.updateOne(
                 { identifier },
                 {
-                    $addToSet: {
-                        selectedDays: { $each: selectedDays },
-                        plannedActivities: { $each: selectedDays.map(date => ({ date })) }
+                    $set: {
+                        selectedDays,
                     }
                 }
             );
@@ -399,7 +449,7 @@ app.post('/submit-plan', async (req, res) => {
     }
 });
 
-app.post('/submit-contact', async (req, res) => {
+app.post('/admin/submit-contact', async (req, res) => {
     const { identifier, identifier_type, participantNumber } = req.body;
 
     if (identifier) {
@@ -412,16 +462,15 @@ app.post('/submit-contact', async (req, res) => {
     }
 
     try {
-        // Save the data with the desired structure
+        // Save the data with the desired structure,
         await planCollection.insertOne({
-            identifier_type,
             identifier,
-            participantNumber: +participantNumber,
+            identifier_type,
+            participantNumber: parseInt(participantNumber),
             selectedDays: [],
-            planned_activities_count: 0,
-            unplanned_activities_count: 0
+            completedPlannedActivities: [],
+            completedUnplannedActivities: [],
         });
-
         res.json({ success: true, message: 'Contact submitted successfully' });
     } catch (error) {
         console.error(error);
@@ -429,7 +478,7 @@ app.post('/submit-contact', async (req, res) => {
     }
 });
 
-app.get('/get-contacts', async (req, res) => {
+app.get('/admin/get-contacts', async (req, res) => {
     try {
         const contacts = await planCollection.find().toArray();
         const identifiers = contacts.map(contact => contact.identifier);
@@ -441,42 +490,92 @@ app.get('/get-contacts', async (req, res) => {
 });
 
 // Add a new route for verifying completed planned activities
-app.post('/verify-completed-activity', async (req, res) => {
+app.post('/admin/verify-completed-activity', async (req, res) => {
     const { user_id, date } = req.body;
-
     try {
-        // Check if any activities exist for the specified user and date
-        const activities = await dataCollection.find({
-            user_id,
-            date
-        }).toArray();
+        // Find the user in the participants collection, and get the participantNumber
+        const user = await participantsCollection.findOne({ user_id });
+        const participantNumber = user.participantNumber;
 
-        if (activities.length > 0) {
-            //convert user_id to participantNumber
-            const participantNumber = await participantsCollection.findOne({ user_id }).number;
+        // Find the plan for that participantNumber
+        const plan = await plansCollection.findOne({ participantNumber });
 
-            // Mark the planned activity as completed in the plan collection by incrementing the planned_activities_count by 1
-            const updated = await planCollection.updateOne(
-                { participantNumber },
-                { $inc: { planned_activities_count: 1 } }
+        // Using their selected days, check if any activities match the date
+        const selectedDays = plan.selectedDays;
+        const matchingActivities = selectedDays
+            .filter(day => day.date === date)
+            .map(day => day.activities);
+
+        if (matchingActivities.length > 0) {
+            const completedActivity = matchingActivities[0];
+            const restUnplannedActivities = matchingActivities.slice(1);
+
+            // Calculate points for completedActivity (planned activity)
+            let plannedPoints = calculatePoints(completedActivity, 'planned');
+
+            // Calculate points for restUnplannedActivities (unplanned activities)
+            let unplannedPoints = 0;
+            for (const activity of restUnplannedActivities) {
+                unplannedPoints += calculatePoints(activity, 'unplanned');
+            }
+
+            // Update user's completedPlannedActivities and unplannedActivities
+            await participantsCollection.updateOne(
+                { user_id },
+                {
+                    $push: { completedPlannedActivities: completedActivity },
+                    $push: { unplannedActivities: { date, activities: restUnplannedActivities } }
+                }
             );
 
-            if (updated.modifiedCount > 0) {
-                res.json({ success: true, message: 'Planned activity verified and marked as completed' });
-            } else {
-                res.json({ success: false, message: 'No matching planned activity found' });
-            }
+            // Update points in planCollection
+            await updatePointsInDatabase(user_id, plannedPoints, unplannedPoints);
+
+            res.json({ success: true, message: 'Activity verified successfully.', plannedPoints, unplannedPoints });
         } else {
-            res.json({ success: false, message: 'Planned activity not completed' });
+            res.json({ success: false, message: 'No matching activity found for the selected date.' });
         }
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error verifying completed activity:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
 
+async function updatePointsInDatabase(user_id, plannedPoints, unplannedPoints) {
+    try {
+        const user = await participantsCollection.findOne({ user_id });
+        const participantNumber = user.number;
+
+        const updated = await planCollection.updateOne(
+            { participantNumber },
+            {
+                $inc: { planned_activities_count: plannedPoints, unplanned_activities_count: unplannedPoints }
+            }
+        );
+
+        if (updated.modifiedCount > 0) {
+            console.log(`Updated points for user ${user_id}`);
+        } else {
+            console.log(`User ${user_id} not found or points not updated`);
+        }
+    } catch (error) {
+        console.error(`Error updating points for user ${user_id}:`, error);
+    }
+}
+
+function calculatePoints(plannedCount, unplannedCount) {
+    const plannedPoints = 400;
+    const unplannedPoints = 250;
+
+    const totalPoints = (plannedCount * plannedPoints) + (unplannedCount * unplannedPoints);
+    return totalPoints;
+}
+
+
+
 // Define a new route handler
-app.get('/api/planned_activities/:user_id', async (req, res) => {
+app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
 
     try {
@@ -522,6 +621,58 @@ app.get('/api/planned_activities/:user_id', async (req, res) => {
     }
 });
 
+
+app.post('/admin/api/points/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+    const { plannedPoints, unplannedPoints } = req.body;
+
+    try {
+        const user = await participantsCollection.findOne({ user_id });
+        //if we find a user there, we can get the participantNumber
+        const participantNumber = user.number;
+
+        // Mark the planned activity as completed in the plan collection by incrementing the planned_activities_count by 1
+        const updated = await planCollection.updateOne(
+            { participantNumber },
+            { $inc: { planned_activities_count: plannedPoints, unplanned_activities_count: unplannedPoints } }
+        );
+
+        if (updated.modifiedCount > 0) {
+            res.json({ success: true, message: 'Points updated successfully' });
+        } else {
+            res.json({ success: false, message: 'No matching planned activity found' });
+        }
+    } catch (error) {
+        console.error('Error updating points:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
+
+app.get('/api/get_user_data', requireUserAuth, (req, res) => {
+    const user_id = req.query.user_id;
+
+    participantsCollection.findOne({ user_id })
+        .then(user => {
+            if (user) {
+                const userData = {
+                    user_id: user.user_id,
+                    participant_number: user.number,
+                    planned_activity_days: user.planned_activity_days, // Add these fields based on your data structure
+                    completed_activity_days: user.completed_activity_days, // Add these fields based on your data structure
+                    points: user.points // Add these fields based on your data structure
+                };
+                res.json(userData);
+            } else {
+                res.status(404).json({ error: 'User not found' });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        });
+});
+
+
 // Serve the error page
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
@@ -533,7 +684,7 @@ cron.schedule('0 7 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
-        const response = await axios.get('http://roybal.vercel.app/api/user_ids');
+        const response = await axios.get('http://roybal.vercel.app/admin/api/user_ids');
         const userIDs = response.data.userIDs;
 
         for (const user_id of userIDs) {
@@ -563,8 +714,37 @@ cron.schedule('0 7 * * *', async () => {
 
             const body = `Hi,\n\nYou have a planned activity today! \n Best, \n Roybal`;
 
-            identifier_type === 'email' ? await sendEmail(identifier, 'Planned Activity', body) 
-                                        : await sendSMS(identifier, body);
+            identifier_type === 'email' ? await sendEmail(identifier, 'Planned Activity', body)
+                : await sendSMS(identifier, body);
+        });
+
+        //verify completed activities, mark them as complete in the plan collection
+        const users = await participantsCollection.find().toArray();
+
+        users.forEach(async (user) => {
+            const user_id = user.user_id;
+            const participantNumber = user.number;
+            const plan = await planCollection.findOne({ participantNumber });
+            const selectedDays = plan.selectedDays;
+            const userDocuments = await dataCollection.find({ user_id }).toArray();
+            let combinedActivities = [];
+            for (const document of userDocuments) {
+                combinedActivities.push(...document.activities);
+            }
+            //if more than one activity is done on the same day, only the first one is marked as planned, the rest are unplanned
+            //if an activity is done on a day that is not in the selectedDays array, it is unplanned
+            const plannedActivities = combinedActivities.filter(activity => selectedDays.includes(activity.startDate.split('T')[0]));
+            const unplannedActivities = combinedActivities.filter(activity => !selectedDays.includes(activity.startDate.split('T')[0]));
+
+            await planCollection.updateOne(
+                { participantNumber },
+                {
+                    $set: {
+                        completedPlannedActivities: plannedActivities,
+                        completedUnplannedActivities: unplannedActivities
+                    }
+                }
+            );
         });
     } catch (error) {
         console.error('Error:', error);
@@ -575,14 +755,14 @@ cron.schedule('0 7 * * *', async () => {
 // Function to collect Fitbit data
 async function collectFitbitData(user_id) {
     try {
-        const tokensResponse = await axios.get(`http://roybal.vercel.app/api/tokens/${user_id}`);
+        const tokensResponse = await axios.get(`http://roybal.vercel.app/admin/api/tokens/${user_id}`);
         let { access_token, refresh_token, expires_in } = tokensResponse.data;
 
         const expirationTime = new Date(expires_in * 1000);
 
         if (Date.now() > expirationTime) {
             // Call your refresh token route
-            const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
+            const refreshResponse = await axios.post(`http://roybal.vercel.app/admin/api/refresh-token/${user_id}`, {
                 refresh_token
             });
 
@@ -605,7 +785,7 @@ async function collectFitbitData(user_id) {
             // Handle 401 error by refreshing the token
             try {
                 // Call your refresh token route
-                const refreshResponse = await axios.post(`http://roybal.vercel.app/api/refresh-token/${user_id}`, {
+                const refreshResponse = await axios.post(`http://roybal.vercel.app/admin/api/refresh-token/${user_id}`, {
                     refresh_token
                 });
 
