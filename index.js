@@ -543,7 +543,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('57 11 * * *', async () => {
+cron.schedule('0 7 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
@@ -572,16 +572,14 @@ cron.schedule('57 11 * * *', async () => {
         const plans = await planCollection.find({ selectedDays: formattedDate }).toArray();
 
         plans.forEach(async (plan) => {
-            const identifierType = plan.identifier_type;
+            const identifier_type = plan.identifier_type;
             const identifier = plan.identifier;
 
             const body = `Hi,\n\nYou have a planned activity today! \n Best, \n Roybal`;
-            await sendEmail(identifier, 'Daily Activity Reminder', body);
-            await sendSMS(identifier, body);
 
+            identifier_type === 'email' ? await sendEmail(identifier, 'Planned Activity', body) 
+                                        : await sendSMS(identifier, body);
         });
-
-
     } catch (error) {
         console.error('Error:', error);
     }
@@ -668,6 +666,7 @@ const sendEmail = async (to, subject, body) => {
 };
 
 const sendSMS = async (to, body) => {
+    console.log(to)
     try {
         const message = await clientTwilio.messages.create({
             body: body,
