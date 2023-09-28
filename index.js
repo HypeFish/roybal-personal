@@ -142,15 +142,12 @@ function requireUserAuth(req, res, next) {
 app.get('/user_portal', requireUserAuth, (req, res) => {
     const user_id = req.session.user; // Use the user ID from the session
 
-    console.log('User ID:', user_id);
 
     participantsCollection.findOne({ user_id })
         .then(user => {
-            console.log('User:', user);
             if (user) {
                 res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
             } else {
-                console.log('User not found');
                 res.status(404).sendFile(path.join(__dirname, '404.html'));
             }
         })
@@ -528,9 +525,6 @@ app.post('/admin/verify-completed-activity', async (req, res) => {
                 }
             );
 
-            // Update points in planCollection
-            await updatePointsInDatabase(user_id, plannedPoints, unplannedPoints);
-
             res.json({ success: true, message: 'Activity verified successfully.', plannedPoints, unplannedPoints });
         } else {
             res.json({ success: false, message: 'No matching activity found for the selected date.' });
@@ -541,38 +535,6 @@ app.post('/admin/verify-completed-activity', async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
-
-async function updatePointsInDatabase(user_id, plannedPoints, unplannedPoints) {
-    try {
-        const user = await participantsCollection.findOne({ user_id });
-        const participantNumber = user.number;
-
-        const updated = await planCollection.updateOne(
-            { participantNumber },
-            {
-                $inc: { planned_activities_count: plannedPoints, unplanned_activities_count: unplannedPoints }
-            }
-        );
-
-        if (updated.modifiedCount > 0) {
-            console.log(`Updated points for user ${user_id}`);
-        } else {
-            console.log(`User ${user_id} not found or points not updated`);
-        }
-    } catch (error) {
-        console.error(`Error updating points for user ${user_id}:`, error);
-    }
-}
-
-function calculatePoints(plannedCount, unplannedCount) {
-    const plannedPoints = 400;
-    const unplannedPoints = 250;
-
-    const totalPoints = (plannedCount * plannedPoints) + (unplannedCount * unplannedPoints);
-    return totalPoints;
-}
-
-
 
 // Define a new route handler
 app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
@@ -638,9 +600,9 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
         );
 
         if (updated.modifiedCount > 0) {
-            res.json({ success: true, message: 'Points updated successfully' });
+            res.status(200).json({ success: true, message: 'Points updated successfully' });
         } else {
-            res.json({ success: false, message: 'No matching planned activity found' });
+            res.status(300).json({ success: false, message: 'No matching planned activity found' });
         }
     } catch (error) {
         console.error('Error updating points:', error);
@@ -648,20 +610,55 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
     }
 });
 
-app.get('/api/get_user_data', requireUserAuth, (req, res) => {
-    const user_id = req.query.user_id;
+app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
+    const user_id = req.session.user;
+    let points;
+
+    const response = await axios.get(`http://roybal.vercel.app/admin/api/planned_activities/${user_id}`);
+    const plannedAndUnplanned = await response.data;
+    
+    if (plannedAndUnplanned.success) {
+        const plannedActivities = plannedAndUnplanned.plannedActivities;
+        const unplannedActivities = plannedAndUnplanned.unplannedActivities;
+
+        // Calculate points for planned activities (up to 5)
+        // Only check for this week (Saturday to Sunday)
+        const today = new Date();
+        const saturday = new Date(today.setDate(today.getDate() - today.getDay()));
+        const sunday = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+
+        const plannedActivitiesThisWeek = plannedActivities.filter(activity => {
+            const activityDate = new Date(activity.startDate);
+            return activityDate >= saturday && activityDate <= sunday;
+        });
+        const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 400;
+
+        // Calculate points for unplanned activities (up to 2)
+        // Only check for this week (Saturday to Sunday)
+        const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
+            const activityDate = new Date(activity.startDate);
+            return activityDate >= saturday && activityDate <= sunday;
+        });
+        const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
+
+        points = plannedPoints + unplannedPoints;
+    }
 
     participantsCollection.findOne({ user_id })
-        .then(user => {
+        .then(async user => {
             if (user) {
-                const userData = {
+                const plan = await planCollection.findOne({ participantNumber: user.number });
+
+                const data = {
                     user_id: user.user_id,
-                    participant_number: user.number,
-                    planned_activity_days: user.planned_activity_days, // Add these fields based on your data structure
-                    completed_activity_days: user.completed_activity_days, // Add these fields based on your data structure
-                    points: user.points // Add these fields based on your data structure
+                    number: user.number,
+                    selectedDays: plan.selectedDays,
+                    completedPlannedActivities: plan.completedPlannedActivities,
+                    //put the points here when obtained
+                    points: points
                 };
-                res.json(userData);
+
+                res.json(data);
             } else {
                 res.status(404).json({ error: 'User not found' });
             }

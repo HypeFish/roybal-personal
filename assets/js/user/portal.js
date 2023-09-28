@@ -11,9 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
             userIdElement.innerText = data.user_id;
-            participantNumberElement.innerText = data.participant_number;
-            plannedActivityDaysElement.innerText = data.planned_activity_days;
-            completedActivityDaysElement.innerText = data.completed_activity_days;
+            participantNumberElement.innerText = data.number;
+            plannedActivityDaysElement.innerText = data.selectedDays;
+            completedActivityDaysElement.innerText = data.completedPlannedActivities;
             pointsElement.innerText = data.points;
 
             // Create a chart

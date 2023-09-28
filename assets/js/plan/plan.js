@@ -158,3 +158,13 @@ flatpickr("#datePicker", {
     dateFormat: "Y-m-d", // Set the date format as needed
 });
 
+document.getElementById('points').addEventListener('click', async function () {
+    const pointSelector = document.getElementById('pointSelector');
+    const selectedOption = pointSelector.options[pointSelector.selectedIndex];
+    const selectedUserID = selectedOption.value;
+
+    const totalPoints = await calculatePoints(selectedUserID);
+
+    const pointsResult = document.getElementById('pointsResult');
+    pointsResult.textContent = `Participant ${selectedOption.getAttribute('data-participant-number')} earned ${totalPoints} points.`;
+});

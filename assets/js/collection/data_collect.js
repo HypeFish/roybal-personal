@@ -38,10 +38,7 @@ async function generateCSV(user_id, participantNumber) {
         let plannedPointsCount = 0;
         let unplannedPointsCount = 0;
 
-        //calculate last saturday
-        const today = new Date();
         let lastSaturdayOutsideLoop;
-
 
         // Add headers for new columns
         const csvData = 'participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned,points\n';
@@ -67,7 +64,6 @@ async function generateCSV(user_id, participantNumber) {
                 const lastSaturdayInsideLoop = new Date(today);
                 lastSaturdayInsideLoop.setDate(today.getDate() - (today.getDay() + 1) % 7);
 
-                console.log({ lastSaturdayOutsideLoop, lastSaturdayInsideLoop })
                 //if the last saturday is not the same as the last saturday, reset the counters
                 if (lastSaturdayOutsideLoop === undefined) {
                     lastSaturdayOutsideLoop = new Date(lastSaturdayInsideLoop);
@@ -110,9 +106,6 @@ async function generateCSV(user_id, participantNumber) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
-
-
-
 
 
 async function getParticipants() {
