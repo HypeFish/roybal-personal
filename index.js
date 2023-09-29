@@ -316,6 +316,12 @@ app.get('/auth/callback', async (req, res) => {
             console.log(`Inserted new record for user ${user_id}`);
         }
 
+        //add a new document to the users collection
+        await usersCollection.insertOne({
+            user: user_id,
+            pass: "cnelab"
+        });
+
     } catch (error) {
         console.error('Error updating database:', error);
         throw error;
