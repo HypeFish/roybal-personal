@@ -1,0 +1,91 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    background-color: #3498db;
+    color: #fff;
+    padding: 6vmin;
+    /* Adjusted padding using 'vmin' */
+    margin: 0;
+    text-align: center;
+    font-size: 5vmin;
+    /* Adjusted font size using 'vmin' */
+}
+
+.container {
+    max-width: 800px;
+    margin: 2vmin auto;
+    /* Adjusted margin using 'vmin' */
+    padding: 4vmin;
+    /* Adjusted padding using 'vmin' */
+    background-color: #fff;
+    border-radius: 2vmin;
+    /* Adjusted border-radius using 'vmin' */
+    box-shadow: 0 2vmin 4vmin rgba(0, 0, 0, 0.1);
+    /* Adjusted box-shadow using 'vmin' */
+}
+
+h2 {
+    color: #333;
+    margin-top: 4vmin;
+    /* Adjusted margin using 'vmin' */
+    font-size: 3vmin;
+    /* Adjusted font size using 'vmin' */
+}
+
+p {
+    margin: 1vmin 0;
+    /* Adjusted margin using 'vmin' */
+    font-size: 2vmin;
+    /* Adjusted font size using 'vmin' */
+}
+
+#point-chart {
+    max-width: 100%;
+}
+
+.logout {
+    text-align: center;
+    margin-top: 4vmin;
+    /* Adjusted margin using 'vmin' */
+}
+
+.logout a {
+    background-color: #e74c3c;
+    color: #fff;
+    text-decoration: none;
+    padding: 2vmin 4vmin;
+    /* Adjusted padding using 'vmin' */
+    border-radius: 1vmin;
+    /* Adjusted border-radius using 'vmin' */
+    font-size: 2vmin;
+    /* Adjusted font size using 'vmin' */
+}
+
+.logout a:hover {
+    background-color: #c0392b;
+}
+
+/* This media query targets screens with a maximum width of 767 pixels (typical for mobile devices) */
+@media (max-width: 767px) {
+    .fc-view-container {
+        display: block;
+        /* Force FullCalendar to use a vertical layout on smaller screens */
+    }
+
+    .fc-scroller.fc-time-grid-container {
+        overflow-x: auto;
+        /* Allow horizontal scrolling for time grid */
+        overflow-y: hidden;
+        /* Hide vertical scrolling for time grid */
+    }
+
+    .fc-time-grid {
+        min-width: 600px;
+        /* Adjust the minimum width for time grid cells */
+    }
+}

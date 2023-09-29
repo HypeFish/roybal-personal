@@ -1,3 +1,5 @@
+//portal.js
+
 document.addEventListener('DOMContentLoaded', () => {
     const userIdElement = document.getElementById('user-id');
     const participantNumberElement = document.getElementById('participant-number');
@@ -28,6 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
+                    }, {
+                        label: 'Max Points for the Week',
+                        data: [2500], // Replace with the actual max points value
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -39,6 +47,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
+
+             // Initialize FullCalendar
+            $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,basicWeek,basicDay'
+                },
+                events: data.selectedDays.map(day => {
+                    return {
+                        title: 'Activity',
+                        start: day
+                    };
+                }
+                )
+            });
         })
         .catch(error => console.error('Error fetching user data:', error));
 });
+

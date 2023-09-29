@@ -8,15 +8,22 @@
     position: relative;
 }
 
-.instructions, .participant-data-collection, .plan-your-walk, .micro-incentive-collector {
+.instructions,
+.participant-data-collection,
+.plan-your-walk,
+.micro-incentive-collector {
     margin-bottom: 4vw;
 }
 
-.instructions h2, .participant-data-collection h2, .plan-your-walk h2, .micro-incentive-collector h2 {
+.instructions h2,
+.participant-data-collection h2,
+.plan-your-walk h2,
+.micro-incentive-collector h2 {
     margin-bottom: 2vw;
 }
 
-select, input {
+select,
+input {
     display: block;
     margin-bottom: 2vw;
     max-width: max-content;
@@ -28,7 +35,7 @@ select, input {
 input[type=submit] {
     background-color: #007bff;
     color: #fff;
-    border:#000000;
+    border: #000000;
     padding: 1vw 1vw;
     cursor: pointer;
     border-radius: 1vw;
@@ -38,10 +45,14 @@ label {
     display: block;
     margin-bottom: 2vw;
     width: 100%;
-    font-size: 2vw; /* Increase font size for emphasis */
-    color: #007bff; /* Fun and vibrant color */
-    font-weight: bold; /* Make the text bold */
-    letter-spacing: 0.1vw; /* Add some letter spacing */
+    font-size: 2vw;
+    /* Increase font size for emphasis */
+    color: #007bff;
+    /* Fun and vibrant color */
+    font-weight: bold;
+    /* Make the text bold */
+    letter-spacing: 0.1vw;
+    /* Add some letter spacing */
 }
 
 
@@ -87,10 +98,27 @@ h2 {
 
 li {
     margin-bottom: 1vw;
-    
+
 }
 
-.signout {
+.logout {
     text-align: center;
-    margin-top: 2vw;
+    margin-top: 4vmin;
+    /* Adjusted margin using 'vmin' */
+}
+
+.logout a {
+    background-color: #e74c3c;
+    color: #fff;
+    text-decoration: none;
+    padding: 2vmin 4vmin;
+    /* Adjusted padding using 'vmin' */
+    border-radius: 1vmin;
+    /* Adjusted border-radius using 'vmin' */
+    font-size: 2vmin;
+    /* Adjusted font size using 'vmin' */
+}
+
+.logout a:hover {
+    background-color: #c0392b;
 }

@@ -653,8 +653,8 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
                     user_id: user.user_id,
                     number: user.number,
                     selectedDays: plan.selectedDays,
-                    completedPlannedActivities: plan.completedPlannedActivities,
-                    //put the points here when obtained
+                    //get the dates of the completed planned activities
+                    completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
                     points: points
                 };
 
@@ -677,7 +677,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('0 7 * * *', async () => {
+cron.schedule('0 10 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
