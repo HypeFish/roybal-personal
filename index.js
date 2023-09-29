@@ -486,55 +486,6 @@ app.get('/admin/get-contacts', async (req, res) => {
     }
 });
 
-// Add a new route for verifying completed planned activities
-app.post('/admin/verify-completed-activity', async (req, res) => {
-    const { user_id, date } = req.body;
-    try {
-        // Find the user in the participants collection, and get the participantNumber
-        const user = await participantsCollection.findOne({ user_id });
-        const participantNumber = user.participantNumber;
-
-        // Find the plan for that participantNumber
-        const plan = await plansCollection.findOne({ participantNumber });
-
-        // Using their selected days, check if any activities match the date
-        const selectedDays = plan.selectedDays;
-        const matchingActivities = selectedDays
-            .filter(day => day.date === date)
-            .map(day => day.activities);
-
-        if (matchingActivities.length > 0) {
-            const completedActivity = matchingActivities[0];
-            const restUnplannedActivities = matchingActivities.slice(1);
-
-            // Calculate points for completedActivity (planned activity)
-            let plannedPoints = calculatePoints(completedActivity, 'planned');
-
-            // Calculate points for restUnplannedActivities (unplanned activities)
-            let unplannedPoints = 0;
-            for (const activity of restUnplannedActivities) {
-                unplannedPoints += calculatePoints(activity, 'unplanned');
-            }
-
-            // Update user's completedPlannedActivities and unplannedActivities
-            await participantsCollection.updateOne(
-                { user_id },
-                {
-                    $push: { completedPlannedActivities: completedActivity },
-                    $push: { unplannedActivities: { date, activities: restUnplannedActivities } }
-                }
-            );
-
-            res.json({ success: true, message: 'Activity verified successfully.', plannedPoints, unplannedPoints });
-        } else {
-            res.json({ success: false, message: 'No matching activity found for the selected date.' });
-        }
-    }
-    catch (error) {
-        console.error('Error verifying completed activity:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
-    }
-});
 
 // Define a new route handler
 app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
