@@ -619,9 +619,6 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
                     points: points
                 };
 
-                //store the points in the weeklyPoints collection
-                await storeWeeklypoints(user_id, points);
-
                 res.json(data);
             } else {
                 res.status(404).json({ error: 'User not found' });
@@ -748,7 +745,6 @@ cron.schedule('49 15 * * *', async () => {
                 const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
 
                 points = plannedPoints + unplannedPoints;
-
 
                 participantsCollection.findOne({ user_id })
                     .then(async user => {
