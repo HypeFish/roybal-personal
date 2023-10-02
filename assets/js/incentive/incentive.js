@@ -35,7 +35,3 @@ async function calculatePoints(user_id) {
         return 0;
     }
 }
-
-module.exports = {
-    calculatePoints
-}

@@ -30,6 +30,7 @@ let dataCollection;
 let adminCollection;
 let planCollection;
 let usersCollection;
+let weeklyPointsCollection;
 
 async function connectToDatabase() {
     try {
@@ -39,6 +40,7 @@ async function connectToDatabase() {
         adminCollection = client.db('Roybal').collection('admin');
         planCollection = client.db('Roybal').collection('plan');
         usersCollection = client.db('Roybal').collection('users');
+        weeklyPointsCollection = client.db('Roybal').collection('weeklyPoints');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
@@ -573,7 +575,7 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
 
     const response = await axios.get(`http://roybal.vercel.app/admin/api/planned_activities/${user_id}`);
     const plannedAndUnplanned = await response.data;
-    
+
     if (plannedAndUnplanned.success) {
         const plannedActivities = plannedAndUnplanned.plannedActivities;
         const unplannedActivities = plannedAndUnplanned.unplannedActivities;
@@ -599,6 +601,7 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
         const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
 
         points = plannedPoints + unplannedPoints;
+
     }
 
     participantsCollection.findOne({ user_id })
@@ -612,8 +615,12 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
                     selectedDays: plan.selectedDays,
                     //get the dates of the completed planned activities
                     completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
+                    completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
                     points: points
                 };
+
+                //store the points in the weeklyPoints collection
+                await storeWeeklypoints(user_id, points);
 
                 res.json(data);
             } else {
@@ -626,6 +633,17 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
         });
 });
 
+app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
+    const user_id = req.session.user;
+
+    try {
+        const weeklyPoints = await weeklyPointsCollection.find({ user_id }).toArray();
+        res.json({ success: true, data: weeklyPoints });
+    } catch (error) {
+        console.error('Error fetching weekly points:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
 
 // Serve the error page
 app.use((req, res) => {
@@ -634,7 +652,7 @@ app.use((req, res) => {
 
 const axios = require('axios');
 
-cron.schedule('0 10 * * *', async () => {
+cron.schedule('49 15 * * *', async () => {
     console.log('Running scheduled task...');
 
     try {
@@ -699,6 +717,61 @@ cron.schedule('0 10 * * *', async () => {
                     }
                 }
             );
+
+            let points;
+
+            const response = await axios.get(`http://roybal.vercel.app/admin/api/planned_activities/${user_id}`);
+            const plannedAndUnplanned = await response.data;
+
+            if (plannedAndUnplanned.success) {
+                const plannedActivities = plannedAndUnplanned.plannedActivities;
+                const unplannedActivities = plannedAndUnplanned.unplannedActivities;
+
+                // Calculate points for planned activities (up to 5)
+                // Only check for this week (Saturday to Sunday)
+                const today = new Date();
+                const saturday = new Date(today.setDate(today.getDate() - today.getDay()));
+                const sunday = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+
+                const plannedActivitiesThisWeek = plannedActivities.filter(activity => {
+                    const activityDate = new Date(activity.startDate);
+                    return activityDate >= saturday && activityDate <= sunday;
+                });
+                const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 400;
+
+                // Calculate points for unplanned activities (up to 2)
+                // Only check for this week (Saturday to Sunday)
+                const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
+                    const activityDate = new Date(activity.startDate);
+                    return activityDate >= saturday && activityDate <= sunday;
+                });
+                const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
+
+                points = plannedPoints + unplannedPoints;
+
+
+                participantsCollection.findOne({ user_id })
+                    .then(async user => {
+                        if (user) {
+                            const plan = await planCollection.findOne({ participantNumber: user.number });
+
+                            const data = {
+                                user_id: user.user_id,
+                                number: user.number,
+                                selectedDays: plan.selectedDays,
+                                //get the dates of the completed planned activities
+                                completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
+                                completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
+                                points: points
+                            };
+
+                            //store the points in the weeklyPoints collection
+                            console.log("points", points)
+                            await storeWeeklypoints(user_id, points);
+
+                        }
+                    });
+            }
         });
     } catch (error) {
         console.error('Error:', error);
@@ -798,6 +871,39 @@ const sendSMS = async (to, body) => {
         console.log("No SMS sent", error)
     }
 };
+
+async function storeWeeklypoints(user_id, points) {
+    //store the points in the weeklyPoints collection
+    const currentDate = new Date();
+    // if currentDate is within Saturday to Sunday, update the document for this week
+    // otherwise, create a new document for the next week
+
+    const saturday = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+    const sunday = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay() + 6));
+
+    const dateRange = {
+        $gte: saturday.toISOString().split('T')[0],
+        $lte: sunday.toISOString().split('T')[0]
+    };
+
+    const existingDocument = await weeklyPointsCollection.findOne({ user_id, date: dateRange });
+
+    if (existingDocument) {
+        //update the document
+        await weeklyPointsCollection.updateOne(
+            { user_id, date: dateRange },
+            { $set: { points } }
+        );
+    }
+    else {
+        //create a new document
+        await weeklyPointsCollection.insertOne({
+            user_id,
+            date: dateRange,
+            points
+        });
+    }
+}
 
 const port = process.env.PORT || 3000;
 
