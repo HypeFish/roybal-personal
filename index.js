@@ -13,7 +13,7 @@ app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user.env file and set the environment variables
 const { MongoClient } = require('mongodb');
-const uri = `mongodb+srv://skyehigh:${process.env.MONGOPASS}@cluster.evnujdo.mongodb.net/`;
+const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -185,7 +185,6 @@ async function storeDataInDatabase(user_id, fitbitData) {
         const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
 
         if (existingDocument) {
-            //console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
             return; // Data already exists, no need to store it again
         }
 
@@ -199,7 +198,6 @@ async function storeDataInDatabase(user_id, fitbitData) {
         };
 
         await dataCollection.insertOne(document);
-        //console.log(`Data stored in the database for user ${user_id} successfully.`);
     } catch (error) {
         console.error('Error storing data in database:', error);
         throw error; // Rethrow the error so it can be caught by the caller
@@ -207,7 +205,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
 }
 
 // Add a new route to refresh the access token
-app.post('/admin/api/refresh-token/:user_id', async (req, res) => {
+app.post('/admin/api/refresh-token/:user_id',requireAuth, async (req, res) => {
     console.log('Reached the refresh_token route'); // Add this line
 
     const user_id = req.params.user_id;
@@ -260,7 +258,7 @@ app.post('/admin/api/refresh-token/:user_id', async (req, res) => {
 });
 
 // Add a new route to fetch all participants
-app.get('/admin/api/participants', async (req, res) => {
+app.get('/admin/api/participants',requireAuth, async (req, res) => {
     try {
         const participants = await participantsCollection.find().sort({ number: 1 }).toArray();
         const formattedParticipants = participants.map(({ user_id, number }, index) => ({
@@ -276,7 +274,7 @@ app.get('/admin/api/participants', async (req, res) => {
 });
 
 // Add a new route for the authorization callback
-app.get('/auth/callback', async (req, res) => {
+app.get('/auth/callback',requireAuth, async (req, res) => {
     res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
     res.redirect('/');
 
@@ -332,7 +330,7 @@ app.get('/auth/callback', async (req, res) => {
 
 
 // Add a new route to fetch all user IDs
-app.get('/admin/api/user_ids', async (req, res) => {
+app.get('/admin/api/user_ids',requireAuth, async (req, res) => {
     try {
         const userIDs = await participantsCollection.distinct('user_id');
         res.json({ success: true, data: userIDs });
@@ -342,7 +340,7 @@ app.get('/admin/api/user_ids', async (req, res) => {
 });
 
 
-app.get('/admin/api/tokens/:user_id', (req, res) => {
+app.get('/admin/api/tokens/:user_id',requireAuth, (req, res) => {
     const user_id = req.params.user_id;
 
     // Fetch tokens for the specified user_id from the database
@@ -365,7 +363,7 @@ app.get('/admin/api/tokens/:user_id', (req, res) => {
 });
 
 // Add a new route for collecting Fitbit data
-app.post('/admin/api/collect_data/:user_id', async (req, res) => {
+app.post('/admin/api/collect_data/:user_id', requireAuth, async (req, res) => {
     const user_id = req.params.user_id;
     const access_token = req.headers.authorization.split(' ')[1]; // Extract the access token from the Authorization header
 
@@ -401,7 +399,7 @@ app.post('/admin/api/collect_data/:user_id', async (req, res) => {
 });
 
 // Add a new route to fetch combined Fitbit data for a user
-app.get('/admin/api/combined_data/:user_id', async (req, res) => {
+app.get('/admin/api/combined_data/:user_id',requireAuth, async (req, res) => {
     const user_id = req.params.user_id;
 
     try {
@@ -425,7 +423,7 @@ app.get('/admin/api/combined_data/:user_id', async (req, res) => {
     }
 });
 
-app.post('/admin/submit-plan', async (req, res) => {
+app.post('/admin/submit-plan', requireAuth, async (req, res) => {
     const { identifier, selectedDays } = req.body;
 
     if (identifier && selectedDays) {
@@ -453,7 +451,7 @@ app.post('/admin/submit-plan', async (req, res) => {
     }
 });
 
-app.post('/admin/submit-contact', async (req, res) => {
+app.post('/admin/submit-contact',requireAuth, async (req, res) => {
     const { identifier, identifier_type, participantNumber } = req.body;
 
     if (identifier) {
@@ -482,7 +480,7 @@ app.post('/admin/submit-contact', async (req, res) => {
     }
 });
 
-app.get('/admin/get-contacts', async (req, res) => {
+app.get('/admin/get-contacts', requireAuth, async (req, res) => {
     try {
         const contacts = await planCollection.find().toArray();
         const identifiers = contacts.map(contact => contact.identifier);
@@ -495,7 +493,7 @@ app.get('/admin/get-contacts', async (req, res) => {
 
 
 // Define a new route handler
-app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
+app.get('/admin/api/planned_activities/:user_id', requireAuth, async (req, res) => {
     const user_id = req.params.user_id;
     try {
         const user = await participantsCollection.findOne({ user_id });
@@ -558,7 +556,7 @@ app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
 });
 
 
-app.post('/admin/api/points/:user_id', async (req, res) => {
+app.post('/admin/api/points/:user_id', requireAuth, async (req, res) => {
     const user_id = req.params.user_id;
     const { plannedPoints, unplannedPoints } = req.body;
 
@@ -679,6 +677,7 @@ async function processPlans() {
         plan.selectedDays = plan.selectedDays.map(day => day.trim());
     });
 
+    const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
     console.log(matchingPlans)
     for (const plan of matchingPlans) {
         await processPlan(plan);
