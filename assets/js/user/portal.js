@@ -1,17 +1,17 @@
 //portal.js
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const userIdElement = document.getElementById('user-id');
     const participantNumberElement = document.getElementById('participant-number');
     const pointsElement = document.getElementById('points');
     const pointChartElement = document.getElementById('point-chart');
 
-    const weeklyPoints = fetch('/api/get_weekly_points')
-        .then(response => response.json())
-        .then(data => {
-            console.log({ data })
-            return data.weeklyPoints;
-        })
+    // Fetch weekly points from backend
+    const response = await fetch('/api/get_weekly_points');
+    const weeklyPointsData = await response.json();
+
+    // Assuming weeklyPointsData is an array of weekly points objects
+    const latestWeekPoints = weeklyPointsData.data[0].points;
 
     // Fetch user data from backend
     fetch('/api/get_user_data')
@@ -19,16 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             userIdElement.innerText = data.user_id;
             participantNumberElement.innerText = data.number;
-            pointsElement.innerText = data.points;
+            pointsElement.innerText = latestWeekPoints;
 
             // Calculate the current week number
             const startDate = new Date(data.selectedDays[0]);
             const today = new Date();
             const weekDiff = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
-
-            // Create labels dynamically for the line chart
-            const weekLabels = Array.from({ length: 12 }, (_, i) => `Week ${i + weekDiff}`);
-
+            const weekLabels = Array.from({ length: weekDiff }, (_, i) => `Week ${i + 1}`);
 
             // Create a chart
             const ctx = pointChartElement.getContext('2d');
@@ -38,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     labels: ['Points'],
                     datasets: [{
                         label: 'Points for the Week',
-                        data: [data.points],
+                        data: [latestWeekPoints],
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
@@ -82,6 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return {
                         title: 'Completed Unplanned Activity',
                         start: activity,
+                        color: 'orange'
+                    };
+                })).concat(data.missedPlannedActivities.map(date => {
+                    return {
+                        title: 'Missed Planned Activity',
+                        start: date,
                         color: 'red'
                     };
                 }))
@@ -90,14 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Create a line chart
             const lineChartElement = document.getElementById('line-chart');
             const lineCtx = lineChartElement.getContext('2d');
+
             new Chart(lineCtx, {
                 type: 'line',
                 data: {
                     labels: weekLabels,
                     datasets: [{
                         label: 'Points for the Week',
-                        data: weeklyPoints,
-                    
+                        data: weeklyPointsData.data.map(week => week.points),
                         fill: false,
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 2,

@@ -185,7 +185,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
         const existingDocument = await dataCollection.findOne({ user_id, date: yesterday });
 
         if (existingDocument) {
-            console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
+            //console.log(`Data for user ${user_id} on ${yesterday} already exists.`);
             return; // Data already exists, no need to store it again
         }
 
@@ -199,7 +199,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
         };
 
         await dataCollection.insertOne(document);
-        console.log(`Data stored in the database for user ${user_id} successfully.`);
+        //console.log(`Data stored in the database for user ${user_id} successfully.`);
     } catch (error) {
         console.error('Error storing data in database:', error);
         throw error; // Rethrow the error so it can be caught by the caller
@@ -335,9 +335,8 @@ app.get('/auth/callback', async (req, res) => {
 app.get('/admin/api/user_ids', async (req, res) => {
     try {
         const userIDs = await participantsCollection.distinct('user_id');
-        res.json({ userIDs });
+        res.json({ success: true, data: userIDs });
     } catch (error) {
-        console.error('Error fetching user IDs:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -498,44 +497,60 @@ app.get('/admin/get-contacts', async (req, res) => {
 // Define a new route handler
 app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
-
     try {
         const user = await participantsCollection.findOne({ user_id });
-        //if we find a user there, we can get the participantNumber
         const participantNumber = user.number;
-        //now we can find the plan for that participant
         const plan = await planCollection.findOne({ participantNumber });
-        //now we can get the selectedDays from the plan
         const selectedDays = plan.selectedDays;
-
-        //obtain all the documents for the specified user_id
         const userDocuments = await dataCollection.find({ user_id }).toArray();
+        let combinedActivities = [];
 
-        //if there are no documents, return an empty array
         if (userDocuments.length === 0) {
             res.json({ success: true, plannedActivities: [], unplannedActivities: [] });
             return;
         }
 
-        //from the documents, get each activity and add it to the combinedActivities array
-        let combinedActivities = [];
         for (const document of userDocuments) {
             combinedActivities.push(...document.activities);
         }
 
-        //filter the combinedActivities array to get only the activities that were planned
-        const plannedActivities = combinedActivities.filter(activity => selectedDays.includes(activity.startDate.split('T')[0]));
-
-        //filter the combinedActivities array to get only the activities that were unplanned
-        const unplannedActivities = combinedActivities.filter(activity => !selectedDays.includes(activity.startDate.split('T')[0]));
-
-        //check if the selectedDays array is empty
-        if (selectedDays.length === 0) {
+        if (combinedActivities.length === 0) {
             res.json({ success: true, plannedActivities: [], unplannedActivities: [] });
             return;
         }
 
-        res.json({ success: true, plannedActivities, unplannedActivities });
+
+        const plannedActivities = [];
+        const unplannedActivities = [];
+        const missedPlannedActivities = [];
+
+        const today = new Date();
+        const todayISOString = today.toISOString().split('T')[0];
+
+        selectedDays.forEach(day => {
+            const trimmedDay = day.trim();
+
+            if (trimmedDay <= todayISOString && trimmedDay !== todayISOString) {
+                const plannedActivityOnDay = combinedActivities.find(activity => {
+                    return activity.startDate.split('T')[0] === trimmedDay && !plannedActivities.some(plannedActivity => plannedActivity.startDate.split('T')[0] === trimmedDay);
+                });
+
+                if (plannedActivityOnDay) {
+                    plannedActivities.push(plannedActivityOnDay);
+                } else {
+                    missedPlannedActivities.push(trimmedDay);
+                }
+            }
+        });
+
+        combinedActivities.forEach(activity => {
+            const activityDate = activity.startDate.split('T')[0];
+            if (!selectedDays.includes(activityDate) && !plannedActivities.includes(activity)) {
+                unplannedActivities.push(activity);
+            }
+        });
+
+        res.json({ success: true, plannedActivities, unplannedActivities});
     } catch (error) {
         console.error('Error fetching planned activities:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -571,44 +586,11 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
 
 app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
     const user_id = req.session.user;
-    let points;
-
-    const response = await axios.get(`http://roybal.vercel.app/admin/api/planned_activities/${user_id}`);
-    const plannedAndUnplanned = await response.data;
-
-    if (plannedAndUnplanned.success) {
-        const plannedActivities = plannedAndUnplanned.plannedActivities;
-        const unplannedActivities = plannedAndUnplanned.unplannedActivities;
-
-        // Calculate points for planned activities (up to 5)
-        // Only check for this week (Saturday to Sunday)
-        const today = new Date();
-        const saturday = new Date(today.setDate(today.getDate() - today.getDay()));
-        const sunday = new Date(today.setDate(today.getDate() - today.getDay() + 6));
-
-        const plannedActivitiesThisWeek = plannedActivities.filter(activity => {
-            const activityDate = new Date(activity.startDate);
-            return activityDate >= saturday && activityDate <= sunday;
-        });
-        const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 400;
-
-        // Calculate points for unplanned activities (up to 2)
-        // Only check for this week (Saturday to Sunday)
-        const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
-            const activityDate = new Date(activity.startDate);
-            return activityDate >= saturday && activityDate <= sunday;
-        });
-        const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
-
-        points = plannedPoints + unplannedPoints;
-
-    }
 
     participantsCollection.findOne({ user_id })
         .then(async user => {
             if (user) {
                 const plan = await planCollection.findOne({ participantNumber: user.number });
-
                 const data = {
                     user_id: user.user_id,
                     number: user.number,
@@ -616,7 +598,7 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
                     //get the dates of the completed planned activities
                     completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
                     completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
-                    points: points
+                    missedPlannedActivities: plan.missedPlannedActivities,
                 };
 
                 res.json(data);
@@ -634,7 +616,7 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
     const user_id = req.session.user;
 
     try {
-        const weeklyPoints = await weeklyPointsCollection.find({ user_id }).toArray();
+        const weeklyPoints = await weeklyPointsCollection.find({ user_id }).sort({ date: -1 }).toArray();
         res.json({ success: true, data: weeklyPoints });
     } catch (error) {
         console.error('Error fetching weekly points:', error);
@@ -642,138 +624,83 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
     }
 });
 
+
 // Serve the error page
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
+const port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+    console.log('Press Ctrl+C to quit.');
+});
+
+// Cron stuff
+
 const axios = require('axios');
 
-cron.schedule('49 15 * * *', async () => {
-    console.log('Running scheduled task...');
-
+async function fetchDataAndProcess() {
     try {
         const response = await axios.get('http://roybal.vercel.app/admin/api/user_ids');
         const userIDs = response.data.userIDs;
 
         for (const user_id of userIDs) {
-            try {
-                const fitbitDataResponse = await collectFitbitData(user_id);
-
-                if (fitbitDataResponse.status === 200) {
-                    const fitbitData = fitbitDataResponse.data;
-                    await storeDataInDatabase(user_id, fitbitData);
-                    console.log(`Data stored in the database for user ${user_id} successfully.`);
-                } else {
-                    console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
-                }
-            } catch (error) {
-                console.error(`Error fetching data for user ${user_id}:`, error);
-            }
+            await processUser(user_id);
         }
-
-        const currentDate = new Date();
-        const formattedDate = currentDate.toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-
-        const plans = await planCollection.find({ selectedDays: formattedDate }).toArray();
-
-        plans.forEach(async (plan) => {
-            const identifier_type = plan.identifier_type;
-            const identifier = plan.identifier;
-
-            const body = `Hi,\n\nYou have a planned activity today! \n Best, \n Roybal`;
-
-            identifier_type === 'email' ? await sendEmail(identifier, 'Planned Activity', body)
-                : await sendSMS(identifier, body);
-        });
-
-        //verify completed activities, mark them as complete in the plan collection
-        const users = await participantsCollection.find().toArray();
-
-        users.forEach(async (user) => {
-            const user_id = user.user_id;
-            const participantNumber = user.number;
-            const plan = await planCollection.findOne({ participantNumber });
-            const selectedDays = plan.selectedDays;
-            const userDocuments = await dataCollection.find({ user_id }).toArray();
-            let combinedActivities = [];
-            for (const document of userDocuments) {
-                combinedActivities.push(...document.activities);
-            }
-            //if more than one activity is done on the same day, only the first one is marked as planned, the rest are unplanned
-            //if an activity is done on a day that is not in the selectedDays array, it is unplanned
-            const plannedActivities = combinedActivities.filter(activity => selectedDays.includes(activity.startDate.split('T')[0]));
-            const unplannedActivities = combinedActivities.filter(activity => !selectedDays.includes(activity.startDate.split('T')[0]));
-
-            await planCollection.updateOne(
-                { participantNumber },
-                {
-                    $set: {
-                        completedPlannedActivities: plannedActivities,
-                        completedUnplannedActivities: unplannedActivities
-                    }
-                }
-            );
-
-            let points;
-
-            const response = await axios.get(`http://roybal.vercel.app/admin/api/planned_activities/${user_id}`);
-            const plannedAndUnplanned = await response.data;
-
-            if (plannedAndUnplanned.success) {
-                const plannedActivities = plannedAndUnplanned.plannedActivities;
-                const unplannedActivities = plannedAndUnplanned.unplannedActivities;
-
-                // Calculate points for planned activities (up to 5)
-                // Only check for this week (Saturday to Sunday)
-                const today = new Date();
-                const saturday = new Date(today.setDate(today.getDate() - today.getDay()));
-                const sunday = new Date(today.setDate(today.getDate() - today.getDay() + 6));
-
-                const plannedActivitiesThisWeek = plannedActivities.filter(activity => {
-                    const activityDate = new Date(activity.startDate);
-                    return activityDate >= saturday && activityDate <= sunday;
-                });
-                const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 400;
-
-                // Calculate points for unplanned activities (up to 2)
-                // Only check for this week (Saturday to Sunday)
-                const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
-                    const activityDate = new Date(activity.startDate);
-                    return activityDate >= saturday && activityDate <= sunday;
-                });
-                const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
-
-                points = plannedPoints + unplannedPoints;
-
-                participantsCollection.findOne({ user_id })
-                    .then(async user => {
-                        if (user) {
-                            const plan = await planCollection.findOne({ participantNumber: user.number });
-
-                            const data = {
-                                user_id: user.user_id,
-                                number: user.number,
-                                selectedDays: plan.selectedDays,
-                                //get the dates of the completed planned activities
-                                completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
-                                completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
-                                points: points
-                            };
-
-                            //store the points in the weeklyPoints collection
-                            console.log("points", points)
-                            await storeWeeklypoints(user_id, points);
-
-                        }
-                    });
-            }
-        });
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching data:', error);
     }
-}, null, true, 'America/New_York');
+}
 
+async function processUser(user_id) {
+    try {
+        const fitbitDataResponse = await collectFitbitData(user_id);
+
+        if (fitbitDataResponse.status === 200) {
+            const fitbitData = fitbitDataResponse.data;
+            await storeDataInDatabase(user_id, fitbitData);
+        } else {
+            console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
+        }
+    } catch (error) {
+        console.error(`Error fetching data for user ${user_id}:`, error);
+    }
+}
+
+async function processPlans() {
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0]
+    //get every plan
+    const plans = await planCollection.find().toArray();
+    //trim the dates 
+    plans.forEach(plan => {
+        plan.selectedDays = plan.selectedDays.map(day => day.trim());
+    });
+
+    console.log(matchingPlans)
+    for (const plan of matchingPlans) {
+        await processPlan(plan);
+    }
+}
+
+async function processPlan(plan) {
+    const identifier_type = plan.identifier_type;
+    const identifier = plan.identifier;
+
+    const body = `Hi,\n\nYou have a planned activity today! \n Best, \n Roybal`;
+    console.log(`Sending notification to ${identifier}...`)
+    try {
+        if (identifier_type === 'email') {
+            await sendEmail(identifier, 'Planned Activity', body);
+        } else {
+            await sendSMS(identifier, body);
+        }
+    } catch (error) {
+        console.error(`Error sending notification to ${identifier}:`, error);
+    }
+}
 
 // Function to collect Fitbit data
 async function collectFitbitData(user_id) {
@@ -868,42 +795,151 @@ const sendSMS = async (to, body) => {
     }
 };
 
-async function storeWeeklypoints(user_id, points) {
-    //store the points in the weeklyPoints collection
+async function storeWeeklyPoints(user_id, points) {
     const currentDate = new Date();
-    // if currentDate is within Saturday to Sunday, update the document for this week
-    // otherwise, create a new document for the next week
+    const saturday = new Date(currentDate);
+    saturday.setDate(currentDate.getDate() - currentDate.getDay());
 
-    const saturday = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
-    const sunday = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay() + 6));
+    const sunday = new Date(currentDate);
+    sunday.setDate(currentDate.getDate() - currentDate.getDay() + 6);
 
-    const dateRange = {
-        $gte: saturday.toISOString().split('T')[0],
-        $lte: sunday.toISOString().split('T')[0]
-    };
+    const weekStart = saturday.toISOString().slice(0, 10);
+    const weekEnd = sunday.toISOString().slice(0, 10);
 
-    const existingDocument = await weeklyPointsCollection.findOne({ user_id, date: dateRange });
+    const existingDocument = await weeklyPointsCollection.findOne({
+        user_id,
+        $and: [
+            { date: { $gte: weekStart } },
+            { date: { $lte: weekEnd } }
+        ]
+    });
 
     if (existingDocument) {
-        //update the document
+        // Update the document
         await weeklyPointsCollection.updateOne(
-            { user_id, date: dateRange },
+            { user_id, date: { $gte: weekStart, $lte: weekEnd } },
             { $set: { points } }
         );
-    }
-    else {
-        //create a new document
+    } else {
+        // Create a new document
         await weeklyPointsCollection.insertOne({
             user_id,
-            date: dateRange,
+            date: weekStart, // Store the start date of the week
             points
         });
     }
 }
 
-const port = process.env.PORT || 3000;
+async function processPoints() {
+    try {
+        const users = await participantsCollection.find().toArray();
 
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-    console.log('Press Ctrl+C to quit.');
-});
+        for (const user of users) {
+            const user_id = user.user_id;
+            const participantNumber = user.number;
+            const plan = await planCollection.findOne({ participantNumber });
+            const selectedDays = plan.selectedDays;
+            const userDocuments = await dataCollection.find({ user_id }).toArray();
+            let combinedActivities = [];
+
+            for (const document of userDocuments) {
+                combinedActivities.push(...document.activities);
+            }
+
+            const plannedActivities = [];
+            const unplannedActivities = [];
+            const missedPlannedActivities = [];
+
+            const today = new Date();
+            const todayISOString = today.toISOString().split('T')[0];
+
+            selectedDays.forEach(day => {
+                const trimmedDay = day.trim();
+
+                if (trimmedDay <= todayISOString && trimmedDay !== todayISOString) {
+                    const plannedActivityOnDay = combinedActivities.find(activity => {
+                        return activity.startDate.split('T')[0] === trimmedDay && !plannedActivities.some(plannedActivity => plannedActivity.startDate.split('T')[0] === trimmedDay);
+                    });
+
+                    if (plannedActivityOnDay) {
+                        plannedActivities.push(plannedActivityOnDay);
+                    } else {
+                        missedPlannedActivities.push(trimmedDay);
+                    }
+                }
+            });
+
+            combinedActivities.forEach(activity => {
+                const activityDate = activity.startDate.split('T')[0];
+                if (!selectedDays.includes(activityDate) && !plannedActivities.includes(activity)) {
+                    unplannedActivities.push(activity);
+                }
+            });
+
+            await planCollection.updateOne(
+                { participantNumber },
+                {
+                    $set: {
+                        completedPlannedActivities: plannedActivities,
+                        completedUnplannedActivities: unplannedActivities,
+                        missedPlannedActivities: missedPlannedActivities
+                    }
+                }
+            );
+
+            let points = 0;
+
+            const sunday = new Date(today.setDate(today.getDate() - today.getDay()));
+            const saturday = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+
+            const plannedActivitiesThisWeek = plannedActivities.filter(activity => {
+                const activityDate = new Date(activity.startDate);
+                return activityDate >= sunday && activityDate <= saturday;
+            });
+
+            const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
+                const activityDate = new Date(activity.startDate);
+                return activityDate >= sunday && activityDate <= saturday;
+            });
+
+            const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 400;
+            const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
+            points = plannedPoints + unplannedPoints;
+
+            console.log(`Points for user ${user_id}: ${points} for the week of ${sunday.toISOString().slice(0, 10)} to ${saturday.toISOString().slice(0, 10)}`)
+            storeWeeklyPoints(user_id, points);
+        }
+    } catch (error) {
+        console.error('Error calculating and storing points:', error);
+    }
+}
+
+// Task 1: Data Fetching
+cron.schedule('52 12 * * *', async () => {
+    console.log('Running scheduled data fetching task...');
+    try {
+        await fetchDataAndProcess();
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}, null, true, 'America/New_York');
+
+// Task 2: Plan Processing
+cron.schedule('29 15 * * *', async () => {
+    console.log('Running scheduled plan processing task...');
+    try {
+        await processPlans();
+    } catch (error) {
+        console.error('Error processing plans:', error);
+    }
+}, null, true, 'America/New_York');
+
+// Task 3: Points Calculation and Storage
+cron.schedule('40 12 * * *', async () => {
+    console.log('Running scheduled points calculation task...');
+    try {
+        await processPoints();
+    } catch (error) {
+        console.error('Error calculating and storing points:', error);
+    }
+}, null, true, 'America/New_York');
