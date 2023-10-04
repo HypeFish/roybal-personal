@@ -548,8 +548,6 @@ async function fetchDataAndProcess() {
     }
 }
 
-fetchDataAndProcess();
-
 async function processUser(user_id) {
     try {
         const fitbitDataResponse = await collectFitbitData(user_id);
@@ -576,7 +574,6 @@ async function processPlans() {
     });
 
     const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
-    console.log(matchingPlans)
     for (const plan of matchingPlans) {
         await processPlan(plan);
     }
@@ -613,7 +610,6 @@ async function collectFitbitData(user_id) {
             }
         });
 
-        console.log(fitbitDataResponse)
         return fitbitDataResponse;
 
     } catch (error) {
@@ -669,7 +665,6 @@ const sendEmail = async (to, subject, body) => {
 };
 
 const sendSMS = async (to, body) => {
-    console.log(to)
     try {
         const message = await clientTwilio.messages.create({
             body: body,
@@ -802,7 +797,7 @@ async function processPoints() {
 }
 
 // Task 1: Data Fetching
-cron.schedule('30 9 * * *', async () => {
+cron.schedule('26 10 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -822,7 +817,7 @@ cron.schedule('6 9 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Task 3: Points Calculation and Storage
-cron.schedule('30 9 * * *', async () => {
+cron.schedule('26 10 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
