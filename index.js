@@ -21,10 +21,7 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
 const fs = require('fs');
-const healthTips = require('./tips.json')
 
-
-let tipIndex = 0;
 let access_token;
 let refresh_token;
 let user_id;
@@ -47,8 +44,6 @@ async function connectToDatabase() {
         weeklyPointsCollection = client.db('Roybal').collection('weeklyPoints');
         healthCollection = client.db('Roybal').collection('health');
         console.log('Connected to MongoDB');
-
-        await sendHealthTips()
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
         throw error;
@@ -1005,7 +1000,7 @@ async function sendHealthTips() {
                     console.error(`Error sending health tip to ${identifier}:`, error);
                 }
             }
-        });
+        )});
     } catch (error) {
         console.error('Error fetching data:', error);
     }

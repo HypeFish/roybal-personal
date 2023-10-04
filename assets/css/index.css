@@ -4,6 +4,11 @@ body {
     margin: 0;
     padding: 0;
 }
+.section-title {
+    border-bottom: 2px solid blue;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+}
 
 h1 {
     background-color: #3498db;
