@@ -296,7 +296,7 @@ app.get('/auth/callback', async (req, res) => {
     access_token = data.access_token;
     refresh_token = data.refresh_token;
     user_id = data.user_id;
-    const participantNumber = participantsCollection.countDocuments() + 1;
+    const participantNumber = await participantsCollection.countDocuments() + 1;
 
     try {
         const result = await participantsCollection.updateOne(
@@ -406,7 +406,7 @@ app.get('/admin/api/combined_data/:user_id', async (req, res) => {
         const userDocuments = await dataCollection.find({ user_id }).toArray();
 
         if (userDocuments.length === 0) {
-            console.error(`No data found for user ${user_id}`);
+            console.log(`No data found for user ${user_id}`);
             res.status(404).json({ error: `No data found for user ${user_id}` });
             return;
         }
@@ -519,6 +519,10 @@ app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
         const user = await participantsCollection.findOne({ user_id });
         const participantNumber = user.number;
         const plan = await planCollection.findOne({ participantNumber });
+        if (!plan) {
+            res.json({ success: true, plannedActivities: [], unplannedActivities: [] });
+            return;
+        }
         const selectedDays = plan.selectedDays;
         const userDocuments = await dataCollection.find({ user_id }).toArray();
         let combinedActivities = [];

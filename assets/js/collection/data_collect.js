@@ -25,7 +25,7 @@ async function generateCSV(user_id, participantNumber) {
         const data = await response.json();
 
         if (!data.success) {
-            console.error('Error:', data.error);
+            alert("There is no data for this participant");
             return;
         }
 
