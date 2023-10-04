@@ -75,14 +75,16 @@ p {
 .instructions,
 .participant-data-collection,
 .plan-your-walk,
-.micro-incentive-collector {
+.micro-incentive-collector,
+.health-tip-container {
     margin-bottom: 4vw;
 }
 
 .instructions h2,
 .participant-data-collection h2,
 .plan-your-walk h2,
-.micro-incentive-collector h2 {
+.micro-incentive-collector h2,
+.health-tip-container h2 {
     margin-bottom: 2vw;
 }
 
