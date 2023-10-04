@@ -545,7 +545,7 @@ app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
             }
         });
 
-        res.json({ success: true, plannedActivities, unplannedActivities});
+        res.json({ success: true, plannedActivities, unplannedActivities });
     } catch (error) {
         console.error('Error fetching planned activities:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -681,25 +681,57 @@ async function processPlans() {
     }
 }
 
+async function processReminder() {
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0]
+    //get every plan
+    const plans = await planCollection.find().toArray();
+    //trim the dates 
+    plans.forEach(plan => {
+        plan.selectedDays = plan.selectedDays.map(day => day.trim());
+    });
+
+    const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
+    for (const plan of matchingPlans) {
+        await sendReminder(plan);
+    }
+}
+
 async function processPlan(plan) {
     const identifier_type = plan.identifier_type;
     const identifier = plan.identifier;
 
-    const emailBody = `Good morning! Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 400 points that will then turn into compensation! \n Best, \n Roybal Team`;
     console.log(`Sending notification to ${identifier}...`)
+    const emailBody = `Good morning! \n Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 400 points that will then turn into compensation! \n Best, \n Roybal Team`;
     const planSMSBody = "Good morning! Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 400 points that will then turn into compensation!"
-    const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and your get your points for walking!"
-    //30 min diff between reminder and planned activity
     try {
         if (identifier_type === 'email') {
-            await sendEmail(identifier, 'Your Planned Activity Today', body);
+            await sendEmail(identifier, 'Your Planned Activity Today', emailBody);
         } else {
-            await sendSMS(identifier, body);
+            await sendSMS(identifier, planSMSBody);
         }
     } catch (error) {
         console.error(`Error sending notification to ${identifier}:`, error);
     }
 }
+
+async function sendReminder(plan) {
+    const identifier_type = plan.identifier_type;
+    const identifier = plan.identifier;
+
+    const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and your get your points for walking!"
+    const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and your get your points for walking! \n Best, \n Roybal Team"
+    try {
+        if (identifier_type === 'email') {
+            await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
+        } else {
+            await sendSMS(identifier, reminderSMSBody);
+        }
+    } catch (error) {
+        console.error(`Error sending reminder to ${identifier}:`, error);
+    }
+}
+
 
 // Function to collect Fitbit data
 async function collectFitbitData(user_id) {
@@ -902,7 +934,7 @@ async function processPoints() {
 }
 
 // Task 1: Data Fetching
-cron.schedule('26 10 * * *', async () => {
+cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -912,7 +944,7 @@ cron.schedule('26 10 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Task 2: Plan Processing
-cron.schedule('6 9 * * *', async () => {
+cron.schedule('5 9 * * *', async () => {
     console.log('Running scheduled plan processing task...');
     try {
         await processPlans();
@@ -921,8 +953,17 @@ cron.schedule('6 9 * * *', async () => {
     }
 }, null, true, 'America/New_York');
 
+cron.schedule('30 8 * * *', async () => {
+    console.log("Sending Reminder")
+    try {
+        await processReminder();
+    } catch (error) {
+        console.error('Error sending reminder', error);
+    }
+}, null, true, 'America/New_Tork');
+
 // Task 3: Points Calculation and Storage
-cron.schedule('50 10 * * *', async () => {
+cron.schedule('5 9 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
@@ -930,4 +971,5 @@ cron.schedule('50 10 * * *', async () => {
         console.error('Error calculating and storing points:', error);
     }
 }, null, true, 'America/New_York');
+
 
