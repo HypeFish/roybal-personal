@@ -330,7 +330,7 @@ app.get('/auth/callback',requireAuth, async (req, res) => {
 
 
 // Add a new route to fetch all user IDs
-app.get('/admin/api/user_ids',requireAuth, async (req, res) => {
+app.get('/admin/api/user_ids', async (req, res) => {
     try {
         const userIDs = await participantsCollection.distinct('user_id');
         res.json({ success: true, data: userIDs });
@@ -642,10 +642,11 @@ const axios = require('axios');
 async function fetchDataAndProcess() {
     try {
         const response = await axios.get('http://roybal.vercel.app/admin/api/user_ids');
-        const userIDs = response.data.userIDs;
+        const userIDs = response.data
 
         for (const user_id of userIDs) {
             await processUser(user_id);
+
         }
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -914,7 +915,7 @@ async function processPoints() {
 }
 
 // Task 1: Data Fetching
-cron.schedule('52 12 * * *', async () => {
+cron.schedule('20 9 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -924,7 +925,7 @@ cron.schedule('52 12 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Task 2: Plan Processing
-cron.schedule('29 15 * * *', async () => {
+cron.schedule('6 9 * * *', async () => {
     console.log('Running scheduled plan processing task...');
     try {
         await processPlans();
@@ -934,7 +935,7 @@ cron.schedule('29 15 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Task 3: Points Calculation and Storage
-cron.schedule('40 12 * * *', async () => {
+cron.schedule('20 9 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
