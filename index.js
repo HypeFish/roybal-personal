@@ -685,11 +685,14 @@ async function processPlan(plan) {
     const identifier_type = plan.identifier_type;
     const identifier = plan.identifier;
 
-    const body = `Hi,\n\nYou have a planned activity today! \n Best, \n Roybal`;
+    const emailBody = `Good morning! Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 400 points that will then turn into compensation! \n Best, \n Roybal Team`;
     console.log(`Sending notification to ${identifier}...`)
+    const planSMSBody = "Good morning! Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 400 points that will then turn into compensation!"
+    const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and your get your points for walking!"
+    //30 min diff between reminder and planned activity
     try {
         if (identifier_type === 'email') {
-            await sendEmail(identifier, 'Planned Activity', body);
+            await sendEmail(identifier, 'Your Planned Activity Today', body);
         } else {
             await sendSMS(identifier, body);
         }
