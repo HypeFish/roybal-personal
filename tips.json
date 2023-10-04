@@ -1,0 +1,52 @@
+{
+    "tips": [
+        {
+            "title": "Staying Hydrated",
+            "description": "Staying hydrated is important for overall health. Proper hydration can improve digestion, joint function and cognition. The recommended amount for men is 3,000ml and 2,200ml for women per day."
+        },
+        {
+            "title": "Forest Bathing",
+            "description": "Forest bathing, also known as Shinrin Yoku, is spending time outside in a wooded area. There is no bathing that occurs but consciously spending time outside has been shown to improve mood, increase vitamin D levels, and improve the immune system’s functioning."
+        },
+        {
+            "title": "Social Interaction",
+            "description": "Did you know that certain types of activities, such as dance, martial arts or volunteering, which involve social interaction, have been linked to maintaining brain health? Several studies have suggested that social interaction can lead to a higher quality of life, greater satisfaction, and a lower risk of cognitive impairment and dementia over time."
+        },
+        {
+            "title": "Better Sleep Quality",
+            "description": "In order to promote better sleep quality, it is recommended to take into consideration individualized needs of sleep based on factors such as age, health status, and daily activities, and to adopt healthy sleep habits such as establishing regular schedules, reducing screen time before bed, exercising earlier in the day and creating a comfortable sleep environment."
+        },
+        {
+            "title": "Positive Social Interactions",
+            "description": "People benefit from healthy social interactions such as daily conversations with spouses and or friends. These interactions when positive lead to the release of dopamine and oxytocin allowing social interaction to positively impact overall health."
+        },
+        {
+            "title": "Cognitive Health",
+            "description": "Improvements in cognitive health can lead to healthy aging. It has been shown that with playing games that involve planning and critical thinking such as cards it improves cognitive health."
+        },
+        {
+            "title": "Prioritize a Healthy Lifestyle",
+            "description": "Maintaining good overall health is vital for a happy and fulfilling life. It’s essential to prioritize a healthy lifestyle by eating a balanced diet, staying physically active, getting enough sleep, and managing stress effectively. Consistently incorporating these habits into your daily routine can improve your immune system, reduce the risk of chronic diseases, and enhance your mental and emotional well-being."
+        },
+        {
+            "title": "Purposeful Life",
+            "description": "Improve your health and well-being by prioritizing positive experiences and living a purposeful life. This can reduce your risk of depression, dementia, and chronic diseases. Reflect on your values, set clear objectives, and pursue activities that bring you joy and fulfillment during your lifespan."
+        },
+        {
+            "title": "Mentally Stimulating Activities",
+            "description": "To promote healthy aging and keep your mind sharp, it's important to engage in mentally stimulating activities on a regular basis. This can include activities such as reading, solving puzzles, playing games that require strategic thinking, learning a new language or musical instrument, or taking on a new hobby that challenges your cognitive abilities."
+        },
+        {
+            "title": "Mindfulness Practices",
+            "description": "Recent studies suggest that incorporating mindfulness practices, such as meditation, gratitude, and mindful eating and communication, into your daily routine may lead to reduced stress, improved mental health, and increased overall well-being."
+        },
+        {
+            "title": "Mediterranean Diet",
+            "description": "The Mediterranean diet is primarily characterized by high consumption of unrefined cereals, fruit, vegetables, legumes, and olive oil; moderate consumption of dairy products and alcohol, as well as low meat consumption. Adherence to the Mediterranean diet demonstrated beneficial effects in various pathological conditions prevention, ranging from metabolic to cognitive disorders, and bringing benefits to various organs and systems, such as musculoskeletal and cardiovascular systems, thus promoting the healthy aging process."
+        },
+        {
+            "title": "Preventing Falls",
+            "description": "To reduce the risk of falls in advanced age, it's recommended to engage in regular physical activity, remove hazards at home, have regular vision and hearing checkups, review medications with a healthcare provider, and wear appropriate footwear. Following these recommendations can improve balance and coordination, reduce the risk of falls, and improve overall health."
+        }
+    ]
+}

@@ -79,22 +79,6 @@ async function getContacts() {
     }
 }
 
-
-// Call the function to populate the contact selector
-getContacts();
-
-// Add an event listener to the form submission
-document.getElementById('planForm').addEventListener('submit', function (event) {
-    event.preventDefault(); // Prevent the default form submission behavior
-    submitPlan(); // Call your function to handle the submission
-});
-
-document.getElementById('addContact').addEventListener('click', function (event) {
-    event.preventDefault(); // Prevent the default form submission behavior
-    submitNewContact(); // Call your function to handle the submission
-});
-
-
 async function submitPlan() {
     const selectedDates = document.getElementById('datePicker').value;
     //add the dates to an array
@@ -163,6 +147,47 @@ flatpickr("#datePicker", {
     dateFormat: "Y-m-d", // Set the date format as needed
 });
 
+async function submitHealthContact() {
+    const newEmail = document.getElementById('healthEmail').value;
+    const newPhone = document.getElementById('healthPhone').value;
+
+    if ((newEmail && newEmail.length > 0 && newEmail.includes('@')) || newPhone) {
+        try {
+            const response = await fetch('/admin/submit-health-contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ identifier: newEmail || newPhone, identifier_type: newEmail ? 'email' : 'phone'})
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(data.message);
+
+            } else {
+                if (data.message === 'Contact already exists') {
+                    alert('This email address or phone number is already registered');
+                } else {
+                    alert('Error submitting contact');
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+
+        document.getElementById('newEmail').value = '';
+        document.getElementById('newPhone').value = '';
+        document.getElementById('participantNumber').value = '';
+    } else {
+        alert('Please enter a valid email address or phone number');
+    }
+}
+
+// Call the function to populate the contact selector
+getContacts();
+
 document.getElementById('points').addEventListener('click', async function () {
     const pointSelector = document.getElementById('pointSelector');
     const selectedOption = pointSelector.options[pointSelector.selectedIndex];
@@ -172,4 +197,20 @@ document.getElementById('points').addEventListener('click', async function () {
 
     const pointsResult = document.getElementById('pointsResult');
     pointsResult.textContent = `Participant ${selectedOption.getAttribute('data-participant-number')} earned ${totalPoints} points.`;
+});
+
+// Add an event listener to the form submission
+document.getElementById('planForm').addEventListener('submit', function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    submitPlan(); // Call your function to handle the submission
+});
+
+document.getElementById('addContact').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    submitNewContact(); // Call your function to handle the submission
+});
+
+document.getElementById('addHealthContact').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    submitHealthContact(); // Call your function to handle the submission
 });

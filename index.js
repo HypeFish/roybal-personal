@@ -20,7 +20,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
+const fs = require('fs');
+const healthTips = require('./tips.json')
 
+
+let tipIndex = 0;
 let access_token;
 let refresh_token;
 let user_id;
@@ -30,6 +34,7 @@ let adminCollection;
 let planCollection;
 let usersCollection;
 let weeklyPointsCollection;
+let healthCollection;
 
 async function connectToDatabase() {
     try {
@@ -40,7 +45,10 @@ async function connectToDatabase() {
         planCollection = client.db('Roybal').collection('plan');
         usersCollection = client.db('Roybal').collection('users');
         weeklyPointsCollection = client.db('Roybal').collection('weeklyPoints');
+        healthCollection = client.db('Roybal').collection('health');
         console.log('Connected to MongoDB');
+
+        await sendHealthTips()
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
         throw error;
@@ -447,6 +455,26 @@ app.post('/admin/submit-plan', async (req, res) => {
         res.status(400).json({ success: false, error: 'Invalid request' });
     }
 });
+app.post('/admin/submit-health-contact', async (req, res) => {
+    const { identifier, identifier_type } = req.body;
+    if (identifier) {
+        const existingContact = await healthCollection.findOne({ identifier_type, identifier });
+        if (existingContact) {
+            res.json({ success: false, message: 'Contact already exists' });
+            return;
+        }
+    }
+    try {
+        await healthCollection.insertOne({
+            identifier,
+            identifier_type,
+        });
+        res.json({ success: true, message: 'Contact submitted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
 
 app.post('/admin/submit-contact', async (req, res) => {
     const { identifier, identifier_type, participantNumber } = req.body;
@@ -487,7 +515,6 @@ app.get('/admin/get-contacts', async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
-
 
 // Define a new route handler
 app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
@@ -933,6 +960,56 @@ async function processPoints() {
     }
 }
 
+async function sendHealthTips() {
+    try {
+        const healthContacts = await healthCollection.find().toArray();
+        const healthContactIdentifiers = healthContacts.map(contact => contact.identifier);
+        const healthContactIdentifierTypes = healthContacts.map(contact => contact.identifier_type);
+
+        fs.readFile('tips.json', 'utf8', async (err, data) => {
+            if (err) {
+                console.log('Error reading file:', err);
+                return;
+            }
+
+            const tips = JSON.parse(data);
+            const tipsList = tips.tips;
+
+
+            //get the first tip from the list, and remove it from the list
+            const tip = tipsList.shift();
+            //add the new list to the json file
+            tips.tips = tipsList;
+            fs.writeFile('tips.json', JSON.stringify(tips), 'utf8', (err) => {
+                if (err) {
+                    console.log('Error writing file:', err);
+                    return;
+                }
+            });
+
+            const tipTitle = tip.title;
+            const tipBody = tip.description;
+            const emailBody = `Good morning!\nThank you for your participation in the Roybal study. Here is your weekly health tip: \n${tipTitle} \n${tipBody} \nBest, \nRoybal Team`;
+            const smsBody = `Good morning! Thank you for your participation in the Roybal study. Here is your weekly health tip: ${tipBody}`
+            healthContactIdentifiers.forEach(async (identifier, i) => {
+                const identifier_type = healthContactIdentifierTypes[i];
+                try {
+                    if (identifier_type === 'email') {
+                        //await sendEmail(identifier, 'Your Weekly Health Tip', emailBody);
+                        console.log("Sent Email")
+                    } else {
+                        //await sendSMS(identifier, smsBody);
+                        console.log("Sent SMS")
+                    }
+                } catch (error) {
+                    console.error(`Error sending health tip to ${identifier}:`, error);
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
 // Task 1: Data Fetching
 cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled data fetching task...');
@@ -973,3 +1050,12 @@ cron.schedule('5 9 * * *', async () => {
 }, null, true, 'America/New_York');
 
 
+//Task 4: Weekly Health Tips
+cron.schedule('0 9 * * 1', async () => {
+    console.log('Running scheduled health tips task...');
+    try {
+        await sendHealthTips();
+    } catch (error) {
+        console.error('Error sending health tips:', error);
+    }
+}, null, true, 'America/New_York');
