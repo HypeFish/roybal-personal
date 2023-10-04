@@ -846,7 +846,7 @@ app.get('/login', (req, res) => {
         }
     }
     else {
-        res.redirect('/login');
+        res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
     }
 });
 
