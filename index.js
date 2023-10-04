@@ -24,7 +24,6 @@ const clientTwilio = require('twilio')(accountSid, authToken);
 let access_token;
 let refresh_token;
 let user_id;
-
 let participantsCollection;
 let dataCollection;
 let adminCollection;
@@ -77,108 +76,6 @@ app.use((req, res, next) => {
     next();
 });
 
-//signout route
-app.get('/logout', (req, res) => {
-    res.redirect('/login');
-    req.session.destroy();
-});
-
-// Define the login route
-app.get('/login', (req, res) => {
-    // Check if the user is already logged in
-    if (req.session?.user) {
-        if (req.session.user === 'cnelab') {
-            res.redirect('/admin');
-        }
-        else {
-            res.redirect('/user_portal');
-        }
-    }
-    else {
-        res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
-    }
-});
-
-app.post('/login', async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-
-    try {
-        const admin = await adminCollection.findOne({ user: username, pass: password });
-        const user = await usersCollection.findOne({ user: username, pass: password });
-
-        if (admin) {
-            req.session.user = username;
-            req.session.isAdmin = true; // Set isAdmin property for admins
-            res.redirect('/admin');
-        } else if (user) {
-            req.session.user = username;
-            req.session.isAdmin = false; // Set isAdmin property for regular users
-            res.redirect('/user_portal'); // Redirect to the user portal
-        }
-        else {
-            res.status(401).json({ success: false, error: 'Invalid username or password' });
-        }
-    } catch (error) {
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-function requireAuth(req, res, next) {
-    if (req.session?.user && req.session?.isAdmin) {
-        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
-    } else {
-        return res.redirect('/login'); // User is not authenticated, redirect to login page
-    }
-}
-
-function requireUserAuth(req, res, next) {
-    if (req.session?.user && !req.session?.isAdmin) {
-        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
-    } else {
-        return res.redirect('/login'); // User is not authenticated or is an admin, redirect to login page
-    }
-}
-
-
-app.get('/user_portal', requireUserAuth, (req, res) => {
-    const user_id = req.session.user; // Use the user ID from the session
-
-
-    participantsCollection.findOne({ user_id })
-        .then(user => {
-            if (user) {
-                res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
-            } else {
-                res.status(404).sendFile(path.join(__dirname, '404.html'));
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching user:', error);
-            res.status(500).sendFile(path.join(__dirname, '500.html'));
-        });
-});
-
-// Serve the index page
-app.get('/admin', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-//If the user is not logged in, redirect to the login page
-app.get('/', (req, res) => {
-    if (req.session?.user) {
-        if (req.session.user === 'cnelab') {
-            res.redirect('/admin');
-        }
-        else {
-            res.redirect('/user_portal');
-        }
-    }
-    else {
-        res.redirect('/login');
-    }
-});
-
 async function storeDataInDatabase(user_id, fitbitData) {
     try {
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
@@ -205,7 +102,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
 }
 
 // Add a new route to refresh the access token
-app.post('/admin/api/refresh-token/:user_id',requireAuth, async (req, res) => {
+app.post('/admin/api/refresh-token/:user_id', async (req, res) => {
     console.log('Reached the refresh_token route'); // Add this line
 
     const user_id = req.params.user_id;
@@ -258,7 +155,7 @@ app.post('/admin/api/refresh-token/:user_id',requireAuth, async (req, res) => {
 });
 
 // Add a new route to fetch all participants
-app.get('/admin/api/participants',requireAuth, async (req, res) => {
+app.get('/admin/api/participants', async (req, res) => {
     try {
         const participants = await participantsCollection.find().sort({ number: 1 }).toArray();
         const formattedParticipants = participants.map(({ user_id, number }, index) => ({
@@ -274,7 +171,7 @@ app.get('/admin/api/participants',requireAuth, async (req, res) => {
 });
 
 // Add a new route for the authorization callback
-app.get('/auth/callback',requireAuth, async (req, res) => {
+app.get('/auth/callback', async (req, res) => {
     res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
     res.redirect('/');
 
@@ -340,11 +237,9 @@ app.get('/admin/api/user_ids', async (req, res) => {
 });
 
 
-app.get('/admin/api/tokens/:user_id',requireAuth, (req, res) => {
+app.get('/admin/api/tokens/:user_id', (req, res) => {
     const user_id = req.params.user_id;
-
-    // Fetch tokens for the specified user_id from the database
-    // Return them as JSON
+    console.log(user_id)
     participantsCollection.findOne({ user_id })
         .then(user => {
             if (user) {
@@ -363,7 +258,7 @@ app.get('/admin/api/tokens/:user_id',requireAuth, (req, res) => {
 });
 
 // Add a new route for collecting Fitbit data
-app.post('/admin/api/collect_data/:user_id', requireAuth, async (req, res) => {
+app.post('/admin/api/collect_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
     const access_token = req.headers.authorization.split(' ')[1]; // Extract the access token from the Authorization header
 
@@ -399,7 +294,7 @@ app.post('/admin/api/collect_data/:user_id', requireAuth, async (req, res) => {
 });
 
 // Add a new route to fetch combined Fitbit data for a user
-app.get('/admin/api/combined_data/:user_id',requireAuth, async (req, res) => {
+app.get('/admin/api/combined_data/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
 
     try {
@@ -423,7 +318,7 @@ app.get('/admin/api/combined_data/:user_id',requireAuth, async (req, res) => {
     }
 });
 
-app.post('/admin/submit-plan', requireAuth, async (req, res) => {
+app.post('/admin/submit-plan', async (req, res) => {
     const { identifier, selectedDays } = req.body;
 
     if (identifier && selectedDays) {
@@ -451,7 +346,7 @@ app.post('/admin/submit-plan', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/admin/submit-contact',requireAuth, async (req, res) => {
+app.post('/admin/submit-contact', async (req, res) => {
     const { identifier, identifier_type, participantNumber } = req.body;
 
     if (identifier) {
@@ -480,7 +375,7 @@ app.post('/admin/submit-contact',requireAuth, async (req, res) => {
     }
 });
 
-app.get('/admin/get-contacts', requireAuth, async (req, res) => {
+app.get('/admin/get-contacts', async (req, res) => {
     try {
         const contacts = await planCollection.find().toArray();
         const identifiers = contacts.map(contact => contact.identifier);
@@ -493,7 +388,7 @@ app.get('/admin/get-contacts', requireAuth, async (req, res) => {
 
 
 // Define a new route handler
-app.get('/admin/api/planned_activities/:user_id', requireAuth, async (req, res) => {
+app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
     try {
         const user = await participantsCollection.findOne({ user_id });
@@ -556,7 +451,7 @@ app.get('/admin/api/planned_activities/:user_id', requireAuth, async (req, res) 
 });
 
 
-app.post('/admin/api/points/:user_id', requireAuth, async (req, res) => {
+app.post('/admin/api/points/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
     const { plannedPoints, unplannedPoints } = req.body;
 
@@ -642,7 +537,7 @@ const axios = require('axios');
 async function fetchDataAndProcess() {
     try {
         const response = await axios.get('http://roybal.vercel.app/admin/api/user_ids');
-        const userIDs = response.data
+        const userIDs = response.data.data;
 
         for (const user_id of userIDs) {
             await processUser(user_id);
@@ -652,6 +547,8 @@ async function fetchDataAndProcess() {
         console.error('Error fetching data:', error);
     }
 }
+
+fetchDataAndProcess();
 
 async function processUser(user_id) {
     try {
@@ -706,22 +603,9 @@ async function processPlan(plan) {
 async function collectFitbitData(user_id) {
     try {
         const tokensResponse = await axios.get(`http://roybal.vercel.app/admin/api/tokens/${user_id}`);
-        let { access_token, refresh_token, expires_in } = tokensResponse.data;
-
-        const expirationTime = new Date(expires_in * 1000);
-
-        if (Date.now() > expirationTime) {
-            // Call your refresh token route
-            const refreshResponse = await axios.post(`http://roybal.vercel.app/admin/api/refresh-token/${user_id}`, {
-                refresh_token
-            });
-
-            // Update access token with the new one
-            access_token = refreshResponse.data.access_token;
-        }
+        let { access_token } = tokensResponse.data;
 
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-        console.log(`Fetching data for user ${user_id} on ${yesterday}`);
         const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -729,11 +613,14 @@ async function collectFitbitData(user_id) {
             }
         });
 
+        console.log(fitbitDataResponse)
         return fitbitDataResponse;
+
     } catch (error) {
         if (error.response.status === 401) {
             // Handle 401 error by refreshing the token
             try {
+                const refresh_token = await participantsCollection.findOne({ user_id }).refresh_token;
                 // Call your refresh token route
                 const refreshResponse = await axios.post(`http://roybal.vercel.app/admin/api/refresh-token/${user_id}`, {
                     refresh_token
@@ -915,7 +802,7 @@ async function processPoints() {
 }
 
 // Task 1: Data Fetching
-cron.schedule('20 9 * * *', async () => {
+cron.schedule('30 9 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -935,7 +822,7 @@ cron.schedule('6 9 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Task 3: Points Calculation and Storage
-cron.schedule('20 9 * * *', async () => {
+cron.schedule('30 9 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
@@ -943,3 +830,107 @@ cron.schedule('20 9 * * *', async () => {
         console.error('Error calculating and storing points:', error);
     }
 }, null, true, 'America/New_York');
+
+
+
+//signout route
+app.get('/logout', (req, res) => {
+    res.redirect('/login');
+    req.session.destroy();
+});
+
+// Define the login route
+app.get('/login', (req, res) => {
+    // Check if the user is already logged in
+    if (req.session?.user) {
+        if (req.session.user === 'cnelab') {
+            res.redirect('/admin');
+        }
+        else {
+            res.redirect('/user_portal');
+        }
+    }
+    else {
+        res.redirect('/login');
+    }
+});
+
+app.post('/login', async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    try {
+        const admin = await adminCollection.findOne({ user: username, pass: password });
+        const user = await usersCollection.findOne({ user: username, pass: password });
+
+        if (admin) {
+            req.session.user = username;
+            req.session.isAdmin = true; // Set isAdmin property for admins
+            res.redirect('/admin');
+        } else if (user) {
+            req.session.user = username;
+            req.session.isAdmin = false; // Set isAdmin property for regular users
+            res.redirect('/user_portal'); // Redirect to the user portal
+        }
+        else {
+            res.status(401).json({ success: false, error: 'Invalid username or password' });
+        }
+    } catch (error) {
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+function requireAuth(req, res, next) {
+    if (req.session?.user && req.session?.isAdmin) {
+        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
+    } else {
+        return res.redirect('/login'); // User is not authenticated, redirect to login page
+    }
+}
+
+function requireUserAuth(req, res, next) {
+    if (req.session?.user && !req.session?.isAdmin) {
+        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
+    } else {
+        return res.redirect('/login'); // User is not authenticated or is an admin, redirect to login page
+    }
+}
+
+
+app.get('/user_portal', requireUserAuth, (req, res) => {
+    const user_id = req.session.user; // Use the user ID from the session
+
+
+    participantsCollection.findOne({ user_id })
+        .then(user => {
+            if (user) {
+                res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
+            } else {
+                res.status(404).sendFile(path.join(__dirname, '404.html'));
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user:', error);
+            res.status(500).sendFile(path.join(__dirname, '500.html'));
+        });
+});
+
+// Serve the index page
+app.get('/admin', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+//If the user is not logged in, redirect to the login page
+app.get('/', (req, res) => {
+    if (req.session?.user) {
+        if (req.session.user === 'cnelab') {
+            res.redirect('/admin');
+        }
+        else {
+            res.redirect('/user_portal');
+        }
+    }
+    else {
+        res.redirect('/login');
+    }
+});
