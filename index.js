@@ -76,6 +76,108 @@ app.use((req, res, next) => {
     next();
 });
 
+//signout route
+app.get('/logout', (req, res) => {
+    res.redirect('/login');
+    req.session.destroy();
+});
+
+// Define the login route
+app.get('/login', (req, res) => {
+    // Check if the user is already logged in
+    if (req.session?.user) {
+        if (req.session.user === 'cnelab') {
+            res.redirect('/admin');
+        }
+        else {
+            res.redirect('/user_portal');
+        }
+    }
+    else {
+        res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
+    }
+});
+
+app.post('/login', async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    try {
+        const admin = await adminCollection.findOne({ user: username, pass: password });
+        const user = await usersCollection.findOne({ user: username, pass: password });
+
+        if (admin) {
+            req.session.user = username;
+            req.session.isAdmin = true; // Set isAdmin property for admins
+            res.redirect('/admin');
+        } else if (user) {
+            req.session.user = username;
+            req.session.isAdmin = false; // Set isAdmin property for regular users
+            res.redirect('/user_portal'); // Redirect to the user portal
+        }
+        else {
+            res.status(401).json({ success: false, error: 'Invalid username or password' });
+        }
+    } catch (error) {
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+function requireAuth(req, res, next) {
+    if (req.session?.user && req.session?.isAdmin) {
+        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
+    } else {
+        return res.redirect('/login'); // User is not authenticated, redirect to login page
+    }
+}
+
+function requireUserAuth(req, res, next) {
+    if (req.session?.user && !req.session?.isAdmin) {
+        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
+    } else {
+        return res.redirect('/login'); // User is not authenticated or is an admin, redirect to login page
+    }
+}
+
+
+app.get('/user_portal', requireUserAuth, (req, res) => {
+    const user_id = req.session.user; // Use the user ID from the session
+
+
+    participantsCollection.findOne({ user_id })
+        .then(user => {
+            if (user) {
+                res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
+            } else {
+                res.status(404).sendFile(path.join(__dirname, '404.html'));
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user:', error);
+            res.status(500).sendFile(path.join(__dirname, '500.html'));
+        });
+});
+
+// Serve the index page
+app.get('/admin', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+//If the user is not logged in, redirect to the login page
+app.get('/', (req, res) => {
+    if (req.session?.user) {
+        if (req.session.user === 'cnelab') {
+            res.redirect('/admin');
+        }
+        else {
+            res.redirect('/user_portal');
+        }
+    }
+    else {
+        res.redirect('/login');
+    }
+});
+
 async function storeDataInDatabase(user_id, fitbitData) {
     try {
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
@@ -817,7 +919,7 @@ cron.schedule('6 9 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Task 3: Points Calculation and Storage
-cron.schedule('26 10 * * *', async () => {
+cron.schedule('50 10 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
@@ -826,106 +928,3 @@ cron.schedule('26 10 * * *', async () => {
     }
 }, null, true, 'America/New_York');
 
-
-
-//signout route
-app.get('/logout', (req, res) => {
-    res.redirect('/login');
-    req.session.destroy();
-});
-
-// Define the login route
-app.get('/login', (req, res) => {
-    // Check if the user is already logged in
-    if (req.session?.user) {
-        if (req.session.user === 'cnelab') {
-            res.redirect('/admin');
-        }
-        else {
-            res.redirect('/user_portal');
-        }
-    }
-    else {
-        res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
-    }
-});
-
-app.post('/login', async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
-
-    try {
-        const admin = await adminCollection.findOne({ user: username, pass: password });
-        const user = await usersCollection.findOne({ user: username, pass: password });
-
-        if (admin) {
-            req.session.user = username;
-            req.session.isAdmin = true; // Set isAdmin property for admins
-            res.redirect('/admin');
-        } else if (user) {
-            req.session.user = username;
-            req.session.isAdmin = false; // Set isAdmin property for regular users
-            res.redirect('/user_portal'); // Redirect to the user portal
-        }
-        else {
-            res.status(401).json({ success: false, error: 'Invalid username or password' });
-        }
-    } catch (error) {
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-function requireAuth(req, res, next) {
-    if (req.session?.user && req.session?.isAdmin) {
-        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
-    } else {
-        return res.redirect('/login'); // User is not authenticated, redirect to login page
-    }
-}
-
-function requireUserAuth(req, res, next) {
-    if (req.session?.user && !req.session?.isAdmin) {
-        return next(); // Regular user is authenticated, proceed to the next middleware or route handler
-    } else {
-        return res.redirect('/login'); // User is not authenticated or is an admin, redirect to login page
-    }
-}
-
-
-app.get('/user_portal', requireUserAuth, (req, res) => {
-    const user_id = req.session.user; // Use the user ID from the session
-
-
-    participantsCollection.findOne({ user_id })
-        .then(user => {
-            if (user) {
-                res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
-            } else {
-                res.status(404).sendFile(path.join(__dirname, '404.html'));
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching user:', error);
-            res.status(500).sendFile(path.join(__dirname, '500.html'));
-        });
-});
-
-// Serve the index page
-app.get('/admin', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-//If the user is not logged in, redirect to the login page
-app.get('/', (req, res) => {
-    if (req.session?.user) {
-        if (req.session.user === 'cnelab') {
-            res.redirect('/admin');
-        }
-        else {
-            res.redirect('/user_portal');
-        }
-    }
-    else {
-        res.redirect('/login');
-    }
-});
