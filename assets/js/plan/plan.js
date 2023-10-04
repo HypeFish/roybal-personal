@@ -4,6 +4,10 @@ async function submitNewContact() {
     const newPhone = document.getElementById('newPhone').value;
     const participantNumber = document.getElementById('participantNumber').value;
 
+    if (participantNumber === '') {
+        alert('Please enter a participant number');
+        return;
+    }
 
     if ((newEmail && newEmail.length > 0 && newEmail.includes('@')) || newPhone) {
         try {
@@ -25,6 +29,7 @@ async function submitNewContact() {
                 option.value = newEmail || newPhone;
                 option.textContent = newEmail || newPhone;
                 contactSelector.appendChild(option);
+                
             } else {
                 if (data.message === 'Contact already exists') {
                     alert('This email address or phone number is already registered');
