@@ -13,9 +13,9 @@ body {
     border-radius: 5vmin;
     box-shadow: 0 2vmin 4vmin rgba(0, 0, 0, 0.1);
     padding: 2vmin;
-    max-width: 40vmin;
-    max-height : 40vmin;
-    width: 100%;
+    width: 60vmin;
+    height: 60vmin;
+    justify-content: center;
 }
 
 h1 {
