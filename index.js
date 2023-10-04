@@ -431,8 +431,8 @@ app.post('/admin/submit-plan', async (req, res) => {
             const updated = await planCollection.updateOne(
                 { identifier },
                 {
-                    $set: {
-                        selectedDays,
+                    $addToSet: {
+                        selectedDays: { $each: selectedDays }
                     }
                 }
             );
@@ -450,6 +450,7 @@ app.post('/admin/submit-plan', async (req, res) => {
         res.status(400).json({ success: false, error: 'Invalid request' });
     }
 });
+
 app.post('/admin/submit-health-contact', async (req, res) => {
     const { identifier, identifier_type } = req.body;
     if (identifier) {
