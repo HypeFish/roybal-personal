@@ -978,7 +978,6 @@ async function sendHealthTips() {
             const tips = JSON.parse(data);
             const tipsList = tips.tips;
 
-
             //get the first tip from the list, and remove it from the list
             const tip = tipsList.shift();
             //add the new list to the json file
