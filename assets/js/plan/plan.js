@@ -244,6 +244,68 @@ async function submitCallingPlan() {
     }
 }
 
+async function deleteContact() {
+    const selectedContact = document.getElementById('contactSelector').value;
+
+    try {
+        const identifier = selectedContact;
+
+        const response = await fetch('/admin/api/delete-contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ identifier })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+        } else {
+            alert('Error deleting contact');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newPhone').value = '';
+    document.getElementById('participantNumber').value = '';
+}
+
+
+async function deleteHealthContact() {
+    const selectedContact = document.getElementById('contactSelector').value;
+
+    try {
+        const identifier = selectedContact;
+
+        const response = await fetch('/admin/api/delete-health-contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ identifier })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+        } else {
+            alert('Error deleting contact');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newPhone').value = '';
+    document.getElementById('participantNumber').value = '';
+}
+
+
 // Call the function to populate the contact selector
 getContacts();
 
@@ -277,4 +339,15 @@ document.getElementById('addHealthContact').addEventListener('click', function (
 document.getElementById('planForm2').addEventListener('submit', function (event) {
     event.preventDefault(); // Prevent the default form submission behavior
     submitCallingPlan(); // Call your function to handle the submission
+});
+
+
+document.getElementById('deleteContact').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    deleteContact(); // Call your function to handle the submission
+});
+
+document.getElementById('deleteHealthContact').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    deleteHealthContact(); // Call your function to handle the submission
 });

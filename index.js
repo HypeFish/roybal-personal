@@ -677,6 +677,41 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
     }
 });
 
+// Delete contact route
+app.delete('/admin/api/delete-contact/:identifier', async (req, res) => {
+    const identifier = req.params.identifier;
+
+    try {
+        const result = await planCollection.deleteOne({ identifier });
+
+        if (result.deletedCount > 0) {
+            res.json({ success: true, message: 'Contact deleted successfully' });
+        } else {
+            res.json({ success: false, message: 'No matching contact found' });
+        }
+    } catch (error) {
+        console.error('Error deleting contact:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
+
+// Delete health contact route
+app.delete('/admin/api/delete-health-contact/:identifier', async (req, res) => {
+    const identifier = req.params.identifier;
+    
+    try {
+        const result = await healthCollection.deleteOne({ identifier });
+
+        if (result.deletedCount > 0) {
+            res.json({ success: true, message: 'Contact deleted successfully' });
+        } else {
+            res.json({ success: false, message: 'No matching contact found' });
+        }
+    } catch (error) {
+        console.error('Error deleting contact:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
 
 // Serve the error page
 app.use((req, res) => {

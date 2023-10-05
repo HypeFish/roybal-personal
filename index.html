@@ -33,39 +33,47 @@
         </div>
 
         <div class="flex-container">
-        <div class="plan-your-walk section-title">
-            <h2>Plan Your Walk</h2>
-            <label for="contactSelector">Select a Contact:</label>
-            <select id="contactSelector" name="contactSelector"></select>
+            <div class="plan-your-walk section-title">
+                <h2>Plan Your Walk</h2>
+                <label for="contactSelector">Select a Contact:</label>
+                <select id="contactSelector" name="contactSelector"></select>
 
-            <form id="planForm"> <!-- Added form element -->
-                <label for="datePicker">Select Date(s):</label>
-                <input type="text" id="datePicker" name="selectedDate" placeholder="MM/DD/YYYY" title="Date Picker">
-                <button type="submit" id="plan">Submit Plan</button>
-            </form>
+                <form id="planForm"> <!-- Added form element -->
+                    <label for="datePicker">Select Date(s):</label>
+                    <input type="text" id="datePicker" name="selectedDate" placeholder="MM/DD/YYYY" title="Date Picker">
+                    <button type="submit" id="plan">Submit Plan</button>
+                </form>
 
-            <label for="newEmail">Or add a new email:</label>
-            <input type="text" id="newEmail" name="newEmail" class="new-input">
-            <label for="newPhone">Or add a new phone number:</label>
-            <input type="text" id="newPhone" name="newPhone" class="new-input">
-            <label for="participantNumber">Participant Number:</label>
-            <input type="number" id="participantNumber" name="participantNumber" class="new-input">
-            <button type="button" id="addContact" title="Add Plan">Add Plan</button>
+                <label for="newEmail">Or add a new email:</label>
+                <input type="text" id="newEmail" name="newEmail" class="new-input">
+                <label for="newPhone">Or add a new phone number:</label>
+                <input type="text" id="newPhone" name="newPhone" class="new-input">
+                <label for="participantNumber">Participant Number:</label>
+                <input type="number" id="participantNumber" name="participantNumber" class="new-input">
+                <button type="button" id="addContact" title="Add Plan">Add Plan</button>
+            </div>
+            <div class="plan-your-call section-title">
+                <h2>Plan Your Call</h2>
+                <label for="contactSelector2">Select a Contact:</label>
+                <select id="contactSelector2" name="contactSelector2"></select>
 
+                <form id="planForm2"> <!-- Added form element -->
+                    <label for="datePicker2">Select Date(s):</label>
+                    <input type="text" id="datePicker2" name="selectedDate" placeholder="MM/DD/YYYY"
+                        title="Date Picker">
+                    <button type="submit" id="plan2">Submit Plan</button>
+                </form>
+            </div>
+
+            <div class="remove-contact">
+                <h2>Remove a Contact</h2>
+                <label for="removeEmail">Remove Email:</label>
+                <input type="text" id="removeEmail" name="removeEmail" class="new-input">
+                <label for="removePhone">Remove Phone:</label>
+                <input type="text" id="removePhone" name="removePhone" class="new-input">
+                <button type="button" id="removeContact" title="Remove Contact">Remove Contact</button>
+            </div>
         </div>
-
-        <div class ="plan-your-call section-title">
-            <h2>Plan Your Call</h2>
-            <label for="contactSelector2">Select a Contact:</label>
-            <select id="contactSelector2" name="contactSelector2"></select>
-
-            <form id="planForm2"> <!-- Added form element -->
-                <label for="datePicker2">Select Date(s):</label>
-                <input type="text" id="datePicker2" name="selectedDate" placeholder="MM/DD/YYYY" title="Date Picker">
-                <button type="submit" id="plan2">Submit Plan</button>
-            </form>
-        </div>
-    </div>
         <div class="micro-incentive-collector section-title">
             <h2>Micro Incentive Collector</h2>
             <p>Click the button to get the points for the current week (Saturday - Sunday)</p>
@@ -76,14 +84,25 @@
             <div class="pointsResult" id="pointsResult"></div>
         </div>
 
-        <div class="health-tip-container section-title">
-            <h2> Add a contact to send Health Tips to</h2>
-            <form id="healthTipForm">
-                <label for="healthEmail">Enter Email:</label>
-                <input type="text" id="healthEmail" name="healthEmail" class="new-input">
-                <label for="healthPhone"> Or Enter Phone:</label>
-                <input type="text" id="healthPhone" name="healthPhone" class="new-input">
-                <button type="submit" id="addHealthContact">Add Contact</button>
+        <div class="flex-container health-tip-container section-title">
+            <div>
+                <h2> Add a contact to send Health Tips</h2>
+                <form id="healthTipForm">
+                    <label for="healthEmail">Enter Email:</label>
+                    <input type="text" id="healthEmail" name="healthEmail" class="new-input">
+                    <label for="healthPhone"> Or Enter Phone:</label>
+                    <input type="text" id="healthPhone" name="healthPhone" class="new-input">
+                    <button type="submit" id="addHealthContact">Add Contact</button>
+                </form>
+            </div>
+            <div>
+                <h2>Remove Contact</h2>
+                <label for="removeHealthEmail">Remove Email:</label>
+                <input type="text" id="removeHealthEmail" name="removeHealthEmail" class="new-input">
+                <label for="removeHealthPhone">Remove Phone:</label>
+                <input type="text" id="removeHealthPhone" name="removeHealthPhone" class="new-input">
+                <button type="button" id="removeHealthContact" title="Remove Contact">Remove Contact</button>
+            </div>
         </div>
 
         <div class="logout ">
