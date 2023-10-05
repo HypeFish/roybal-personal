@@ -32,6 +32,7 @@
             <button id="generate-csv">Generate CSV</button>
         </div>
 
+        <div class="flex-container">
         <div class="plan-your-walk section-title">
             <h2>Plan Your Walk</h2>
             <label for="contactSelector">Select a Contact:</label>
@@ -49,10 +50,22 @@
             <input type="text" id="newPhone" name="newPhone" class="new-input">
             <label for="participantNumber">Participant Number:</label>
             <input type="number" id="participantNumber" name="participantNumber" class="new-input">
-            <!-- Add this field -->
-            <button type="submit" id="addContact">Add Contact</button>
+            <button type="button" id="addContact" title="Add Plan">Add Plan</button>
+
         </div>
 
+        <div class ="plan-your-call section-title">
+            <h2>Plan Your Call</h2>
+            <label for="contactSelector2">Select a Contact:</label>
+            <select id="contactSelector2" name="contactSelector2"></select>
+
+            <form id="planForm2"> <!-- Added form element -->
+                <label for="datePicker2">Select Date(s):</label>
+                <input type="text" id="datePicker2" name="selectedDate" placeholder="MM/DD/YYYY" title="Date Picker">
+                <button type="submit" id="plan2">Submit Plan</button>
+            </form>
+        </div>
+    </div>
         <div class="micro-incentive-collector section-title">
             <h2>Micro Incentive Collector</h2>
             <p>Click the button to get the points for the current week (Saturday - Sunday)</p>

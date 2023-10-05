@@ -71,6 +71,22 @@ async function getContacts() {
                     contactSelector.appendChild(option);
                 }
             });
+
+            const contactSelector2 = document.getElementById('contactSelector2');
+
+            // Clear existing options
+            contactSelector2.innerHTML = '';
+
+            // Add new options
+            data.data.forEach(identifier => {
+                if (identifier.trim() !== '') {
+                    const option = document.createElement('option');
+                    option.value = identifier;
+                    option.textContent = identifier;
+                    contactSelector2.appendChild(option);
+                }
+            });
+
         } else {
             console.error('Error fetching contacts:', data.error);
         }
@@ -147,6 +163,18 @@ flatpickr("#datePicker", {
     dateFormat: "Y-m-d", // Set the date format as needed
 });
 
+flatpickr("#datePicker2", {
+    mode: 'multiple', // Enable multiple date selection
+    enable: [
+        function(date) {
+            // Enable all dates for now, you can add custom logic here later
+            return true;
+        }
+    ],
+    dateFormat: "Y-m-d", // Set the date format as needed
+});
+
+
 async function submitHealthContact() {
     const newEmail = document.getElementById('healthEmail').value;
     const newPhone = document.getElementById('healthPhone').value;
@@ -185,6 +213,37 @@ async function submitHealthContact() {
     }
 }
 
+async function submitCallingPlan() {
+    const callingDates = document.getElementById('datePicker2').value;
+    const dates = callingDates.split(',');
+    const identifier = document.getElementById('contactSelector2').value;
+
+    console.log("hello")
+    if (callingDates && identifier) {
+        try {
+            const response = await fetch('/admin/api/call', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ identifier, callingDates: dates })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(data.message);
+            } else {
+                alert('Error submitting plan');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    } else {
+        alert('Please select at least one date and a contact');
+    }
+}
+
 // Call the function to populate the contact selector
 getContacts();
 
@@ -213,4 +272,9 @@ document.getElementById('addContact').addEventListener('click', function (event)
 document.getElementById('addHealthContact').addEventListener('click', function (event) {
     event.preventDefault(); // Prevent the default form submission behavior
     submitHealthContact(); // Call your function to handle the submission
+});
+
+document.getElementById('planForm2').addEventListener('submit', function (event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    submitCallingPlan(); // Call your function to handle the submission
 });

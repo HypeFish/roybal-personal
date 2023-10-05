@@ -451,6 +451,36 @@ app.post('/admin/submit-plan', async (req, res) => {
     }
 });
 
+app.post ('/admin/api/call', async (req, res) => {
+    //add the date to the calling days array
+    const identifier = req.body.identifier;
+    const callingDates = req.body.callingDates;
+
+    if (identifier && callingDates) {
+        try {
+            const updated = await planCollection.updateOne(
+                { identifier },
+                {
+                    $addToSet: {
+                        callingDays: { $each: callingDates }
+                    }
+                }
+            );
+
+            if (updated.modifiedCount > 0) {
+                res.json({ success: true, message: 'Calling days submitted successfully' });
+            } else {
+                res.json({ success: false, message: 'No matching contact found' });
+            }
+        } catch (error) {
+            console.error('Error updating plan:', error);
+            res.status(500).json({ success: false, error: 'Internal Server Error' });
+        }
+    } else {
+        res.status(400).json({ success: false, error: 'Invalid request' });
+    }
+});
+
 app.post('/admin/submit-health-contact', async (req, res) => {
     const { identifier, identifier_type } = req.body;
     if (identifier) {
@@ -493,6 +523,7 @@ app.post('/admin/submit-contact', async (req, res) => {
             selectedDays: [],
             completedPlannedActivities: [],
             completedUnplannedActivities: [],
+            callingDays: []
         });
         res.json({ success: true, message: 'Contact submitted successfully' });
     } catch (error) {
@@ -1014,6 +1045,39 @@ async function sendHealthTips() {
     }
 }
 
+async function processCallReminder() {
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0]
+    //get every plan
+    const plans = await planCollection.find().toArray();
+    //trim the dates 
+    plans.forEach(plan => {
+        plan.callingDays = plan.selectedDays.map(day => day.trim());
+    });
+
+    const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
+    for (const plan of matchingPlans) {
+        await sendCallReminder(plan);
+    }
+}
+
+async function sendCallReminder(plan) {
+    const identifier_type = plan.identifier_type;
+    const identifier = plan.identifier;
+
+    const reminderSMSBody = "Good Morning! Here is your reminder that the Roybal Team will be calling you today!"
+    const reminderEmailBody = "Good Morning! \n Here is your reminder that the Roybal Team will be calling you today! \n Best, \n Roybal Team"
+    try {
+        if (identifier_type === 'email') {
+            await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
+        } else {
+            await sendSMS(identifier, reminderSMSBody);
+        }
+    } catch (error) {
+        console.error(`Error sending reminder to ${identifier}:`, error);
+    }
+}
+
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
 cron.schedule('55 8 * * *', async () => {
@@ -1022,7 +1086,7 @@ cron.schedule('55 8 * * *', async () => {
         await fetchDataAndProcess();
     } catch (error) {
         console.error('Error fetching data:', error);
-    }
+    }  
 }, null, true, 'America/New_York');
 
 // Task 2: Plan Processing
@@ -1033,6 +1097,16 @@ cron.schedule('0 9 * * *', async () => {
         await processPlans();
     } catch (error) {
         console.error('Error processing plans:', error);
+    }
+}, null, true, 'America/New_York');
+
+//Task once a day to send a reminder of the call with another lab member
+cron.schedule('0 8 * * *', async () => {
+    console.log('Running scheduled call reminder task...');
+    try { 
+        await processCallReminder();
+    } catch (error) {
+        console.error('Error sending call reminder:', error);
     }
 }, null, true, 'America/New_York');
 

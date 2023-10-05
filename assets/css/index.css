@@ -6,8 +6,8 @@ body {
 }
 .section-title {
     border-bottom: 2px solid blue;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
+    /* margin-bottom: 10px;
+    padding-bottom: 5px;  */
 }
 
 h1 {
@@ -164,3 +164,21 @@ li {
 .logout a:hover {
     background-color: #c0392b;
 }
+
+
+/* Add this to your CSS */
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Update these styles */
+.plan-your-walk,
+.plan-your-call {
+    flex-basis: 50%; /* Adjust the width as needed */
+}
+
+.plan-your-walk {
+    margin-bottom: auto;
+}
+
