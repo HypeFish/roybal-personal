@@ -884,6 +884,9 @@ async function processPoints() {
             const user_id = user.user_id;
             const participantNumber = user.number;
             const plan = await planCollection.findOne({ participantNumber });
+            if (!plan) {
+                continue;
+            }
             const selectedDays = plan.selectedDays;
             const userDocuments = await dataCollection.find({ user_id }).toArray();
             let combinedActivities = [];
@@ -1005,13 +1008,16 @@ async function sendHealthTips() {
                     console.error(`Error sending health tip to ${identifier}:`, error);
                 }
             }
-        )});
+            )
+        });
     } catch (error) {
         console.error('Error fetching data:', error);
     }
 }
+
 // Task 1: Data Fetching
-cron.schedule('0 9 * * *', async () => {
+// Second task. Runs at 8:55 AM every day
+cron.schedule('55 8 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -1021,7 +1027,8 @@ cron.schedule('0 9 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // Task 2: Plan Processing
-cron.schedule('5 9 * * *', async () => {
+// Third task. Runs at 9:00 AM every day
+cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled plan processing task...');
     try {
         await processPlans();
@@ -1030,6 +1037,7 @@ cron.schedule('5 9 * * *', async () => {
     }
 }, null, true, 'America/New_York');
 
+// First Task. Runs at 8:30 AM every day
 cron.schedule('30 8 * * *', async () => {
     console.log("Sending Reminder")
     try {
@@ -1040,7 +1048,8 @@ cron.schedule('30 8 * * *', async () => {
 }, null, true, 'America/New_Tork');
 
 // Task 3: Points Calculation and Storage
-cron.schedule('5 9 * * *', async () => {
+// Needs to be delayed to ensure that all data is collected
+cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
@@ -1050,7 +1059,8 @@ cron.schedule('5 9 * * *', async () => {
 }, null, true, 'America/New_York');
 
 
-//Task 4: Weekly Health Tips
+// Task 4: Weekly Health Tips
+// Fourth task. Runs at 9:00 AM every Monday
 cron.schedule('0 9 * * 1', async () => {
     console.log('Running scheduled health tips task...');
     try {
