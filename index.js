@@ -997,10 +997,10 @@ async function sendHealthTips() {
                 const identifier_type = healthContactIdentifierTypes[i];
                 try {
                     if (identifier_type === 'email') {
-                        //await sendEmail(identifier, 'Your Weekly Health Tip', emailBody);
+                        await sendEmail(identifier, 'Your Weekly Health Tip', emailBody);
                         console.log("Sent Email")
                     } else {
-                        //await sendSMS(identifier, smsBody);
+                        await sendSMS(identifier, smsBody);
                         console.log("Sent SMS")
                     }
                 } catch (error) {
