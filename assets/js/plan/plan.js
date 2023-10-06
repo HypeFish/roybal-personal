@@ -342,12 +342,12 @@ document.getElementById('planForm2').addEventListener('submit', function (event)
 });
 
 
-document.getElementById('deleteContact').addEventListener('click', function (event) {
+document.getElementById('removeContact').addEventListener('click', function (event) {
     event.preventDefault(); // Prevent the default form submission behavior
     deleteContact(); // Call your function to handle the submission
 });
 
-document.getElementById('deleteHealthContact').addEventListener('click', function (event) {
+document.getElementById('removeHealthContact').addEventListener('click', function (event) {
     event.preventDefault(); // Prevent the default form submission behavior
     deleteHealthContact(); // Call your function to handle the submission
 });

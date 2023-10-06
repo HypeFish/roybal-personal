@@ -1115,7 +1115,7 @@ async function sendCallReminder(plan) {
 
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
-cron.schedule('55 8 * * *', async () => {
+cron.schedule('19 9 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
