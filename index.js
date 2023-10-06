@@ -698,7 +698,7 @@ app.delete('/admin/api/delete-contact/:identifier', async (req, res) => {
 // Delete health contact route
 app.delete('/admin/api/delete-health-contact/:identifier', async (req, res) => {
     const identifier = req.params.identifier;
-    
+
     try {
         const result = await healthCollection.deleteOne({ identifier });
 
@@ -812,8 +812,8 @@ async function sendReminder(plan) {
     const identifier_type = plan.identifier_type;
     const identifier = plan.identifier;
 
-    const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and your get your points for walking!"
-    const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and your get your points for walking! \n Best, \n Roybal Team"
+    const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking!"
+    const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking! \nBest, \n oybal Team"
     try {
         if (identifier_type === 'email') {
             await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
