@@ -535,6 +535,8 @@ app.post('/admin/submit-contact', async (req, res) => {
 app.get('/admin/get-contacts', async (req, res) => {
     try {
         const contacts = await planCollection.find().toArray();
+        //sort the contacts by participant number
+        contacts.sort((a, b) => a.participantNumber - b.participantNumber);
         const identifiers = contacts.map(contact => contact.identifier);
         res.json({ success: true, data: identifiers });
     } catch (error) {
