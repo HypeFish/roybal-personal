@@ -23,20 +23,23 @@
         <p>Participant Number: <span id="participant-number"></span></p>
         <p> Remember to sync your Fitbit with your phone app daily please!</p>
     </div>
+
     <div class="container">
-        <h2>Your Points This Week: <span id="points"></span></h2>
-        <p> Please remember to sync your Fitbit app so the points are accurate!</p>
-        <canvas id="point-chart"></canvas>
+        <h2>Your Calendar</h2>
+        <div id="calendar"></div>
+    </div>
+
+    <div class="container">
+        <h2>Your Points This Week</h2>
+        <canvas id="stamina-chart"></canvas>
+        <div class="chart-text">
+            <p><span id="points-value"></span> / 1500 Points</p>
+        </div>
     </div>
 
     <div class="container">
         <h2> Your Points Overall</h2>
         <canvas id="line-chart"></canvas>
-    </div>
-
-    <div class="container">
-        <h2>Your Calendar</h2>
-        <div id="calendar"></div>
     </div>
 
     <div class="logout">

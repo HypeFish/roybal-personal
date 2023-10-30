@@ -3,7 +3,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const userIdElement = document.getElementById('user-id');
     const participantNumberElement = document.getElementById('participant-number');
-    const pointsElement = document.getElementById('points');
     const pointChartElement = document.getElementById('point-chart');
 
     // Fetch weekly points from backend
@@ -19,7 +18,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         .then(data => {
             userIdElement.innerText = data.user_id;
             participantNumberElement.innerText = data.number;
-            pointsElement.innerText = latestWeekPoints;
+            let pointsValueElement = document.getElementById('points-value');
+            pointsValueElement.innerText = 1000;
+
 
             // Calculate the current week number
             const startDate = new Date(data.selectedDays[0]);
@@ -27,35 +28,72 @@ document.addEventListener('DOMContentLoaded', async () => {
             const weekDiff = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
             const weekLabels = Array.from({ length: weekDiff }, (_, i) => `Week ${i + 1}`);
 
-            // Create a chart
-            const ctx = pointChartElement.getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Points'],
+            function drawStaminaWheel(value) {
+                let ctx = document.getElementById('stamina-chart').getContext('2d');
+
+                let data = {
+                    labels: [
+                        'Your Points',
+                        'Remaining Points'
+                    ],
                     datasets: [{
-                        label: 'Points for the Week',
-                        data: [latestWeekPoints],
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }, {
-                        label: 'Max Points for the Week',
-                        data: [2500], // Replace with the actual max points value
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
+                        label: 'Points',
+                        data: [value, 1500 - value],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        hoverOffset: 4
                     }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 2500
+
+                };
+
+                // Makes a doughnut chart
+                let options = {
+                    responsive: true,
+                    cutout: '80%',
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top', // Position options: 'top', 'bottom', 'left', 'right'
+                            labels: {
+                                color: 'black',
+                                usePointStyle: true // This will use the point style as the legend marker
+                            }
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    },
+                    elements: {
+                        arc: {
+                            borderWidth: 0
+                        },
+                        center: {
+                            // the longest text that could appear in the center
+                            maxText: '100%',
+                            text: '100%',
+                            fontColor: '#36A2EB',
+                            fontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+                            fontStyle: 'normal',
+
                         }
                     }
-                }
-            });
+                };
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: options
+                });
+            }
+
+            drawStaminaWheel(1000)
+
 
             $('#calendar').fullCalendar({
                 header: {
@@ -65,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
                 events: data.selectedDays.map(day => {
                     return {
-                        title: 'Activity',
+                        title: 'Planned Activity',
                         start: day,
                         color: 'blue'
                     };
@@ -74,12 +112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         title: 'Completed Planned Activity',
                         start: activity,
                         color: 'green'
-                    };
-                })).concat(data.completedUnplannedActivities.map(activity => {
-                    return {
-                        title: 'Completed Unplanned Activity',
-                        start: activity,
-                        color: 'orange'
                     };
                 })).concat(data.missedPlannedActivities.map(date => {
                     return {
@@ -120,4 +152,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         })
         .catch(error => console.error('Error fetching user data:', error));
 });
+
 

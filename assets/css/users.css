@@ -89,3 +89,18 @@ p {
         /* Adjust the minimum width for time grid cells */
     }
 }
+
+#stamina-chart {
+    width: 8vmin;
+    /* Adjust the size as needed */
+    height: 8vmin;
+    margin: 0 auto;
+    /* Center the chart */
+    display: block;
+}
+
+
+#points-value {
+    font-weight: bold;
+    color: #4CAF50; /* Match the filled portion color */
+}
