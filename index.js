@@ -144,13 +144,19 @@ function requireUserAuth(req, res, next) {
 
 
 app.get('/user_portal', requireUserAuth, (req, res) => {
-    const user_id = req.session.user; // Use the user ID from the session
+    const user = req.session.user; // Use the user ID from the session
 
 
-    participantsCollection.findOne({ user_id })
+    usersCollection.findOne({ user })
         .then(user => {
             if (user) {
-                res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
+                //check if user is experimental or control
+                if (user.group === 'experimental') {
+                    res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
+                }
+                else {
+                    res.sendFile(path.join(__dirname, 'assets/pages/user.html'));
+                }
             } else {
                 res.status(404).sendFile(path.join(__dirname, '404.html'));
             }
@@ -275,14 +281,22 @@ app.get('/admin/api/participants', async (req, res) => {
     }
 });
 
-// Add a new route for the authorization callback
 app.get('/auth/callback', async (req, res) => {
-    res.sendFile(path.join(__dirname, 'assets/pages/login.html'));
-    res.redirect('/');
+    const state = req.query.state; // Get the state query parameter
 
-    const authorizationCode = req.query.code; // Extract the authorization code from the URL
+    if (state === 'experiment') {
+        // User is in the experimental group, execute the experimental group action
+        res.send('Experimental Group: Action executed');
+    } else if (state === 'control') {
+        // User is in the control group, execute the control group action
+        res.send('Control Group: Action executed');
+    } else {
+        // Handle other cases or errors
+        res.send('Unknown group or error occurred');
+    }
 
-    // Use the authorization code to obtain access token
+    // Use the authorization code to obtain access token (your existing code)
+    const authorizationCode = req.query.code;
     const response = await fetch('https://api.fitbit.com/oauth2/token', {
         method: 'POST',
         headers: {
@@ -306,10 +320,11 @@ app.get('/auth/callback', async (req, res) => {
                     authorization_code: authorizationCode,
                     access_token: access_token,
                     refresh_token: refresh_token,
-                    number: participantNumber
+                    number: participantNumber,
+                    group: state
                 }
             },
-            { upsert: true } // Update existing record or insert new if not found
+            { upsert: true }
         );
 
         if (result.modifiedCount > 0) {
@@ -318,17 +333,22 @@ app.get('/auth/callback', async (req, res) => {
             console.log(`Inserted new record for user ${user_id}`);
         }
 
-        //add a new document to the users collection
-        await usersCollection.insertOne({
-            user: user_id,
-            pass: "cnelab"
-        });
+        //check if the user is in the user collection
+        const user = await usersCollection.findOne({ user_id });
+        if (!user) {
+            await usersCollection.insertOne({
+                user_id,
+                number: participantNumber,
+                group: state
+            });
+        }
 
     } catch (error) {
         console.error('Error updating database:', error);
         throw error;
     }
 });
+
 
 
 // Add a new route to fetch all user IDs
@@ -451,7 +471,7 @@ app.post('/admin/submit-plan', async (req, res) => {
     }
 });
 
-app.post ('/admin/api/call', async (req, res) => {
+app.post('/admin/api/call', async (req, res) => {
     //add the date to the calling days array
     const identifier = req.body.identifier;
     const callingDates = req.body.callingDates;
@@ -1123,7 +1143,7 @@ cron.schedule('28 11 * * *', async () => {
         await fetchDataAndProcess();
     } catch (error) {
         console.error('Error fetching data:', error);
-    }  
+    }
 }, null, true, 'America/New_York');
 
 // Task 2: Plan Processing
@@ -1140,7 +1160,7 @@ cron.schedule('29 11 * * *', async () => {
 //Task once a day to send a reminder of the call with another lab member
 cron.schedule('0 8 * * *', async () => {
     console.log('Running scheduled call reminder task...');
-    try { 
+    try {
         await processCallReminder();
     } catch (error) {
         console.error('Error sending call reminder:', error);
