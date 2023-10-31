@@ -135,7 +135,7 @@ p {
 }
 
 .chart-text {
-    font-size: 4vmin;
+    font-size: 5vmin;
     /* Adjusted font size using 'vmin' */
     text-align: center;
     margin-top: 2vmin;
