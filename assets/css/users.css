@@ -5,6 +5,10 @@ body {
     padding: 0;
 }
 
+p {
+    font-size: 3vmin;
+}
+
 h1 {
     background-color: #3498db;
     color: #fff;
