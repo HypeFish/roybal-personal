@@ -88,6 +88,11 @@ p {
         min-width: 600px;
         /* Adjust the minimum width for time grid cells */
     }
+
+    #stamina-chart {
+        width: 600px;
+        height: 600px;
+    }
 }
 
 #stamina-chart {
@@ -97,13 +102,6 @@ p {
     margin: 0 auto;
     /* Center the chart */
     display: block;
-}
-
-@media (max-width: 768px) {
-    #stamina-chart {
-        width: 80vmin; /* Adjust as needed for smaller screens */
-        height: 80vmin; /* Adjust as needed for smaller screens */
-    }
 }
 
 #points-value {
