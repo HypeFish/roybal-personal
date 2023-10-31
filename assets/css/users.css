@@ -114,7 +114,7 @@ p {
     color: #000000;
     margin-top: 4vmin;
     /* Adjusted margin using 'vmin' */
-    font-size: 3vmin;
+    font-size: 4vmin;
     /* Adjusted font size using 'vmin' */
     text-indent: 2vmin;
 }
@@ -122,14 +122,14 @@ p {
 .tip-description {
     margin: 1vmin 0;
     /* Adjusted margin using 'vmin' */
-    font-size: 2vmin;
+    font-size: 4vmin;
     /* Adjusted font size using 'vmin' */
-    text-indent: 2vmin;
+    text-indent: 4vmin;
     line-height: 150%;
 }
 
 .chart-text {
-    font-size: 20pt;
+    font-size: 4vmin;
     /* Adjusted font size using 'vmin' */
     text-align: center;
     margin-top: 2vmin;

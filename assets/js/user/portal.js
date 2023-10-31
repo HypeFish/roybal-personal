@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 color: 'black',
                                 usePointStyle: true, // This will use the point style as the legend marker
                                 font: {
-                                    size: 20,
+                                    size: "20%",
                                     family: 'Montserrat'
                                 }
                             }
