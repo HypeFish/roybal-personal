@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
                 events: data.callingDays.map(day => {
                     return {
-                        title: 'Calling Day',
+                        title: 'Call',
                         start: day,
                         color: 'orange'
                     }

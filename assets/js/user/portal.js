@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         label: 'Points',
                         data: [value, 1500 - value],
                         backgroundColor: [
-                            //green
-                            'rgba(75, 192, 192, 1)',
+                            //green fill
+                            'rgba(124, 252, 0, 1)',
                             //gray
                             'rgba(201, 203, 207, 1)'
                         ],
