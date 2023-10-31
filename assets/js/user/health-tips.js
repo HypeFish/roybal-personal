@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             // Get the first tip from the file tips.json in the root directory
-            const response = await fetch('/tips.json');
+            const response = await fetch('/assets/tips.json');
             const tips = await response.json();
             console.log(tips)
             const firstTip = tips.tips[0];
