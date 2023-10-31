@@ -131,3 +131,8 @@ p {
     margin-top: 2vmin;
     /* Adjusted margin using 'vmin' */
 }
+
+.chart-container {
+    display: flex;
+    align-items: center;
+}

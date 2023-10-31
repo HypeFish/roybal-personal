@@ -69,10 +69,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     },
                     elements: {
                         arc: {
-                            borderWidth: .5
+                            borderWidth: 0
                         },
                     },
-                    aspectRatio: 2.0
+                    aspectRatio: 1.7
                 };
 
                 new Chart(ctx, {
