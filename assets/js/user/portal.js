@@ -52,7 +52,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             position: 'top', // Position options: 'top', 'bottom', 'left', 'right'
                             labels: {
                                 color: 'black',
-                                usePointStyle: true // This will use the point style as the legend marker
+                                usePointStyle: true, // This will use the point style as the legend marker
+                                font: {
+                                    size: 20,
+                                    family: 'Montserrat'
+                                }
                             }
                         },
                         tooltip: {
@@ -65,18 +69,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     },
                     elements: {
                         arc: {
-                            borderWidth: 0
+                            borderWidth: .5
                         },
-                        center: {
-                            // the longest text that could appear in the center
-                            maxText: '100%',
-                            text: '100%',
-                            fontColor: '#36A2EB',
-                            fontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
-                            fontStyle: 'normal',
-
-                        }
-                    }
+                    },
+                    aspectRatio: 2.0
                 };
 
                 new Chart(ctx, {

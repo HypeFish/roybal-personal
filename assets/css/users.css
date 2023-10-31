@@ -123,3 +123,11 @@ p {
     text-indent: 2vmin;
     line-height: 150%;
 }
+
+.chart-text {
+    font-size: 20pt;
+    /* Adjusted font size using 'vmin' */
+    text-align: center;
+    margin-top: 2vmin;
+    /* Adjusted margin using 'vmin' */
+}
