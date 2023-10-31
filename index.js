@@ -1060,7 +1060,7 @@ async function sendHealthTips() {
         const healthContactIdentifiers = healthContacts.map(contact => contact.identifier);
         const healthContactIdentifierTypes = healthContacts.map(contact => contact.identifier_type);
 
-        fs.readFile('tips.json', 'utf8', async (err, data) => {
+        fs.readFile('/assets/tips.json', 'utf8', async (err, data) => {
             if (err) {
                 console.log('Error reading file:', err);
                 return;
@@ -1073,7 +1073,7 @@ async function sendHealthTips() {
             const tip = tipsList.shift();
             //add the new list to the json file
             tips.tips = tipsList;
-            fs.writeFile('tips.json', JSON.stringify(tips), 'utf8', (err) => {
+            fs.writeFile('/assets/tips.json', JSON.stringify(tips), 'utf8', (err) => {
                 if (err) {
                     console.log('Error writing file:', err);
                 }
