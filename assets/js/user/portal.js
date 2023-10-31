@@ -3,7 +3,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const userIdElement = document.getElementById('user-id');
     const participantNumberElement = document.getElementById('participant-number');
-    const pointChartElement = document.getElementById('point-chart');
 
     // Fetch weekly points from backend
     const response = await fetch('/api/get_weekly_points');
@@ -19,14 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             userIdElement.innerText = data.user_id;
             participantNumberElement.innerText = data.number;
             let pointsValueElement = document.getElementById('points-value');
-            pointsValueElement.innerText = 1000;
-
-
-            // Calculate the current week number
-            const startDate = new Date(data.selectedDays[0]);
-            const today = new Date();
-            const weekDiff = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
-            const weekLabels = Array.from({ length: weekDiff }, (_, i) => `Week ${i + 1}`);
+            pointsValueElement.innerText = latestWeekPoints;
 
             function drawStaminaWheel(value) {
                 let ctx = document.getElementById('stamina-chart').getContext('2d');
@@ -40,8 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         label: 'Points',
                         data: [value, 1500 - value],
                         backgroundColor: [
+                            //green
                             'rgba(75, 192, 192, 1)',
-                            'rgba(255, 99, 132, 1)'
+                            //gray
+                            'rgba(201, 203, 207, 1)'
                         ],
                         hoverOffset: 4
                     }]
@@ -119,8 +113,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                         start: date,
                         color: 'red'
                     };
+                })).concat(data.callingDays.map(date => {
+                    return {
+                        title: 'Call',
+                        start: date,
+                        color: 'orange'
+                    };
                 }))
             });
+
+            // Calculate the current week number
+            const startDate = new Date(data.selectedDays[0]);
+            const today = new Date();
+            const weekDiff = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
+            const weekLabels = Array.from({ length: weekDiff }, (_, i) => `Week ${i + 1}`)
+
+            // Reverse the weeklyPointsData.data array
+            const reversedData = [...weeklyPointsData.data].reverse();
 
             // Create a line chart
             const lineChartElement = document.getElementById('line-chart');
@@ -132,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     labels: weekLabels,
                     datasets: [{
                         label: 'Points for the Week',
-                        data: weeklyPointsData.data.map(week => week.points),
+                        data: reversedData.map(week => week.points),
                         fill: false,
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 2,
@@ -144,7 +153,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 2500
+                            max: 1500,
+                            ticks: {
+                                stepSize: 300
+                            }
                         }
                     }
                 }

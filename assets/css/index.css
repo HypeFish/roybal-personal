@@ -5,7 +5,7 @@ body {
     padding: 0;
 }
 .section-title {
-    border-bottom: 2px solid blue;
+    border-bottom: .3vmin solid blue;
     /* margin-bottom: 10px;
     padding-bottom: 5px;  */
 }
@@ -151,20 +151,6 @@ button:hover {
 li {
     margin-bottom: 1vw;
 }
-
-.logout a {
-    background-color: #e74c3c;
-    color: #fff;
-    text-decoration: none;
-    padding: 2vmin 4vmin;
-    border-radius: 1vmin;
-    font-size: 2vmin;
-}
-
-.logout a:hover {
-    background-color: #c0392b;
-}
-
 
 /* Add this to your CSS */
 .flex-container {

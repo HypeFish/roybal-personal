@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+
+    <link rel="stylesheet" href="/assets/css/users.css">
+</head>
+
+<body>
+    <h1>Welcome!</h1>
+    <div class="container">
+        <h2>Your Information</h2>
+        <p>User ID: <span id="user-id"></span></p>
+        <p>Participant Number: <span id="participant-number"></span></p>
+        <p> Remember to sync your Fitbit with your phone app daily please!</p>
+    </div>
+
+    <div class="container">
+        <h2>Your Calendar</h2>
+        <div id="calendar"></div>
+    </div>
+
+    <!-- New section for health tips -->
+    <div class="container">
+        <h2>This Weeks Health Tip</h2>
+        <!-- where the health tip is -->
+        <div class='tip-title', id="tip-title"></div>
+        <div class='tip-description', id="tip-description"></div>
+    </div>
+
+    <div class="logout">
+        <a href="/logout">Logout</a>
+    </div>
+
+
+    <script src="/assets/js/user/health-tips.js"></script>
+</body>
+
+</html>

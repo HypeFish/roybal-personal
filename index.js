@@ -10,6 +10,7 @@ const cron = require('node-cron');
 const nodemailer = require('nodemailer');
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
+app.use(express.static(__dirname));
 app.use(express.json());
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user.env file and set the environment variables
 const { MongoClient } = require('mongodb');
@@ -354,10 +355,12 @@ app.get('/auth/callback', async (req, res) => {
 // Add a new route to fetch all user IDs
 app.get('/admin/api/user_ids', async (req, res) => {
     try {
-        const userIDs = await participantsCollection.distinct('user_id');
+        const participants = await participantsCollection.find().toArray();
+        const userIDs = participants.map(participant => participant.user_id);
         res.json({ success: true, data: userIDs });
     } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error fetching user IDs:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });
 
@@ -674,6 +677,7 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
                     completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
                     completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
                     missedPlannedActivities: plan.missedPlannedActivities,
+                    callingDays: plan.callingDays
                 };
 
                 res.json(data);
@@ -817,8 +821,8 @@ async function processPlan(plan) {
     const identifier = plan.identifier;
 
     console.log(`Sending notification to ${identifier}...`)
-    const emailBody = `Good morning! \n Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 400 points that will then turn into compensation! \n Best, \n Roybal Team`;
-    const planSMSBody = "Good morning! Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 400 points that will then turn into compensation!"
+    const emailBody = `Good morning! \n Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 500 points that will then turn into compensation! \n Best, \n Roybal Team`;
+    const planSMSBody = "Good morning! Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 500 points that will then turn into compensation!"
     try {
         if (identifier_type === 'email') {
             await sendEmail(identifier, 'Your Planned Activity Today', emailBody);
@@ -1073,7 +1077,6 @@ async function sendHealthTips() {
             fs.writeFile('tips.json', JSON.stringify(tips), 'utf8', (err) => {
                 if (err) {
                     console.log('Error writing file:', err);
-                    return;
                 }
             });
 
