@@ -10,7 +10,6 @@ const cron = require('node-cron');
 const nodemailer = require('nodemailer');
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
-app.use(express.static(__dirname));
 app.use(express.json());
 dotenv.config({ path: 'env/user.env' }); // This will read the env/user.env file and set the environment variables
 const { MongoClient } = require('mongodb');
