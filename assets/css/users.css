@@ -99,6 +99,12 @@ p {
     display: block;
 }
 
+@media (max-width: 768px) {
+    #stamina-chart {
+        width: 80vmin; /* Adjust as needed for smaller screens */
+        height: 80vmin; /* Adjust as needed for smaller screens */
+    }
+}
 
 #points-value {
     font-weight: bold;
@@ -135,4 +141,6 @@ p {
 .chart-container {
     display: flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
 }
