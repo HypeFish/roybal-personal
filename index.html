@@ -18,16 +18,18 @@
             <h2>How to Add a New Participant</h2>
             <ol>
                 <li>Click the following link for the experimental group: <a
-                        href="https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23RCXD&scope=activity+cardio_fitness+electrocardiogram+heartrate+location+nutrition+oxygen_saturation+profile+respiratory_rate+settings+sleep+social+temperature+weight&code_challenge=MAW4G5Jmci9QV7obCIdQshJMPKaD5jBaTQG07_TgNn4&code_challenge_method=S256&state=291q5l2z2m6l1b015l4j420d122o6o6h&redirect_uri=https%3A%2F%2Froybal.vercel.app%2Fauth%2Fcallback
-                        ">Add New Participant (Experimental Group)</a></li>
+                        href="https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23RCXD&scope=activity+cardio_fitness+electrocardiogram+heartrate+location+nutrition+oxygen_saturation+profile+respiratory_rate+settings+sleep+social+temperature+weight&code_challenge=MAW4G5Jmci9QV7obCIdQshJMPKaD5jBaTQG07_TgNn4&code_challenge_method=S256&state=experiment&redirect_uri=https%3A%2F%2Froybal.vercel.app%2Fauth%2Fcallback">Add
+                        New Participant (Experimental Group)</a></li>
                 <li>Click the following link for the control group: <a
-                        href="https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23RCXD&scope=activity+cardio_fitness+electrocardiogram+heartrate+location+nutrition+oxygen_saturation+profile+respiratory_rate+settings+sleep+social+temperature+weight&code_challenge=MAW4G5Jmci9QV7obCIdQshJMPKaD5jBaTQG07_TgNn4&code_challenge_method=S256&state=291q5l2z2m6l1b015l4j420d122o6o6h&redirect_uri=https%3A%2F%2Froybal.vercel.app%2Fauth%2Fcallback
-                        ">Add New Participant (Control Group)</a></li>
+                        href="https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23RCXD&scope=activity+cardio_fitness+electrocardiogram+heartrate+location+nutrition+oxygen_saturation+profile+respiratory_rate+settings+sleep+social+temperature+weight&code_challenge=MAW4G5Jmci9QV7obCIdQshJMPKaD5jBaTQG07_TgNn4&code_challenge_method=S256&state=control&redirect_uri=https%3A%2F%2Froybal.vercel.app%2Fauth%2Fcallback">Add
+                        New Participant (Control Group)</a></li>
                 <li>Sign in with Google using the Participant email address and password (On Basecamp)</li>
                 <li>Consent to all the following and submit the authorization form</li>
                 <li>When you finish, remember to log out!!</li>
             </ol>
         </div>
+        
+        
         
         <div class="participant-data-collection section-title">
             <h2>Participant Data Collection</h2>
@@ -54,7 +56,7 @@
                 <input type="text" id="newPhone" name="newPhone" class="new-input">
                 <label for="participantNumber">Participant Number:</label>
                 <input type="number" id="participantNumber" name="participantNumber" class="new-input">
-                <button type="button" id="addContact" title="Add Plan">Add Contact</button>
+                <button type="button" id="addContact" title="Add Plan">Add Plan</button>
             </div>
             <div class="plan-your-call section-title">
                 <h2>Plan Your Call</h2>
@@ -69,8 +71,8 @@
                 </form>
             </div>
 
-            <div class="remove-contact section-title">
-                <h2>Remove Contact</h2>
+            <div class="remove-contact">
+                <h2>Remove a Contact</h2>
                 <label for="removeEmail">Remove Email:</label>
                 <input type="text" id="removeEmail" name="removeEmail" class="new-input">
                 <label for="removePhone">Remove Phone:</label>
