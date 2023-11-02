@@ -1139,7 +1139,7 @@ async function sendCallReminder(plan) {
 
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
-cron.schedule('30 13 * * *', async () => {
+cron.schedule('55 8 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -1150,7 +1150,7 @@ cron.schedule('30 13 * * *', async () => {
 
 // Task 2: Plan Processing
 // Third task. Runs at 9:00 AM every day
-cron.schedule('48 13 * * *', async () => {
+cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled plan processing task...');
     try {
         await processPlans();
@@ -1160,7 +1160,7 @@ cron.schedule('48 13 * * *', async () => {
 }, null, true, 'America/New_York');
 
 //Task once a day to send a reminder of the call with another lab member
-cron.schedule('30 13 * * *', async () => {
+cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled call reminder task...');
     try {
         await processCallReminder();
@@ -1170,7 +1170,7 @@ cron.schedule('30 13 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // First Task. Runs at 8:30 AM every day
-cron.schedule('30 13 * * *', async () => {
+cron.schedule('30 8 * * *', async () => {
     console.log("Sending Reminder")
     try {
         await processReminder();
@@ -1181,7 +1181,7 @@ cron.schedule('30 13 * * *', async () => {
 
 // Task 3: Points Calculation and Storage
 // Needs to be delayed to ensure that all data is collected
-cron.schedule('30 13 * * *', async () => {
+cron.schedule('5 9 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
@@ -1193,7 +1193,7 @@ cron.schedule('30 13 * * *', async () => {
 
 // Task 4: Weekly Health Tips
 // Fourth task. Runs at 9:00 AM every Monday
-cron.schedule('30 13 * * 1', async () => {
+cron.schedule('0 9 * * 1', async () => {
     console.log('Running scheduled health tips task...');
     try {
         await sendHealthTips();

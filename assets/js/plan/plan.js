@@ -30,13 +30,11 @@ async function submitNewContact() {
                 option.textContent = newEmail || newPhone;
                 contactSelector.appendChild(option);
                 
-            } else {
-                if (data.message === 'Contact already exists') {
+            } else if (data.message === 'Contact already exists') {
                     alert('This email address or phone number is already registered');
                 } else {
                     alert('Error submitting contact');
                 }
-            }
         } catch (error) {
             console.error('Error:', error);
         }
@@ -194,13 +192,11 @@ async function submitHealthContact() {
             if (data.success) {
                 alert(data.message);
 
-            } else {
-                if (data.message === 'Contact already exists') {
+            } else if (data.message === 'Contact already exists') {
                     alert('This email address or phone number is already registered');
                 } else {
                     alert('Error submitting contact');
                 }
-            }
         } catch (error) {
             console.error('Error:', error);
         }

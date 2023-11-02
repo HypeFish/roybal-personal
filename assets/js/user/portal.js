@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            drawStaminaWheel(1000)
+            drawStaminaWheel(latestWeekPoints)
 
 
             $('#calendar').fullCalendar({
