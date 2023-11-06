@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ],
                     datasets: [{
                         label: 'Points',
-                        data: [value, 1500 - value],
+                        data: [value, 2500 - value],
                         backgroundColor: [
                             //green fill
                             'rgba(124, 252, 0, 1)',
