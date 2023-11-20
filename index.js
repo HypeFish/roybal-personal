@@ -754,9 +754,21 @@ app.listen(port, () => {
 
 const axios = require('axios');
 
-async function fetchDataAndProcess() {
+async function fetchIDs() {
     try {
         const response = await axios.get('http://roybal.vercel.app/admin/api/user_ids');
+        return response;
+    } catch (error) {
+        // rerun the function
+        console.error('Error fetching user IDs:', error);
+        return await fetchIDs();
+
+    }
+}
+
+async function fetchDataAndProcess() {
+    try {
+        const response = await fetchIDs()
         const userIDs = response.data.data;
 
         for (const user_id of userIDs) {
@@ -765,6 +777,7 @@ async function fetchDataAndProcess() {
         }
     } catch (error) {
         console.error('Error fetching data:', error);
+
     }
 }
 
@@ -775,6 +788,7 @@ async function processUser(user_id) {
         if (fitbitDataResponse.status === 200) {
             const fitbitData = fitbitDataResponse.data;
             await storeDataInDatabase(user_id, fitbitData);
+            console.log(`Data stored in the database for user ${user_id} successfully.`);
         } else {
             console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
         }
@@ -1060,7 +1074,7 @@ async function sendHealthTips() {
         const healthContactIdentifiers = healthContacts.map(contact => contact.identifier);
         const healthContactIdentifierTypes = healthContacts.map(contact => contact.identifier_type);
 
-        fs.readFile('/assets/tips.json', 'utf8', async (err, data) => {
+        fs.readFile('assets/tips.json', 'utf8', async (err, data) => {
             if (err) {
                 console.log('Error reading file:', err);
                 return;
@@ -1073,7 +1087,7 @@ async function sendHealthTips() {
             const tip = tipsList.shift();
             //add the new list to the json file
             tips.tips = tipsList;
-            fs.writeFile('/assets/tips.json', JSON.stringify(tips), 'utf8', (err) => {
+            fs.writeFile('assets/tips.json', JSON.stringify(tips), 'utf8', (err) => {
                 if (err) {
                     console.log('Error writing file:', err);
                 }
@@ -1134,6 +1148,7 @@ async function sendCallReminder(plan) {
         }
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
+        
     }
 }
 
