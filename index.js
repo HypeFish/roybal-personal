@@ -1148,14 +1148,14 @@ async function sendCallReminder(plan) {
         }
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
-        
+
     }
 }
 
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
 cron.schedule('55 8 * * *', async () => {
-    console.log(`Running scheduled data fetching task at ` + new Date() );
+    console.log(`Running scheduled data fetching task at ` + new Date());
     try {
         await fetchDataAndProcess();
     } catch (error) {
