@@ -1155,7 +1155,7 @@ async function sendCallReminder(plan) {
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
 cron.schedule('55 8 * * *', async () => {
-    console.log('Running scheduled data fetching task...');
+    console.log(`Running scheduled data fetching task at ` + new Date() );
     try {
         await fetchDataAndProcess();
     } catch (error) {
@@ -1166,7 +1166,7 @@ cron.schedule('55 8 * * *', async () => {
 // Task 2: Plan Processing
 // Third task. Runs at 9:00 AM every day
 cron.schedule('0 9 * * *', async () => {
-    console.log('Running scheduled plan processing task...');
+    console.log('Running scheduled plan processing task at ' + new Date());
     try {
         await processPlans();
     } catch (error) {
@@ -1176,7 +1176,7 @@ cron.schedule('0 9 * * *', async () => {
 
 //Task once a day to send a reminder of the call with another lab member
 cron.schedule('0 9 * * *', async () => {
-    console.log('Running scheduled call reminder task...');
+    console.log('Running scheduled call reminder task at ' + new Date());
     try {
         await processCallReminder();
     } catch (error) {
@@ -1186,7 +1186,7 @@ cron.schedule('0 9 * * *', async () => {
 
 // First Task. Runs at 8:30 AM every day
 cron.schedule('30 8 * * *', async () => {
-    console.log("Sending Reminder")
+    console.log("Sending Reminder at" + new Date());
     try {
         await processReminder();
     } catch (error) {
@@ -1196,8 +1196,8 @@ cron.schedule('30 8 * * *', async () => {
 
 // Task 3: Points Calculation and Storage
 // Needs to be delayed to ensure that all data is collected
-cron.schedule('5 9 * * *', async () => {
-    console.log('Running scheduled points calculation task...');
+cron.schedule('05 9 * * *', async () => {
+    console.log('Running scheduled points calculation task at ' + new Date());
     try {
         await processPoints();
     } catch (error) {
@@ -1209,7 +1209,7 @@ cron.schedule('5 9 * * *', async () => {
 // Task 4: Weekly Health Tips
 // Fourth task. Runs at 9:00 AM every Monday
 cron.schedule('0 9 * * 1', async () => {
-    console.log('Running scheduled health tips task...');
+    console.log('Running scheduled health tips task at ' + new Date());
     try {
         await sendHealthTips();
     } catch (error) {
