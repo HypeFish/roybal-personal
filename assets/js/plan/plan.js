@@ -280,7 +280,7 @@ async function deleteHealthContact() {
         const identifier = selectedContact;
 
         const response = await fetch('/admin/api/delete-health-contact', {
-            method: 'POST',
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
             },
