@@ -272,8 +272,10 @@ async function deleteContact() {
 
 
 async function deleteHealthContact() {
-    const selectedContact = document.getElementById('contactSelector').value;
 
+    //select either email or phone number depending on which has a value
+    const selectedContact = document.getElementById('healthEmail').value || document.getElementById('healthPhone').value;
+    
     try {
         const identifier = selectedContact;
 
