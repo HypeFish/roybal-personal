@@ -241,16 +241,13 @@ async function submitCallingPlan() {
 }
 
 async function deleteContact() {
-    const selectedContact = document.getElementById('contactSelector').value;
+    const selectedContact = document.getElementById('removeEmail').value || document.getElementById('removePhone').value;
 
     try {
         const identifier = selectedContact;
 
         const response = await fetch('/admin/api/delete-contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            method: 'DELETE',
             body: JSON.stringify({ identifier })
         });
 
@@ -281,11 +278,9 @@ async function deleteHealthContact() {
 
         const response = await fetch('/admin/api/delete-health-contact', {
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({ identifier })
         });
+        
 
         const data = await response.json();
 
