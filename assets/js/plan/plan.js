@@ -244,11 +244,10 @@ async function deleteContact() {
     const selectedContact = document.getElementById('removeEmail').value || document.getElementById('removePhone').value;
 
     try {
-        const identifier = selectedContact;
+        const identifier = encodeURIComponent(selectedContact); // Make sure to encode the identifier
 
-        const response = await fetch('/admin/api/delete-contact', {
+        const response = await fetch(`/admin/api/delete-health-contact/${identifier}`, {
             method: 'DELETE',
-            body: JSON.stringify({ identifier })
         });
 
         const data = await response.json();
