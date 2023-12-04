@@ -269,18 +269,14 @@ async function deleteContact() {
 
 
 async function deleteHealthContact() {
-
-    //select either email or phone number depending on which has a value
     const selectedContact = document.getElementById('removeHealthEmail').value || document.getElementById('removeHealthPhone').value;
 
     try {
-        const identifier = selectedContact;
+        const identifier = encodeURIComponent(selectedContact); // Make sure to encode the identifier
 
-        const response = await fetch('/admin/api/delete-health-contact', {
+        const response = await fetch(`/admin/api/delete-health-contact/${identifier}`, {
             method: 'DELETE',
-            body: JSON.stringify({ identifier })
         });
-        
 
         const data = await response.json();
 
@@ -297,6 +293,7 @@ async function deleteHealthContact() {
     document.getElementById('newPhone').value = '';
     document.getElementById('participantNumber').value = '';
 }
+
 
 
 // Call the function to populate the contact selector
