@@ -339,7 +339,9 @@ app.get('/auth/callback', async (req, res) => {
             await usersCollection.insertOne({
                 user_id,
                 number: participantNumber,
-                group: state
+                group: state,
+                user: participantNumber,
+                pass: "cnelab"
             });
         }
 
