@@ -151,7 +151,7 @@ app.get('/user_portal', requireUserAuth, (req, res) => {
         .then(user => {
             if (user) {
                 //check if user is experimental or control
-                if (user.group === 'experimental') {
+                if (user.group === 'experiment') {
                     res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
                 }
                 else {
