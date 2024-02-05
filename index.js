@@ -1044,8 +1044,8 @@ async function processPoints() {
                 return activityDate >= sunday && activityDate <= saturday;
             });
 
-            const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 400;
-            const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
+            const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 500;
+            const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 0;
             points = plannedPoints + unplannedPoints;
 
             console.log(`Points for user ${user_id}: ${points} for the week of ${sunday.toISOString().slice(0, 10)} to ${saturday.toISOString().slice(0, 10)}`)

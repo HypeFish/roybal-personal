@@ -91,8 +91,8 @@ async function generateCSV(user_id, participantNumber) {
                 }
 
                 // Check if points have reached max
-                const plannedPoints = plannedPointsCount < 5 && isPlanned ? 400 : 0;
-                const unplannedPoints = unplannedPointsCount < 2 && !isPlanned ? 250 : 0;
+                const plannedPoints = plannedPointsCount < 5 && isPlanned ? 500 : 0;
+                const unplannedPoints = unplannedPointsCount < 2 && !isPlanned ? 0 : 0;
 
                 // Update counters based on activity type
                 if (isPlanned && plannedPoints > 0) {
