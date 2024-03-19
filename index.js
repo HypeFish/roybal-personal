@@ -663,10 +663,9 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
     }
 });
 
-app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
+app.get('/api/get_user_data', async (req, res) => {
     const user_id = req.session.user;
-
-    participantsCollection.findOne({ user_id })
+    user = usersCollection.findOne({ user_id })
         .then(async user => {
             if (user) {
                 const plan = await planCollection.findOne({ participantNumber: user.number });
@@ -675,8 +674,10 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
                     number: user.number,
                     selectedDays: plan.selectedDays,
                     //get the dates of the completed planned activities
-                    completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
+                    completedPlannedActivities : plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
+                    //get the dates of the completed unplanned activities
                     completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
+
                     missedPlannedActivities: plan.missedPlannedActivities,
                     callingDays: plan.callingDays
                 };
@@ -688,8 +689,9 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
         })
         .catch(error => {
             console.error('Error fetching user:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        });
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    );
 });
 
 app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
@@ -702,6 +704,16 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
         console.error('Error fetching weekly points:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
+});
+
+app.get(`/api/get_point/:user_id`, async (req, res) => {
+    const user_id = req.params.user_id;
+    const user = await participantsCollection.findOne({ user_id });
+    const participantNumber = user.number;
+    const plan = await planCollection.findOne({ participantNumber });
+    const plannedPoints = plan.planned_activities_count;
+    const unplannedPoints = plan.unplanned_activities_count;
+    res.json({ success: true, data: { plannedPoints, unplannedPoints } });
 });
 
 // Delete contact route
@@ -812,6 +824,7 @@ async function processReminder() {
     });
 
     const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
+    // for each person, send a reminder if they have a planned activity today
     for (const plan of matchingPlans) {
         await sendReminder(plan);
     }

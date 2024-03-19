@@ -29,11 +29,6 @@ async function generateCSV(user_id, participantNumber) {
         }
 
         const combinedData = data.data;
-        if (combinedData.length === 0 || !combinedData[0].activities || combinedData[0].activities.length === 0) {
-            alert("There is no data for this participant");
-            return;
-        }
-
         let plannedPointsCount = 0;
         let unplannedPointsCount = 0;
         let lastSaturdayOutsideLoop;

@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fetch weekly points from backend
     const response = await fetch('/api/get_weekly_points');
     const weeklyPointsData = await response.json();
-
-    // Assuming weeklyPointsData is an array of weekly points objects
-    const latestWeekPoints = weeklyPointsData.data[weeklyPointsData.data.length - 1].points;
+ 
+    // Sum the points for this week
+    const thisWeekPoints = weeklyPointsData.data[weeklyPointsData.data.length - 1].points;
 
     // Fetch user data from backend
     fetch('/api/get_user_data')
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             userIdElement.innerText = data.user_id;
             participantNumberElement.innerText = data.number;
             let pointsValueElement = document.getElementById('points-value');
-            pointsValueElement.innerText = latestWeekPoints;
+            pointsValueElement.innerText = thisWeekPoints;
 
             function drawStaminaWheel(value) {
                 let ctx = document.getElementById('stamina-chart').getContext('2d');
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            drawStaminaWheel(latestWeekPoints)
+            drawStaminaWheel(thisWeekPoints)
 
 
             $('#calendar').fullCalendar({
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             // Calculate the current week number
-            const startDate = new Date(data.selectedDays[0]);
+            const startDate = new Date(data.startDate);
             const today = new Date();
             const weekDiff = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
             const weekLabels = Array.from({ length: weekDiff }, (_, i) => `Week ${i + 1}`)
