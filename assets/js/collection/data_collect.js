@@ -29,23 +29,26 @@ async function generateCSV(user_id, participantNumber) {
         }
 
         const combinedData = data.data;
-        let plannedPointsCount = 0;
-        let unplannedPointsCount = 0;
+        let csvData = 'participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned,points\n';
         let lastSaturdayOutsideLoop;
         let activityMap = new Map();
 
-        // Add headers for new columns
-        const csvData = 'participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned,points\n';
+        // Loop through each combined data item
+        combinedData.forEach(item => {
+            const date = item.date;
 
-        const formattedData = combinedData.flatMap(item => {
-            return item.activities.map(activity => {
+            // If the date is not in the map, create a new entry
+            if (!activityMap.has(date)) {
+                activityMap.set(date, []);
+            }
+
+            // Loop through each activity for the date
+            item.activities.forEach(activity => {
                 const formattedParticipantNumber = participantNumber.toString().padStart(2, '0'); // Pad with leading zeros
-
-                const date = item.date;
                 const dayOfWeekIndex = new Date(date).getDay(); // Get the day of the week as an index (0-6)
                 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dayOfWeek = daysOfWeek[(dayOfWeekIndex + 1) % 7]; // Get the day of the week as a string, with an offset of one day                
-                let isPlanned = plannedActivities.includes(date);
+                const isPlanned = plannedActivities.includes(date);
                 const startTime = activity.startTime;
                 const activityName = activity.name;
                 const totalSteps = activity.steps;
@@ -53,68 +56,59 @@ async function generateCSV(user_id, participantNumber) {
                 const durationInMinutes = Math.round(activity.duration / 60000 * 100) / 100; // Round to 2 decimal places
                 const caloriesBurned = activity.calories;
 
-                // Calculate last Saturday
-                const today = new Date(date);
-                const lastSaturdayInsideLoop = new Date(today);
-                lastSaturdayInsideLoop.setDate(today.getDate() - (today.getDay() + 1) % 7);
+                // Calculate points based on activity type
+                let plannedPoints = 0;
+                let unplannedPoints = 0;
 
-                // If the last Saturday is not the same as the last Saturday, reset the counters
-                if (lastSaturdayOutsideLoop === undefined) {
-                    lastSaturdayOutsideLoop = new Date(lastSaturdayInsideLoop);
-                    plannedPointsCount = 0;
-                    unplannedPointsCount = 0;
-                } else if (lastSaturdayOutsideLoop.getTime() !== lastSaturdayInsideLoop.getTime()) {
-                    lastSaturdayOutsideLoop = new Date(lastSaturdayInsideLoop);
-                    plannedPointsCount = 0;
-                    unplannedPointsCount = 0;
-                }
-
-                // Check if the date is already in the map
-                if (activityMap.has(date)) {
-                    const activitiesOnDate = activityMap.get(date);
-
-                    if (isPlanned && activitiesOnDate.some(activity => activity.isPlanned)) {
-                        isPlanned = false; // If there are planned activities on this date, mark the new one as unplanned
-                    }
-
-                    activitiesOnDate.push({ isPlanned }); // Add the new activity to the list
-                    activityMap.set(date, activitiesOnDate); // Update the map with the updated list
+                if (isPlanned) {
+                    plannedPoints = activityMap.get(date).filter(activity => activity.isPlanned).length < 5 ? 500 : 0;
                 } else {
-                    // If the date is not in the map, create a new entry with the current activity
-                    activityMap.set(date, [{ isPlanned }]);
+                    unplannedPoints = activityMap.get(date).filter(activity => !activity.isPlanned).length < 2 ? 200 : 0;
                 }
 
-                // Check if points have reached max
-                const plannedPoints = plannedPointsCount < 5 && isPlanned ? 500 : 0;
-                const unplannedPoints = unplannedPointsCount < 2 && !isPlanned ? 0 : 0;
-
-                // Update counters based on activity type
-                if (isPlanned && plannedPoints > 0) {
-                    plannedPointsCount++;
-                } else if (!isPlanned && unplannedPoints > 0) {
-                    unplannedPointsCount++;
-                }
+                // Update the map with the new activity
+                activityMap.get(date).push({ isPlanned });
 
                 const totalPoints = plannedPoints + unplannedPoints;
 
-                return `sub_${formattedParticipantNumber},${date},${dayOfWeek},${isPlanned},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned},${totalPoints}`;
+                // Append data to CSV string
+                csvData += `sub_${formattedParticipantNumber},${date},${dayOfWeek},${isPlanned},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned},${totalPoints}\n`;
             });
         });
 
-        const csvContent = csvData + formattedData.join('\n');
+        //filter the data to remove duplicates. remove if the date and activity, start time and duration are the same
+        let lines = csvData.split("\n");
+        let result = [];
+        let headers = lines[0].split(",");
+        result.push(headers);
+        let unique = {};
+        for (let i = 1; i < lines.length; i++) {
+            let currentLine = lines[i].split(",");
+            let date = currentLine[1];
+            let activity = currentLine[5];
+            let start = currentLine[4];
+            let duration = currentLine[8];
+            if (!unique[date + activity + start + duration]) {
+                result.push(currentLine);
+                unique[date + activity + start + duration] = true;
+            }
+        }
+        csvData = result.join("\n");
 
-        const blob = new Blob([csvContent], { type: 'text/csv' });
+
+        // Generate CSV file
+        const blob = new Blob([csvData], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `fitbit_data_participant${participantNumber}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
-
     } catch (error) {
         console.error(`Error generating CSV for user ${user_id}:`, error);
     }
 }
+
 
 
 
