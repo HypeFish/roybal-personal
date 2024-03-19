@@ -7,7 +7,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
-const nodemailer = require('nodemailer');a
+const nodemailer = require('nodemailer');
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
