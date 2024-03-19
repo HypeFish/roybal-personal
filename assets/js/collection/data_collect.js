@@ -7,9 +7,8 @@ async function getPlannedActivities(user_id) {
 
         if (data.success) {
             const plannedActivities = data.plannedActivities;
-            return plannedActivities.map(activity => activity.startDate);
+            return plannedActivities.map(activity => activity.date);
         }
-
         return [];
     } catch (error) {
         alert("No data for this participant")

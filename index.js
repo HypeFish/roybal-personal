@@ -7,7 +7,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
-const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer');a
 const publicPath = '/assets'; // Set the correct public path
 app.use(publicPath, express.static(path.join(__dirname, 'assets')));
 app.use(express.json());
@@ -840,7 +840,7 @@ async function sendReminder(plan) {
     const identifier = plan.identifier;
 
     const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking!"
-    const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking! \nBest, \n oybal Team"
+    const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking! \nBest, \n Roybal Team"
     try {
         if (identifier_type === 'email') {
             await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);

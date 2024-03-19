@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const weeklyPointsData = await response.json();
 
     // Assuming weeklyPointsData is an array of weekly points objects
-    const latestWeekPoints = weeklyPointsData.data[0].points;
+    const latestWeekPoints = weeklyPointsData.data[weeklyPointsData.data.length - 1].points;
 
     // Fetch user data from backend
     fetch('/api/get_user_data')
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     center: 'title',
                     right: 'month,basicWeek,basicDay'
                 },
-                events: data.selectedDays.map(day => {
+                events: data.selectedDays?.map(day => {
                     return {
                         title: 'Planned Activity',
                         start: day,
