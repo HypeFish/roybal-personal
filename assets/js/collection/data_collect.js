@@ -7,7 +7,7 @@ async function getPlannedActivities(user_id) {
 
         if (data.success) {
             const plannedActivities = data.plannedActivities;
-            return plannedActivities.map(activity => activity.date);
+            return plannedActivities;
         }
         return [];
     } catch (error) {
@@ -20,6 +20,7 @@ async function generateCSV(user_id, participantNumber) {
     try {
         // Fetch planned activities for the user
         const plannedActivities = await getPlannedActivities(user_id);
+
         const response = await fetch(`/admin/api/combined_data/${user_id}`);
         const data = await response.json();
 
@@ -37,6 +38,15 @@ async function generateCSV(user_id, participantNumber) {
         combinedData.forEach(item => {
             const date = item.date;
 
+
+            //Create a list of all the planned activity dates
+            let plannedActivityDates = [];
+            plannedActivities.forEach(activity => {
+                plannedActivityDates.push(activity.startDate);
+            });
+
+            console.log(plannedActivityDates);
+
             // If the date is not in the map, create a new entry
             if (!activityMap.has(date)) {
                 activityMap.set(date, []);
@@ -48,7 +58,9 @@ async function generateCSV(user_id, participantNumber) {
                 const dayOfWeekIndex = new Date(date).getDay(); // Get the day of the week as an index (0-6)
                 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dayOfWeek = daysOfWeek[(dayOfWeekIndex + 1) % 7]; // Get the day of the week as a string, with an offset of one day                
-                const isPlanned = plannedActivities.includes(date);
+                const isPlanned = plannedActivityDates.includes(date);
+                console.log(isPlanned);
+                
                 const startTime = activity.startTime;
                 const activityName = activity.name;
                 const totalSteps = activity.steps;
@@ -62,10 +74,7 @@ async function generateCSV(user_id, participantNumber) {
 
                 if (isPlanned) {
                     plannedPoints = activityMap.get(date).filter(activity => activity.isPlanned).length < 5 ? 500 : 0;
-                } else {
-                    unplannedPoints = activityMap.get(date).filter(activity => !activity.isPlanned).length < 2 ? 200 : 0;
                 }
-
                 // Update the map with the new activity
                 activityMap.get(date).push({ isPlanned });
 

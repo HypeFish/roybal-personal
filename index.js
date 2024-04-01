@@ -808,8 +808,14 @@ async function processPlans() {
     });
 
     const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
+    // for each person, send a reminder if they have a planned activity today
+    // do not send more than one reminder to the same person
+    const processedPlans = new Set();
     for (const plan of matchingPlans) {
-        await processPlan(plan);
+        if (!processedPlans.has(plan.identifier)) {
+            await processPlan(plan);
+            processedPlans.add(plan.identifier);
+        }
     }
 }
 

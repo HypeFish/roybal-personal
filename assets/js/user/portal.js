@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fetch weekly points from backend
     const response = await fetch('/api/get_weekly_points');
     const weeklyPointsData = await response.json();
- 
-    // Sum the points for this week
-    const thisWeekPoints = weeklyPointsData.data[weeklyPointsData.data.length - 1].points;
+
+    // first element of the array is the most recent week
+    const thisWeekPoints = weeklyPointsData.data[0].points;
 
     // Fetch user data from backend
     fetch('/api/get_user_data')
@@ -118,45 +118,67 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }))
             });
 
-            // Calculate the current week number
-            const startDate = new Date(data.startDate);
-            const today = new Date();
-            const weekDiff = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
-            const weekLabels = Array.from({ length: weekDiff }, (_, i) => `Week ${i + 1}`)
+            // Plot the graph of points over weeks
+            let ctx = document.getElementById('line-chart').getContext('2d');
+            console.log(weeklyPointsData.data)
 
-            // Reverse the weeklyPointsData.data array
-            const reversedData = [...weeklyPointsData.data].reverse();
+            // get all the weeks that have passed since the first week in the data
+            let firstDate = weeklyPointsData.data[weeklyPointsData.data.length - 1].date
+            let firstDateObj = new Date(firstDate)
+            let today = new Date()
+            let weeksPassed = Math.floor((today - firstDateObj) / 604800000)
+            let weeks = []
+            for (let i = 0; i <= weeksPassed; i++) {
+                weeks.push(i)
+            }
 
-            // Create a line chart
-            const lineChartElement = document.getElementById('line-chart');
-            const lineCtx = lineChartElement.getContext('2d');
+            // reverse the data so that the most recent week is first
+            weeklyPointsData.data.reverse()
 
-            new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: weekLabels,
-                    datasets: [{
-                        label: 'Points for the Week',
-                        data: reversedData.map(week => week.points),
-                        fill: false,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2,
-                        pointRadius: 5,
-                        pointBackgroundColor: 'rgba(75, 192, 192, 1)'
-                    }]
+            let line_chart = {
+                labels: weeks,
+                datasets: [{
+                    label: 'Points',
+                    data: weeklyPointsData.data.map(week => week.points),
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            };
+
+            let options = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: true
+                    }
                 },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 1500,
-                            ticks: {
-                                stepSize: 300
-                            }
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Weeks'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Points'
                         }
                     }
                 }
+            };
+
+
+            new Chart(ctx, {
+                type: 'line',
+                data: line_chart,
+                options: options
             });
+
         })
         .catch(error => console.error('Error fetching user data:', error));
 });
