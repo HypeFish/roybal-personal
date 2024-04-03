@@ -20,7 +20,6 @@ async function generateCSV(user_id, participantNumber) {
     try {
         // Fetch planned activities for the user
         const plannedActivities = await getPlannedActivities(user_id);
-
         const response = await fetch(`/admin/api/combined_data/${user_id}`);
         const data = await response.json();
 
@@ -45,7 +44,6 @@ async function generateCSV(user_id, participantNumber) {
                 plannedActivityDates.push(activity.startDate);
             });
 
-            console.log(plannedActivityDates);
 
             // If the date is not in the map, create a new entry
             if (!activityMap.has(date)) {
@@ -59,7 +57,6 @@ async function generateCSV(user_id, participantNumber) {
                 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dayOfWeek = daysOfWeek[(dayOfWeekIndex + 1) % 7]; // Get the day of the week as a string, with an offset of one day                
                 const isPlanned = plannedActivityDates.includes(date);
-                console.log(isPlanned);
                 
                 const startTime = activity.startTime;
                 const activityName = activity.name;

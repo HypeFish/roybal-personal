@@ -10,11 +10,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // first element of the array is the most recent week
     const thisWeekPoints = weeklyPointsData.data[0].points;
+    console.log(weeklyPointsData.data);
 
     // Fetch user data from backend
     fetch('/api/get_user_data')
         .then(response => response.json())
         .then(data => {
+            console.log(data);
             userIdElement.innerText = data.user_id;
             participantNumberElement.innerText = data.number;
             let pointsValueElement = document.getElementById('points-value');
@@ -120,7 +122,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Plot the graph of points over weeks
             let ctx = document.getElementById('line-chart').getContext('2d');
-            console.log(weeklyPointsData.data)
 
             // get all the weeks that have passed since the first week in the data
             let firstDate = weeklyPointsData.data[weeklyPointsData.data.length - 1].date

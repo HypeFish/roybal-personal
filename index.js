@@ -53,6 +53,7 @@ async function connectToDatabase() {
 // Call the connectToDatabase function
 connectToDatabase();
 
+
 const store = new MongoDBStore({
     uri: uri + 'Roybal',
     collection: 'sessions' // Name of the collection to store sessions
@@ -576,6 +577,7 @@ app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
         const user = await participantsCollection.findOne({ user_id });
         const participantNumber = user.number;
         const plan = await planCollection.findOne({ participantNumber });
+
         if (!plan) {
             res.json({ success: true, plannedActivities: [], unplannedActivities: [] });
             return;
@@ -646,11 +648,8 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
         //if we find a user there, we can get the participantNumber
         const participantNumber = user.number;
 
-        // Mark the planned activity as completed in the plan collection by incrementing the planned_activities_count by 1
-        const updated = await planCollection.updateOne(
-            { participantNumber },
-            { $inc: { planned_activities_count: plannedPoints, unplanned_activities_count: unplannedPoints } }
-        );
+        const plan = await planCollection.findOne({ participantNumber });
+        console.log(plan);
 
         if (updated.modifiedCount > 0) {
             res.status(200).json({ success: true, message: 'Points updated successfully' });
@@ -704,16 +703,6 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
         console.error('Error fetching weekly points:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
-});
-
-app.get(`/api/get_point/:user_id`, async (req, res) => {
-    const user_id = req.params.user_id;
-    const user = await participantsCollection.findOne({ user_id });
-    const participantNumber = user.number;
-    const plan = await planCollection.findOne({ participantNumber });
-    const plannedPoints = plan.planned_activities_count;
-    const unplannedPoints = plan.unplanned_activities_count;
-    res.json({ success: true, data: { plannedPoints, unplannedPoints } });
 });
 
 // Delete contact route
@@ -973,25 +962,33 @@ async function storeWeeklyPoints(user_id, points) {
     });
 
     if (existingDocument) {
-        // Update the document
+       // Update the existing document
         await weeklyPointsCollection.updateOne(
-            { user_id, date: { $gte: weekStart, $lte: weekEnd } },
+            { user_id, date: weekStart },
             { $set: { points } }
         );
-    } else {
+
+        console.log(`Updated weekly points for user ${user_id} for the week of ${weekStart} to ${weekEnd}`);
+
+    } 
+    else {
         // Create a new document
         await weeklyPointsCollection.insertOne({
             user_id,
-            date: weekStart, // Store the start date of the week
+            date: weekStart,
             points
         });
+
+        console.log(`Stored weekly points for user ${user_id} for the week of ${weekStart} to ${weekEnd}`);
     }
 }
 
 async function processPoints() {
     try {
-        const users = await participantsCollection.find().toArray();
 
+        //Check if db is connected
+        const db = client.db('Roybal');
+        const users = await usersCollection.find().toArray();
         for (const user of users) {
             const user_id = user.user_id;
             const participantNumber = user.number;
@@ -1202,7 +1199,7 @@ cron.schedule('30 8 * * *', async () => {
 
 // Task 3: Points Calculation and Storage
 // Needs to be delayed to ensure that all data is collected
-cron.schedule('5 9 * * *', async () => {
+cron.schedule('10 9 * * *', async () => {
     console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
@@ -1222,3 +1219,5 @@ cron.schedule('0 9 * * 1', async () => {
         console.error('Error sending health tips:', error);
     }
 }, null, true, 'America/New_York');
+
+processPoints()
