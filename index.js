@@ -311,7 +311,7 @@ app.get('/auth/callback', async (req, res) => {
     access_token = data.access_token;
     refresh_token = data.refresh_token;
     user_id = data.user_id;
-    const participantNumber = await participantsCollection.countDocuments() + 1;
+    const participantNumber = await participantsCollection.countDocuments();
 
     try {
         const result = await participantsCollection.updateOne(
@@ -341,7 +341,7 @@ app.get('/auth/callback', async (req, res) => {
                 user_id,
                 number: participantNumber,
                 group: state,
-                user: participantNumber,
+                user: user_id,
                 pass: "cnelab"
             });
         }
@@ -798,14 +798,8 @@ async function processPlans() {
     });
 
     const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
-    // for each person, send a reminder if they have a planned activity today
-    // do not send more than one reminder to the same person
-    const processedPlans = new Set();
     for (const plan of matchingPlans) {
-        if (!processedPlans.has(plan.identifier)) {
-            await processPlan(plan);
-            processedPlans.add(plan.identifier);
-        }
+        await processPlan(plan);
     }
 }
 
@@ -946,7 +940,6 @@ const sendSMS = async (to, body) => {
         console.log("No SMS sent", error)
     }
 };
-
 
 async function storeWeeklyPoints(user_id, points) {
     const currentDate = new Date();
@@ -1164,7 +1157,7 @@ async function sendCallReminder(plan) {
 
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
-cron.schedule('55 8 * * *', async () => {
+cron.schedule('5 10 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -1175,27 +1168,27 @@ cron.schedule('55 8 * * *', async () => {
 
 // Task 2: Plan Processing
 // Third task. Runs at 9:00 AM every day
-// cron.schedule('0 9 * * *', async () => {
-//     console.log('Running scheduled plan processing task...');
-//     try {
-//         await processPlans();
-//     } catch (error) {
-//         console.error('Error processing plans:', error);
-//     }
-// }, null, true, 'America/New_York');
+cron.schedule('5 10 * * *', async () => {
+    console.log('Running scheduled plan processing task...');
+    try {
+        await processPlans();
+    } catch (error) {
+        console.error('Error processing plans:', error);
+    }
+}, null, true, 'America/New_York');
 
-//Task once a day to send a reminder of the call with another lab member
-// cron.schedule('0 9 * * *', async () => {
-//     console.log('Running scheduled call reminder task...');
-//     try {
-//         await processCallReminder();
-//     } catch (error) {
-//         console.error('Error sending call reminder:', error);
-//     }
-// }, null, true, 'America/New_York');
+// Task once a day to send a reminder of the call with another lab member
+cron.schedule('0 9 * * *', async () => {
+    console.log('Running scheduled call reminder task...');
+    try {
+        await processCallReminder();
+    } catch (error) {
+        console.error('Error sending call reminder:', error);
+    }
+}, null, true, 'America/New_York');
 
 // First Task. Runs at 8:30 AM every day
-cron.schedule('30 8 * * *', async () => {
+cron.schedule('4 10 * * *', async () => {
     console.log("Sending Reminder")
     try {
         await processReminder();
@@ -1227,3 +1220,7 @@ cron.schedule('0 9 * * 1', async () => {
     }
 }, null, true, 'America/New_York');
 
+cron.schedule('5 10 * * *', async () => {
+    console.log("saying hello to skye")
+    sendEmail('skye.toral02@gmail.com', 'Hello', 'Hello Skye');
+}, null, true, 'America/New_York');
