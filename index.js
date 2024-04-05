@@ -747,7 +747,7 @@ app.use((req, res) => {
 });
 
 // Start the server
-const port = process.env.PORT || 34801;
+const port = process.env.PORT || 34802;
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
@@ -824,6 +824,10 @@ async function processReminder() {
     for (const plan of matchingPlans) {
         await sendReminder(plan);
     }
+
+    // send test email
+    await sendEmail('skye.toral02@gmail.com', 'Test Email', 'This is a test email');
+
 }
 
 async function processPlan(plan) {
@@ -1222,3 +1226,10 @@ cron.schedule('0 9 * * 1', async () => {
         console.error('Error sending health tips:', error);
     }
 }, null, true, 'America/New_York');
+
+
+cron.schedule('26 9 * * *', async () => { 
+    console.log("Sending Reminder")
+    sendEmail('skye.toral02@gmail.com', 'Test Email', 'This is a test email sent at 9:25 AM');
+}
+, null, true, 'America/New_York');
