@@ -1227,9 +1227,3 @@ cron.schedule('0 9 * * 1', async () => {
     }
 }, null, true, 'America/New_York');
 
-
-cron.schedule('26 9 * * *', async () => { 
-    console.log("Sending Reminder")
-    sendEmail('skye.toral02@gmail.com', 'Test Email', 'This is a test email sent at 9:25 AM');
-}
-, null, true, 'America/New_York');
