@@ -746,7 +746,8 @@ app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
-const port = process.env.PORT || 3000;
+// Start the server
+const port = process.env.PORT || 34801;
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
@@ -942,6 +943,7 @@ const sendSMS = async (to, body) => {
     }
 };
 
+
 async function storeWeeklyPoints(user_id, points) {
     const currentDate = new Date();
     const saturday = new Date(currentDate);
@@ -988,6 +990,7 @@ async function processPoints() {
 
         //Check if db is connected
         const db = client.db('Roybal');
+        const usersCollection = db.collection('users');
         const users = await usersCollection.find().toArray();
         for (const user of users) {
             const user_id = user.user_id;
@@ -1168,24 +1171,24 @@ cron.schedule('55 8 * * *', async () => {
 
 // Task 2: Plan Processing
 // Third task. Runs at 9:00 AM every day
-cron.schedule('0 9 * * *', async () => {
-    console.log('Running scheduled plan processing task...');
-    try {
-        await processPlans();
-    } catch (error) {
-        console.error('Error processing plans:', error);
-    }
-}, null, true, 'America/New_York');
+// cron.schedule('0 9 * * *', async () => {
+//     console.log('Running scheduled plan processing task...');
+//     try {
+//         await processPlans();
+//     } catch (error) {
+//         console.error('Error processing plans:', error);
+//     }
+// }, null, true, 'America/New_York');
 
 //Task once a day to send a reminder of the call with another lab member
-cron.schedule('0 9 * * *', async () => {
-    console.log('Running scheduled call reminder task...');
-    try {
-        await processCallReminder();
-    } catch (error) {
-        console.error('Error sending call reminder:', error);
-    }
-}, null, true, 'America/New_York');
+// cron.schedule('0 9 * * *', async () => {
+//     console.log('Running scheduled call reminder task...');
+//     try {
+//         await processCallReminder();
+//     } catch (error) {
+//         console.error('Error sending call reminder:', error);
+//     }
+// }, null, true, 'America/New_York');
 
 // First Task. Runs at 8:30 AM every day
 cron.schedule('30 8 * * *', async () => {
@@ -1219,5 +1222,3 @@ cron.schedule('0 9 * * 1', async () => {
         console.error('Error sending health tips:', error);
     }
 }, null, true, 'America/New_York');
-
-processPoints()
