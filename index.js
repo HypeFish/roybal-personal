@@ -760,14 +760,27 @@ const axios = require('axios');
 
 async function fetchDataAndProcess() {
     try {
-        const response = await axios.get('http://roybal.vercel.app/admin/api/user_ids');
-        const userIDs = response.data.data;
+       const listIDS = await getIds();
 
-        for (const user_id of userIDs) {
+        for (const user_id of listIDS) {
             await processUser(user_id);
-
         }
     } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+async function getIds() {
+    try {
+        const db = await client.db('Roybal');
+        const usersCollection = await db.collection('users');
+        const list = await usersCollection.find().toArray();
+
+        const userIDs = list.map(user => user.user_id);
+
+        return userIDs;
+    }
+    catch (error) {
         console.error('Error fetching data:', error);
     }
 }
@@ -1157,7 +1170,7 @@ async function sendCallReminder(plan) {
 
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
-cron.schedule('5 10 * * *', async () => {
+cron.schedule('55 8 * * *', async () => {
     console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
@@ -1168,7 +1181,7 @@ cron.schedule('5 10 * * *', async () => {
 
 // Task 2: Plan Processing
 // Third task. Runs at 9:00 AM every day
-cron.schedule('5 10 * * *', async () => {
+cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled plan processing task...');
     try {
         await processPlans();
@@ -1188,7 +1201,7 @@ cron.schedule('0 9 * * *', async () => {
 }, null, true, 'America/New_York');
 
 // First Task. Runs at 8:30 AM every day
-cron.schedule('4 10 * * *', async () => {
+cron.schedule('30 8 * * *', async () => {
     console.log("Sending Reminder")
     try {
         await processReminder();
@@ -1220,6 +1233,7 @@ cron.schedule('0 9 * * 1', async () => {
     }
 }, null, true, 'America/New_York');
 
+// Hello skye
 cron.schedule('5 10 * * *', async () => {
     console.log("saying hello to skye")
     sendEmail('skye.toral02@gmail.com', 'Hello', 'Hello Skye');
