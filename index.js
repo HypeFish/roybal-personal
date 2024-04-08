@@ -827,10 +827,14 @@ async function processReminder() {
     });
 
     const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
+    const set = new Set();
     // for each person, send a reminder if they have a planned activity today
     for (const plan of matchingPlans) {
-        await sendReminder(plan);
+        if (!set.has(plan.identifier)) {
+            set.add(plan.identifier);
+            await sendReminder(plan);
     }
+}
 
     // send test email
     await sendEmail('skye.toral02@gmail.com', 'Test Email', 'This is a test email');
@@ -1232,10 +1236,4 @@ cron.schedule('0 9 * * 1', async () => {
     } catch (error) {
         console.error('Error sending health tips:', error);
     }
-}, null, true, 'America/New_York');
-
-// Hello skye
-cron.schedule('5 10 * * *', async () => {
-    console.log("saying hello to skye")
-    sendEmail('skye.toral02@gmail.com', 'Hello', 'Hello Skye');
 }, null, true, 'America/New_York');
