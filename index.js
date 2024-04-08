@@ -1065,17 +1065,18 @@ async function processPoints() {
 
             const plannedActivitiesThisWeek = plannedActivities.filter(activity => {
                 const activityDate = new Date(activity.startDate);
-                return activityDate >= sunday && activityDate <= saturday;
+                return activityDate >= sunday && activityDate <= saturday || activityDate.toISOString().split('T')[0] === sunday.toISOString().split('T')[0];
             });
 
-            const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
-                const activityDate = new Date(activity.startDate);
-                return activityDate >= sunday && activityDate <= saturday;
-            });
+
+            // const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
+            //     const activityDate = new Date(activity.startDate);
+            //     return activityDate >= sunday && activityDate <= saturday;
+            // });
 
             const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 500;
-            const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 0;
-            points = plannedPoints + unplannedPoints;
+            // const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 0;
+            points = plannedPoints;
 
             console.log(`Points for user ${user_id}: ${points} for the week of ${sunday.toISOString().slice(0, 10)} to ${saturday.toISOString().slice(0, 10)}`)
             storeWeeklyPoints(user_id, points);
