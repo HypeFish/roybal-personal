@@ -835,10 +835,6 @@ async function processReminder() {
             await sendReminder(plan);
     }
 }
-
-    // send test email
-    await sendEmail('skye.toral02@gmail.com', 'Test Email', 'This is a test email');
-
 }
 
 async function processPlan(plan) {
