@@ -747,7 +747,7 @@ app.use((req, res) => {
 });
 
 // Start the server
-const port = process.env.PORT || 34802;
+const port = process.env.PORT || 34236;
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
@@ -827,14 +827,10 @@ async function processReminder() {
     });
 
     const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
-    const set = new Set();
     // for each person, send a reminder if they have a planned activity today
     for (const plan of matchingPlans) {
-        if (!set.has(plan.identifier)) {
-            set.add(plan.identifier);
             await sendReminder(plan);
     }
-}
 }
 
 async function processPlan(plan) {
@@ -859,6 +855,7 @@ async function sendReminder(plan) {
     const identifier_type = plan.identifier_type;
     const identifier = plan.identifier;
 
+    console.log(`Sending reminder to ${identifier}...`)
     const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking!"
     const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking! \nBest, \n Roybal Team"
     try {
@@ -866,7 +863,7 @@ async function sendReminder(plan) {
             await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
         } else {
             await sendSMS(identifier, reminderSMSBody);
-        }
+        }x
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
     }
