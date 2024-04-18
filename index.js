@@ -270,10 +270,11 @@ app.post('/admin/api/refresh-token/:user_id', async (req, res) => {
 app.get('/admin/api/participants', async (req, res) => {
     try {
         const participants = await participantsCollection.find().sort({ number: 1 }).toArray();
-        const formattedParticipants = participants.map(({ user_id, number }, index) => ({
+        const formattedParticipants = participants.map(({ user_id, number, group}, index) => ({
             user_id,
             number,
-            name: `Participant ${index}`
+            name: `Participant ${index}`,
+            group
         }));
         res.json({ success: true, data: formattedParticipants });
     } catch (error) {
@@ -757,6 +758,7 @@ app.listen(port, () => {
 // Cron stuff
 
 const axios = require('axios');
+const { group } = require('console');
 
 async function fetchDataAndProcess() {
     try {

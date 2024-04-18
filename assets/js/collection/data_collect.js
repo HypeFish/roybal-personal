@@ -122,6 +122,7 @@ async function getParticipants() {
     try {
         const response = await fetch('/admin/api/participants');
         const data = await response.json();
+        console.log(data);
 
         if (data.success) {
             const participantSelector = document.getElementById('participantSelector');

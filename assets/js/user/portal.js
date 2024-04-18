@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const weeklyPointsData = await response.json();
 
     // first element of the array is the most recent week
+    if (weeklyPointsData.data.length === 0) {
+       // If there is no data, set the points to 0
+         weeklyPointsData.data.push({points: 0});
+    }
     const thisWeekPoints = weeklyPointsData.data[0].points;
     console.log(weeklyPointsData.data);
 
