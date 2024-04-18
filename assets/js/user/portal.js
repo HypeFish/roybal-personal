@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(weeklyPointsData.data);
 
     // Fetch user data from backend
-    fetch('/api/get_user_data')
+    await fetch('/api/get_user_data')
         .then(response => response.json())
         .then(data => {
             console.log(data);

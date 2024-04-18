@@ -665,11 +665,23 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
 
 app.get('/api/get_user_data', async (req, res) => {
     const user_id = req.session.user;
+    let data = {};
     user = usersCollection.findOne({ user_id })
         .then(async user => {
             if (user) {
                 const plan = await planCollection.findOne({ participantNumber: user.number });
-                const data = {
+                if (!plan) {
+                    data = {
+                        user_id: user.user_id,
+                        number: user.number,
+                        selectedDays: [],
+                        completedPlannedActivities: [],
+                        completedUnplannedActivities: [],
+                        missedPlannedActivities: [],
+                        callingDays: []
+                    };
+                } else {
+                    data = {
                     user_id: user.user_id,
                     number: user.number,
                     selectedDays: plan.selectedDays,
@@ -681,7 +693,7 @@ app.get('/api/get_user_data', async (req, res) => {
                     missedPlannedActivities: plan.missedPlannedActivities,
                     callingDays: plan.callingDays
                 };
-
+            }
                 res.json(data);
             } else {
                 res.status(404).json({ error: 'User not found' });
