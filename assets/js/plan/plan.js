@@ -245,7 +245,6 @@ async function deleteContact() {
 
     try {
         const identifier = selectedContact;
-
         const response = await fetch('/admin/api/delete-contact', {
             method: 'POST',
             headers: {
@@ -253,8 +252,9 @@ async function deleteContact() {
             },
             body: JSON.stringify({ identifier })
         });
-
+        console.log(await response.json())
         const data = await response.json();
+
 
         if (data.success) {
             alert(data.message);

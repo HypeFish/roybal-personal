@@ -721,7 +721,7 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
 // Delete contact route
 app.delete('/admin/api/delete-contact/:identifier', async (req, res) => {
     const identifier = req.params.identifier;
-
+    console.log(identifier);
     try {
         const result = await planCollection.deleteOne({ identifier });
 
