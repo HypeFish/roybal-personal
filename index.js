@@ -689,7 +689,7 @@ app.get('/api/get_user_data', async (req, res) => {
                     completedPlannedActivities : plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
                     //get the dates of the completed unplanned activities
                     completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
-
+                    //get the dates of the missed planned activities
                     missedPlannedActivities: plan.missedPlannedActivities,
                     callingDays: plan.callingDays
                 };

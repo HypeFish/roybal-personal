@@ -20,6 +20,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetch('/api/get_user_data')
         .then(response => response.json())
         .then(data => {
+            let missedPlannedActivities = data.missedPlannedActivities;
+            if (missedPlannedActivities === undefined) {
+                missedPlannedActivities = [];
+            }
             console.log(data);
             userIdElement.innerText = data.user_id;
             participantNumberElement.innerText = data.number;
@@ -103,19 +107,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                         start: day,
                         color: 'blue'
                     };
-                }).concat(data.completedPlannedActivities.map(activity => {
+                }).concat(data.completedPlannedActivities?.map(activity => {
                     return {
                         title: 'Completed Planned Activity',
                         start: activity,
                         color: 'green'
                     };
-                })).concat(data.missedPlannedActivities.map(date => {
+                })).concat(missedPlannedActivities?.map(activity => {  
                     return {
                         title: 'Missed Planned Activity',
-                        start: date,
+                        start: activity,
                         color: 'red'
                     };
-                })).concat(data.callingDays.map(date => {
+                })).concat(data.callingDays?.map(date => {
                     return {
                         title: 'Call',
                         start: date,
