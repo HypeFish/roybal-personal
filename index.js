@@ -666,7 +666,7 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
 app.get('/api/get_user_data', async (req, res) => {
     const user_id = req.session.user;
     let data = {};
-    user = usersCollection.findOne({ user_id })
+    usersCollection.findOne({ user_id })
         .then(async user => {
             if (user) {
                 const plan = await planCollection.findOne({ participantNumber: user.number });
@@ -774,7 +774,7 @@ const { group } = require('console');
 
 async function fetchIDs() {
     try {
-       const listIDS = await getIds();
+        const listIDS = await getIds();
 
         for (const user_id of listIDS) {
             await processUser(user_id);
@@ -800,20 +800,7 @@ async function getIds() {
     }
 }
 
-async function getIds() {
-    try {
-        const db = await client.db('Roybal');
-        const usersCollection = await db.collection('users');
-        const list = await usersCollection.find().toArray();
 
-        const userIDs = list.map(user => user.user_id);
-
-        return userIDs;
-    }
-    catch (error) {
-        console.error('Error fetching data:', error);
-    }
-}
 
 async function processUser(user_id) {
     try {
@@ -896,7 +883,7 @@ async function sendReminder(plan) {
             await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
         } else {
             await sendSMS(identifier, reminderSMSBody);
-        }x
+        }
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
     }
