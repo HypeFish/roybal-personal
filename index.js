@@ -53,6 +53,7 @@ async function connectToDatabase() {
 // Call the connectToDatabase function
 connectToDatabase();
 
+
 const store = new MongoDBStore({
     uri: uri + 'Roybal',
     collection: 'sessions' // Name of the collection to store sessions
@@ -151,7 +152,7 @@ app.get('/user_portal', requireUserAuth, (req, res) => {
         .then(user => {
             if (user) {
                 //check if user is experimental or control
-                if (user.group === 'experimental') {
+                if (user.group === 'experiment') {
                     res.sendFile(path.join(__dirname, 'assets/pages/user_portal.html'));
                 }
                 else {
@@ -269,10 +270,11 @@ app.post('/admin/api/refresh-token/:user_id', async (req, res) => {
 app.get('/admin/api/participants', async (req, res) => {
     try {
         const participants = await participantsCollection.find().sort({ number: 1 }).toArray();
-        const formattedParticipants = participants.map(({ user_id, number }, index) => ({
+        const formattedParticipants = participants.map(({ user_id, number, group}, index) => ({
             user_id,
             number,
-            name: `Participant ${index}`
+            name: `Participant ${index}`,
+            group
         }));
         res.json({ success: true, data: formattedParticipants });
     } catch (error) {
@@ -310,7 +312,7 @@ app.get('/auth/callback', async (req, res) => {
     access_token = data.access_token;
     refresh_token = data.refresh_token;
     user_id = data.user_id;
-    const participantNumber = await participantsCollection.countDocuments() + 1;
+    const participantNumber = await participantsCollection.countDocuments();
 
     try {
         const result = await participantsCollection.updateOne(
@@ -339,7 +341,9 @@ app.get('/auth/callback', async (req, res) => {
             await usersCollection.insertOne({
                 user_id,
                 number: participantNumber,
-                group: state
+                group: state,
+                user: user_id,
+                pass: "cnelab"
             });
         }
 
@@ -574,6 +578,7 @@ app.get('/admin/api/planned_activities/:user_id', async (req, res) => {
         const user = await participantsCollection.findOne({ user_id });
         const participantNumber = user.number;
         const plan = await planCollection.findOne({ participantNumber });
+
         if (!plan) {
             res.json({ success: true, plannedActivities: [], unplannedActivities: [] });
             return;
@@ -644,11 +649,8 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
         //if we find a user there, we can get the participantNumber
         const participantNumber = user.number;
 
-        // Mark the planned activity as completed in the plan collection by incrementing the planned_activities_count by 1
-        const updated = await planCollection.updateOne(
-            { participantNumber },
-            { $inc: { planned_activities_count: plannedPoints, unplanned_activities_count: unplannedPoints } }
-        );
+        const plan = await planCollection.findOne({ participantNumber });
+        console.log(plan);
 
         if (updated.modifiedCount > 0) {
             res.status(200).json({ success: true, message: 'Points updated successfully' });
@@ -661,24 +663,37 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
     }
 });
 
-app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
+app.get('/api/get_user_data', async (req, res) => {
     const user_id = req.session.user;
-
-    participantsCollection.findOne({ user_id })
+    let data = {};
+    user = usersCollection.findOne({ user_id })
         .then(async user => {
             if (user) {
                 const plan = await planCollection.findOne({ participantNumber: user.number });
-                const data = {
+                if (!plan) {
+                    data = {
+                        user_id: user.user_id,
+                        number: user.number,
+                        selectedDays: [],
+                        completedPlannedActivities: [],
+                        completedUnplannedActivities: [],
+                        missedPlannedActivities: [],
+                        callingDays: []
+                    };
+                } else {
+                    data = {
                     user_id: user.user_id,
                     number: user.number,
                     selectedDays: plan.selectedDays,
                     //get the dates of the completed planned activities
-                    completedPlannedActivities: plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
+                    completedPlannedActivities : plan.completedPlannedActivities.map(activity => activity.startDate.split('T')[0]),
+                    //get the dates of the completed unplanned activities
                     completedUnplannedActivities: plan.completedUnplannedActivities.map(activity => activity.startDate.split('T')[0]),
+                    //get the dates of the missed planned activities
                     missedPlannedActivities: plan.missedPlannedActivities,
                     callingDays: plan.callingDays
                 };
-
+            }
                 res.json(data);
             } else {
                 res.status(404).json({ error: 'User not found' });
@@ -686,8 +701,9 @@ app.get('/api/get_user_data', requireUserAuth, async (req, res) => {
         })
         .catch(error => {
             console.error('Error fetching user:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        });
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    );
 });
 
 app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
@@ -705,7 +721,7 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
 // Delete contact route
 app.delete('/admin/api/delete-contact/:identifier', async (req, res) => {
     const identifier = req.params.identifier;
-
+    console.log(identifier);
     try {
         const result = await planCollection.deleteOne({ identifier });
 
@@ -743,6 +759,7 @@ app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
+// Start the server
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
@@ -753,31 +770,48 @@ app.listen(port, () => {
 // Cron stuff
 
 const axios = require('axios');
+const { group } = require('console');
 
 async function fetchIDs() {
     try {
-        const response = await axios.get('http://roybal.vercel.app/admin/api/user_ids');
-        return response;
-    } catch (error) {
-        // rerun the function
-        console.error('Error fetching user IDs:', error);
-        return await fetchIDs();
+       const listIDS = await getIds();
 
-    }
-}
-
-async function fetchDataAndProcess() {
-    try {
-        const response = await fetchIDs()
-        const userIDs = response.data.data;
-
-        for (const user_id of userIDs) {
+        for (const user_id of listIDS) {
             await processUser(user_id);
-
         }
     } catch (error) {
         console.error('Error fetching data:', error);
 
+    }
+}
+
+async function getIds() {
+    try {
+        const db = await client.db('Roybal');
+        const usersCollection = await db.collection('users');
+        const list = await usersCollection.find().toArray();
+
+        const userIDs = list.map(user => user.user_id);
+
+        return userIDs;
+    }
+    catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+async function getIds() {
+    try {
+        const db = await client.db('Roybal');
+        const usersCollection = await db.collection('users');
+        const list = await usersCollection.find().toArray();
+
+        const userIDs = list.map(user => user.user_id);
+
+        return userIDs;
+    }
+    catch (error) {
+        console.error('Error fetching data:', error);
     }
 }
 
@@ -798,6 +832,8 @@ async function processUser(user_id) {
 }
 
 async function processPlans() {
+    const db = client.db('Roybal');
+    const planCollection = db.collection('plan');
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split('T')[0]
     //get every plan
@@ -824,8 +860,9 @@ async function processReminder() {
     });
 
     const matchingPlans = plans.filter(plan => plan.selectedDays.includes(formattedDate));
+    // for each person, send a reminder if they have a planned activity today
     for (const plan of matchingPlans) {
-        await sendReminder(plan);
+            await sendReminder(plan);
     }
 }
 
@@ -851,14 +888,15 @@ async function sendReminder(plan) {
     const identifier_type = plan.identifier_type;
     const identifier = plan.identifier;
 
+    console.log(`Sending reminder to ${identifier}...`)
     const reminderSMSBody = "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking!"
-    const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking! \nBest, \n oybal Team"
+    const reminderEmailBody = "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking! \nBest, \n Roybal Team"
     try {
         if (identifier_type === 'email') {
             await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
         } else {
             await sendSMS(identifier, reminderSMSBody);
-        }
+        }x
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
     }
@@ -867,44 +905,89 @@ async function sendReminder(plan) {
 
 // Function to collect Fitbit data
 async function collectFitbitData(user_id) {
+    // make sure the database is connected
+    const db = client.db('Roybal');
+    const participantsCollection = db.collection('participants');
+
     try {
-        const tokensResponse = await axios.get(`http://roybal.vercel.app/admin/api/tokens/${user_id}`);
-        let { access_token } = tokensResponse.data;
+        const tokensResponse = await participantsCollection.findOne({
+            user_id
+        });
+
+        if (!tokensResponse) {
+            throw new Error(`User ${user_id} not found`);
+        }
+
+        const access_token = tokensResponse.access_token;
 
         const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10);
-        const fitbitDataResponse = await axios.get(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
+        const fitbitDataResponse = await fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${access_token}`
             }
         });
-
+        console.log(fitbitDataResponse.status)
+        if (fitbitDataResponse.status !== 200) {
+            throw new Error(`HTTP error! status: ${fitbitDataResponse.status}`);
+        }
         return fitbitDataResponse;
 
     } catch (error) {
-        if (error.response.status === 401) {
             // Handle 401 error by refreshing the token
             try {
-                const refresh_token = await participantsCollection.findOne({ user_id }).refresh_token;
-                // Call your refresh token route
-                const refreshResponse = await axios.post(`http://roybal.vercel.app/admin/api/refresh-token/${user_id}`, {
-                    refresh_token
+                const user = await participantsCollection.findOne({ user_id });
+                const response = await fetch('https://api.fitbit.com/oauth2/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Basic ' + Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')
+                    },
+                    body: `grant_type=refresh_token&refresh_token=${user.refresh_token}`
                 });
 
-                if (refreshResponse.status === 200) {
-                    // Update access token with the new one
-                    access_token = refreshResponse.data.access_token;
-                    // Retry Fitbit API call with the new access token
-                    return await collectFitbitData(user_id);
+                const data = await response.json();
+                console.log(data)
+
+                if (data.access_token) {
+                    const newAccessToken = data.access_token;
+                    const newRefreshToken = data.refresh_token || user.refresh_token;
+
+                    const result = await participantsCollection.updateOne(
+                        { user_id: user_id },
+                        { $set: { access_token: newAccessToken, refresh_token: newRefreshToken } }
+                    );
+
+                    if (result.modifiedCount > 0) {
+                        console.log(`Updated access token and refresh token for user ${user_id}`);
+                    } else {
+                        console.log(`User ${user_id} not found or access token/refresh token not updated`);
+                    }
+
+                    const fitbitDataResponse = await fetch(`https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${newAccessToken}`
+                        }
+                    });
+
+                    if (fitbitDataResponse.status !== 200) {
+                        throw new Error(`HTTP error! status: ${fitbitDataResponse.status}`);
+                    }
+
+                    return fitbitDataResponse;
+
                 } else {
-                    throw new Error(`HTTP error! status: ${refreshResponse.status}`);
+                    console.error('Error refreshing access token:', data.error);
+                    throw new Error('Error refreshing access token');
                 }
-            } catch (refreshError) {
-                throw new Error(`Error refreshing token for user ${user_id}: ${refreshError.message}`);
+
+            } catch (error) {
+                console.error('Error refreshing access token:', error);
+                throw error;
             }
-        } else {
-            throw error;
-        }
     }
 }
 
@@ -966,25 +1049,34 @@ async function storeWeeklyPoints(user_id, points) {
     });
 
     if (existingDocument) {
-        // Update the document
+       // Update the existing document
         await weeklyPointsCollection.updateOne(
-            { user_id, date: { $gte: weekStart, $lte: weekEnd } },
+            { user_id, date: weekStart },
             { $set: { points } }
         );
-    } else {
+
+        console.log(`Updated weekly points for user ${user_id} for the week of ${weekStart} to ${weekEnd}`);
+
+    } 
+    else {
         // Create a new document
         await weeklyPointsCollection.insertOne({
             user_id,
-            date: weekStart, // Store the start date of the week
+            date: weekStart,
             points
         });
+
+        console.log(`Stored weekly points for user ${user_id} for the week of ${weekStart} to ${weekEnd}`);
     }
 }
 
 async function processPoints() {
     try {
-        const users = await participantsCollection.find().toArray();
 
+        //Check if db is connected
+        const db = client.db('Roybal');
+        const usersCollection = db.collection('users');
+        const users = await usersCollection.find().toArray();
         for (const user of users) {
             const user_id = user.user_id;
             const participantNumber = user.number;
@@ -1048,17 +1140,18 @@ async function processPoints() {
 
             const plannedActivitiesThisWeek = plannedActivities.filter(activity => {
                 const activityDate = new Date(activity.startDate);
-                return activityDate >= sunday && activityDate <= saturday;
+                return activityDate >= sunday && activityDate <= saturday || activityDate.toISOString().split('T')[0] === sunday.toISOString().split('T')[0];
             });
 
-            const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
-                const activityDate = new Date(activity.startDate);
-                return activityDate >= sunday && activityDate <= saturday;
-            });
 
-            const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 400;
-            const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 250;
-            points = plannedPoints + unplannedPoints;
+            // const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
+            //     const activityDate = new Date(activity.startDate);
+            //     return activityDate >= sunday && activityDate <= saturday;
+            // });
+
+            const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 500;
+            // const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 0;
+            points = plannedPoints;
 
             console.log(`Points for user ${user_id}: ${points} for the week of ${sunday.toISOString().slice(0, 10)} to ${saturday.toISOString().slice(0, 10)}`)
             storeWeeklyPoints(user_id, points);
@@ -1174,7 +1267,7 @@ cron.schedule('0 9 * * *', async () => {
     }
 }, null, true, 'America/New_York');
 
-//Task once a day to send a reminder of the call with another lab member
+// Task once a day to send a reminder of the call with another lab member
 cron.schedule('0 9 * * *', async () => {
     console.log('Running scheduled call reminder task at ' + new Date());
     try {
@@ -1196,8 +1289,8 @@ cron.schedule('30 8 * * *', async () => {
 
 // Task 3: Points Calculation and Storage
 // Needs to be delayed to ensure that all data is collected
-cron.schedule('05 9 * * *', async () => {
-    console.log('Running scheduled points calculation task at ' + new Date());
+cron.schedule('10 9 * * *', async () => {
+    console.log('Running scheduled points calculation task...');
     try {
         await processPoints();
     } catch (error) {
@@ -1216,3 +1309,4 @@ cron.schedule('0 9 * * 1', async () => {
         console.error('Error sending health tips:', error);
     }
 }, null, true, 'America/New_York');
+

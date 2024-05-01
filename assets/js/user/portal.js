@@ -8,17 +8,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const response = await fetch('/api/get_weekly_points');
     const weeklyPointsData = await response.json();
 
-    // Assuming weeklyPointsData is an array of weekly points objects
-    const latestWeekPoints = weeklyPointsData.data[0].points;
+    // first element of the array is the most recent week
+    if (weeklyPointsData.data.length === 0) {
+       // If there is no data, set the points to 0
+         weeklyPointsData.data.push({points: 0});
+    }
+    const thisWeekPoints = weeklyPointsData.data[0].points;
+    console.log(weeklyPointsData.data);
 
     // Fetch user data from backend
-    fetch('/api/get_user_data')
+    await fetch('/api/get_user_data')
         .then(response => response.json())
         .then(data => {
+            let missedPlannedActivities = data.missedPlannedActivities;
+            if (missedPlannedActivities === undefined) {
+                missedPlannedActivities = [];
+            }
+            console.log(data);
             userIdElement.innerText = data.user_id;
             participantNumberElement.innerText = data.number;
             let pointsValueElement = document.getElementById('points-value');
-            pointsValueElement.innerText = latestWeekPoints;
+            pointsValueElement.innerText = thisWeekPoints;
 
             function drawStaminaWheel(value) {
                 let ctx = document.getElementById('stamina-chart').getContext('2d');
@@ -82,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            drawStaminaWheel(latestWeekPoints)
+            drawStaminaWheel(thisWeekPoints)
 
 
             $('#calendar').fullCalendar({
@@ -91,25 +101,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                     center: 'title',
                     right: 'month,basicWeek,basicDay'
                 },
-                events: data.selectedDays.map(day => {
+                events: data.selectedDays?.map(day => {
                     return {
                         title: 'Planned Activity',
                         start: day,
                         color: 'blue'
                     };
-                }).concat(data.completedPlannedActivities.map(activity => {
+                }).concat(data.completedPlannedActivities?.map(activity => {
                     return {
                         title: 'Completed Planned Activity',
                         start: activity,
                         color: 'green'
                     };
-                })).concat(data.missedPlannedActivities.map(date => {
+                })).concat(missedPlannedActivities?.map(activity => {  
                     return {
                         title: 'Missed Planned Activity',
-                        start: date,
+                        start: activity,
                         color: 'red'
                     };
-                })).concat(data.callingDays.map(date => {
+                })).concat(data.callingDays?.map(date => {
                     return {
                         title: 'Call',
                         start: date,
@@ -118,45 +128,66 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }))
             });
 
-            // Calculate the current week number
-            const startDate = new Date(data.selectedDays[0]);
-            const today = new Date();
-            const weekDiff = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
-            const weekLabels = Array.from({ length: weekDiff }, (_, i) => `Week ${i + 1}`)
+            // Plot the graph of points over weeks
+            let ctx = document.getElementById('line-chart').getContext('2d');
 
-            // Reverse the weeklyPointsData.data array
-            const reversedData = [...weeklyPointsData.data].reverse();
+            // get all the weeks that have passed since the first week in the data
+            let firstDate = weeklyPointsData.data[weeklyPointsData.data.length - 1].date
+            let firstDateObj = new Date(firstDate)
+            let today = new Date()
+            let weeksPassed = Math.floor((today - firstDateObj) / 604800000)
+            let weeks = []
+            for (let i = 0; i <= weeksPassed; i++) {
+                weeks.push(i)
+            }
 
-            // Create a line chart
-            const lineChartElement = document.getElementById('line-chart');
-            const lineCtx = lineChartElement.getContext('2d');
+            // reverse the data so that the most recent week is first
+            weeklyPointsData.data.reverse()
 
-            new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: weekLabels,
-                    datasets: [{
-                        label: 'Points for the Week',
-                        data: reversedData.map(week => week.points),
-                        fill: false,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2,
-                        pointRadius: 5,
-                        pointBackgroundColor: 'rgba(75, 192, 192, 1)'
-                    }]
+            let line_chart = {
+                labels: weeks,
+                datasets: [{
+                    label: 'Points',
+                    data: weeklyPointsData.data.map(week => week.points),
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            };
+
+            let options = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: true
+                    }
                 },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 1500,
-                            ticks: {
-                                stepSize: 300
-                            }
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Weeks'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Points'
                         }
                     }
                 }
+            };
+
+
+            new Chart(ctx, {
+                type: 'line',
+                data: line_chart,
+                options: options
             });
+
         })
         .catch(error => console.error('Error fetching user data:', error));
 });
