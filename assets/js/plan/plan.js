@@ -241,7 +241,7 @@ async function submitCallingPlan() {
 }
 
 async function deleteContact() {
-    const selectedContact = document.getElementById('contactSelector').value;
+    const selectedContact = document.getElementById('removeEmail').value || document.getElementById('removePhone').value;
 
     try {
         const identifier = selectedContact;
@@ -272,17 +272,13 @@ async function deleteContact() {
 
 
 async function deleteHealthContact() {
-    const selectedContact = document.getElementById('contactSelector').value;
+    const selectedContact = document.getElementById('removeHealthEmail').value || document.getElementById('removeHealthPhone').value;
 
     try {
-        const identifier = selectedContact;
+        const identifier = encodeURIComponent(selectedContact); // Make sure to encode the identifier
 
-        const response = await fetch('/admin/api/delete-health-contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ identifier })
+        const response = await fetch(`/admin/api/delete-health-contact/${identifier}`, {
+            method: 'DELETE',
         });
 
         const data = await response.json();
@@ -300,6 +296,7 @@ async function deleteHealthContact() {
     document.getElementById('newPhone').value = '';
     document.getElementById('participantNumber').value = '';
 }
+
 
 
 // Call the function to populate the contact selector
