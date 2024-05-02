@@ -21,10 +21,12 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
 const fs = require('fs');
+const { Twilio } = require('twilio');
 
 let access_token;
 let refresh_token;
 let user_id;
+
 let participantsCollection;
 let dataCollection;
 let adminCollection;
@@ -32,6 +34,7 @@ let planCollection;
 let usersCollection;
 let weeklyPointsCollection;
 let healthCollection;
+let textCollection;
 
 async function connectToDatabase() {
     try {
@@ -43,6 +46,7 @@ async function connectToDatabase() {
         usersCollection = client.db('Roybal').collection('users');
         weeklyPointsCollection = client.db('Roybal').collection('weeklyPoints');
         healthCollection = client.db('Roybal').collection('health');
+        textCollection = client.db('Roybal').collection('text');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
@@ -666,7 +670,7 @@ app.post('/admin/api/points/:user_id', async (req, res) => {
 app.get('/api/get_user_data', async (req, res) => {
     const user_id = req.session.user;
     let data = {};
-    user = usersCollection.findOne({ user_id })
+    usersCollection.findOne({ user_id })
         .then(async user => {
             if (user) {
                 const plan = await planCollection.findOne({ participantNumber: user.number });
@@ -716,6 +720,22 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
         console.error('Error fetching weekly points:', error);
         res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
+});
+
+app.post("/api/text", (req, res) => {
+    const { exercise, text } = req.body;
+    
+    // Here you can perform any backend logic with the received data
+    console.log("Exercise:", exercise);
+    console.log("Text:", text);
+
+    // Send the information to the database
+    textCollection.insertOne({ exercise
+    , text });
+
+
+    // Respond with a success message
+    res.json({ message: "Data received successfully!" });
 });
 
 // Delete contact route
@@ -769,12 +789,9 @@ app.listen(port, () => {
 
 // Cron stuff
 
-const axios = require('axios');
-const { group } = require('console');
-
 async function fetchDataAndProcess() {
     try {
-       const listIDS = await getIds();
+        const listIDS = await getIds();
 
         for (const user_id of listIDS) {
             await processUser(user_id);
@@ -880,6 +897,21 @@ async function sendReminder(plan) {
         } else {
             await sendSMS(identifier, reminderSMSBody);
         }x
+    } catch (error) {
+        console.error(`Error sending reminder to ${identifier}:`, error);
+    }
+}
+
+async function sendEmaReminder(identifier, identifier_type) {
+    console.log(`Sending ema reminder to ${identifier}...`)
+    const emaReminderSMSBody = "Hello! Here is your reminder to complete your exercise survey today! Please log in to the website today! Please go to the website at https://roybal.vercel.app/ to complete your survey!"
+    const emaReminderEmailBody = "Hello! \n Here is your reminder to complete your exercise survey today! Please log in to the website today Please go to the website at https://roybal.vercel.app/ to complete your survey! \n Best, \n Roybal Team"
+    try {
+        if (identifier_type === 'email') {
+            await sendEmail(identifier, "Daily Survey", emaReminderEmailBody);
+        } else {
+            await sendSMS(identifier, emaReminderSMSBody);
+        }
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
     }
@@ -1292,3 +1324,29 @@ cron.schedule('0 9 * * 1', async () => {
     }
 }, null, true, 'America/New_York');
 
+// Task 5: EMA Reminder
+// Fifth task. Runs at Noon every day
+cron.schedule('0 12 * * *', async () => {
+    console.log('Running scheduled EMA reminder task...');
+    let db = client.db('Roybal');
+    let usersCollection = db.collection('users');
+    let planCollection = db.collection('plan');
+    try {
+        const users = await usersCollection.find().toArray();
+        for (const user of users) {
+            const user_id = user.user_id;
+            const plan = await planCollection.findOne({ user_id });
+            if (plan) {
+                const identifier = plan.identifier;
+                const identifier_type = plan.identifier_type;
+                await sendEmaReminder(identifier, identifier_type);
+            }
+        }
+    } catch (error) {
+        console.error('Error sending EMA reminder:', error);
+    }
+    try {
+    } catch (error) {
+        console.error('Error sending EMA reminder:', error);
+    }
+}, null, true, 'America/New_York');
