@@ -21,10 +21,12 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require('twilio')(accountSid, authToken);
 const fs = require('fs');
+const { Twilio } = require('twilio');
 
 let access_token;
 let refresh_token;
 let user_id;
+
 let participantsCollection;
 let dataCollection;
 let adminCollection;
@@ -32,6 +34,7 @@ let planCollection;
 let usersCollection;
 let weeklyPointsCollection;
 let healthCollection;
+let textCollection;
 
 async function connectToDatabase() {
     try {
@@ -43,6 +46,7 @@ async function connectToDatabase() {
         usersCollection = client.db('Roybal').collection('users');
         weeklyPointsCollection = client.db('Roybal').collection('weeklyPoints');
         healthCollection = client.db('Roybal').collection('health');
+        textCollection = client.db('Roybal').collection('text');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error);
@@ -718,6 +722,22 @@ app.get('/api/get_weekly_points', requireUserAuth, async (req, res) => {
     }
 });
 
+app.post("/api/text", (req, res) => {
+    const { exercise, text } = req.body;
+    
+    // Here you can perform any backend logic with the received data
+    console.log("Exercise:", exercise);
+    console.log("Text:", text);
+
+    // Send the information to the database
+    textCollection.insertOne({ exercise
+    , text });
+
+
+    // Respond with a success message
+    res.json({ message: "Data received successfully!" });
+});
+
 // Delete contact route
 app.delete('/admin/api/delete-contact/:identifier', async (req, res) => {
     const identifier = req.params.identifier;
@@ -769,10 +789,7 @@ app.listen(port, () => {
 
 // Cron stuff
 
-const axios = require('axios');
-const { group } = require('console');
-
-async function fetchIDs() {
+async function fetchDataAndProcess() {
     try {
         const listIDS = await getIds();
 
@@ -781,7 +798,6 @@ async function fetchIDs() {
         }
     } catch (error) {
         console.error('Error fetching data:', error);
-
     }
 }
 
@@ -800,8 +816,6 @@ async function getIds() {
     }
 }
 
-
-
 async function processUser(user_id) {
     try {
         const fitbitDataResponse = await collectFitbitData(user_id);
@@ -809,7 +823,6 @@ async function processUser(user_id) {
         if (fitbitDataResponse.status === 200) {
             const fitbitData = fitbitDataResponse.data;
             await storeDataInDatabase(user_id, fitbitData);
-            console.log(`Data stored in the database for user ${user_id} successfully.`);
         } else {
             console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
         }
@@ -883,6 +896,21 @@ async function sendReminder(plan) {
             await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
         } else {
             await sendSMS(identifier, reminderSMSBody);
+        }x
+    } catch (error) {
+        console.error(`Error sending reminder to ${identifier}:`, error);
+    }
+}
+
+async function sendEmaReminder(identifier, identifier_type) {
+    console.log(`Sending ema reminder to ${identifier}...`)
+    const emaReminderSMSBody = "Hello! Here is your reminder to complete your exercise survey today! Please log in to the website today! Please go to the website at https://roybal.vercel.app/ to complete your survey!"
+    const emaReminderEmailBody = "Hello! \n Here is your reminder to complete your exercise survey today! Please log in to the website today Please go to the website at https://roybal.vercel.app/ to complete your survey! \n Best, \n Roybal Team"
+    try {
+        if (identifier_type === 'email') {
+            await sendEmail(identifier, "Daily Survey", emaReminderEmailBody);
+        } else {
+            await sendSMS(identifier, emaReminderSMSBody);
         }
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
@@ -1154,7 +1182,7 @@ async function sendHealthTips() {
         const healthContactIdentifiers = healthContacts.map(contact => contact.identifier);
         const healthContactIdentifierTypes = healthContacts.map(contact => contact.identifier_type);
 
-        fs.readFile('assets/tips.json', 'utf8', async (err, data) => {
+        fs.readFile('/assets/tips.json', 'utf8', async (err, data) => {
             if (err) {
                 console.log('Error reading file:', err);
                 return;
@@ -1167,7 +1195,7 @@ async function sendHealthTips() {
             const tip = tipsList.shift();
             //add the new list to the json file
             tips.tips = tipsList;
-            fs.writeFile('assets/tips.json', JSON.stringify(tips), 'utf8', (err) => {
+            fs.writeFile('/assets/tips.json', JSON.stringify(tips), 'utf8', (err) => {
                 if (err) {
                     console.log('Error writing file:', err);
                 }
@@ -1228,14 +1256,13 @@ async function sendCallReminder(plan) {
         }
     } catch (error) {
         console.error(`Error sending reminder to ${identifier}:`, error);
-
     }
 }
 
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
 cron.schedule('55 8 * * *', async () => {
-    console.log(`Running scheduled data fetching task at ` + new Date());
+    console.log('Running scheduled data fetching task...');
     try {
         await fetchDataAndProcess();
     } catch (error) {
@@ -1246,7 +1273,7 @@ cron.schedule('55 8 * * *', async () => {
 // Task 2: Plan Processing
 // Third task. Runs at 9:00 AM every day
 cron.schedule('0 9 * * *', async () => {
-    console.log('Running scheduled plan processing task at ' + new Date());
+    console.log('Running scheduled plan processing task...');
     try {
         await processPlans();
     } catch (error) {
@@ -1256,7 +1283,7 @@ cron.schedule('0 9 * * *', async () => {
 
 // Task once a day to send a reminder of the call with another lab member
 cron.schedule('0 9 * * *', async () => {
-    console.log('Running scheduled call reminder task at ' + new Date());
+    console.log('Running scheduled call reminder task...');
     try {
         await processCallReminder();
     } catch (error) {
@@ -1266,7 +1293,7 @@ cron.schedule('0 9 * * *', async () => {
 
 // First Task. Runs at 8:30 AM every day
 cron.schedule('30 8 * * *', async () => {
-    console.log("Sending Reminder at" + new Date());
+    console.log("Sending Reminder")
     try {
         await processReminder();
     } catch (error) {
@@ -1289,7 +1316,7 @@ cron.schedule('10 9 * * *', async () => {
 // Task 4: Weekly Health Tips
 // Fourth task. Runs at 9:00 AM every Monday
 cron.schedule('0 9 * * 1', async () => {
-    console.log('Running scheduled health tips task at ' + new Date());
+    console.log('Running scheduled health tips task...');
     try {
         await sendHealthTips();
     } catch (error) {
@@ -1297,3 +1324,29 @@ cron.schedule('0 9 * * 1', async () => {
     }
 }, null, true, 'America/New_York');
 
+// Task 5: EMA Reminder
+// Fifth task. Runs at Noon every day
+cron.schedule('0 12 * * *', async () => {
+    console.log('Running scheduled EMA reminder task...');
+    let db = client.db('Roybal');
+    let usersCollection = db.collection('users');
+    let planCollection = db.collection('plan');
+    try {
+        const users = await usersCollection.find().toArray();
+        for (const user of users) {
+            const user_id = user.user_id;
+            const plan = await planCollection.findOne({ user_id });
+            if (plan) {
+                const identifier = plan.identifier;
+                const identifier_type = plan.identifier_type;
+                await sendEmaReminder(identifier, identifier_type);
+            }
+        }
+    } catch (error) {
+        console.error('Error sending EMA reminder:', error);
+    }
+    try {
+    } catch (error) {
+        console.error('Error sending EMA reminder:', error);
+    }
+}, null, true, 'America/New_York');
