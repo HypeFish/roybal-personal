@@ -93,7 +93,7 @@ async function generateCSV(user_id, participantNumber) {
         // Update the map with the new activity
         activityMap.get(date).push({ isPlanned });
 
-        const totalPoints = plannedPoints;
+        let totalPoints = plannedPoints;
 
         // if the sum of the points for the week is greater than 2500, stop awarding points
         let pointsForWeek = 0;
@@ -102,7 +102,6 @@ async function generateCSV(user_id, participantNumber) {
         lastSaturday = lastSaturday.toISOString().split("T")[0];
         if (lastSaturday !== lastSaturdayOutsideLoop) {
           lastSaturdayOutsideLoop = lastSaturday;
-          pointsForWeek = 0;
         }
         pointsForWeek += totalPoints;
         if (pointsForWeek > 2500) {

@@ -5,8 +5,6 @@ async function calculatePoints(user_id) {
 
     if (plannedAndUnplanned.success) {
       const plannedActivities = plannedAndUnplanned.plannedActivities;
-      const unplannedActivities = plannedAndUnplanned.unplannedActivities;
-
       // Calculate points for planned activities (up to 5)
       // Only check for this week (Saturday to Sunday)
       const today = new Date();
