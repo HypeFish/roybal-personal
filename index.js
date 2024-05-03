@@ -707,7 +707,6 @@ app.get("/admin/api/planned_activities/:user_id", async (req, res) => {
 
 app.post("/admin/api/points/:user_id", async (req, res) => {
   const user_id = req.params.user_id;
-  const { plannedPoints, unplannedPoints } = req.body;
 
   try {
     const user = await participantsCollection.findOne({ user_id });
@@ -878,8 +877,8 @@ async function fetchDataAndProcess() {
 
 async function getIds() {
   try {
-    const db = await client.db("Roybal");
-    const usersCollection = await db.collection("users");
+    const db = client.db("Roybal");
+    const usersCollection = db.collection("users");
     const list = await usersCollection.find().toArray();
 
     const userIDs = list.map((user) => user.user_id);
@@ -978,7 +977,6 @@ async function sendReminder(plan) {
     } else {
       await sendSMS(identifier, reminderSMSBody);
     }
-    x;
   } catch (error) {
     console.error(`Error sending reminder to ${identifier}:`, error);
   }
@@ -1270,14 +1268,7 @@ async function processPoints() {
             sunday.toISOString().split("T")[0]
         );
       });
-
-      // const unplannedActivitiesThisWeek = unplannedActivities.filter(activity => {
-      //     const activityDate = new Date(activity.startDate);
-      //     return activityDate >= sunday && activityDate <= saturday;
-      // });
-
       const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 500;
-      // const unplannedPoints = Math.min(unplannedActivitiesThisWeek.length, 2) * 0;
       points = plannedPoints;
 
       console.log(
