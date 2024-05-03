@@ -44,7 +44,6 @@ async function generateCSV(user_id, participantNumber) {
                 plannedActivityDates.push(activity.startDate);
             });
 
-
             // If the date is not in the map, create a new entry
             if (!activityMap.has(date)) {
                 activityMap.set(date, []);
@@ -58,11 +57,10 @@ async function generateCSV(user_id, participantNumber) {
                 const dayOfWeek = daysOfWeek[(dayOfWeekIndex + 1) % 7]; // Get the day of the week as a string, with an offset of one day                
                 let isPlanned = plannedActivityDates.includes(date);
                 // Only set the first planned activity as true if there are multiple planned activities for the day
-                if (isPlanned && lastSaturdayOutsideLoop !== date) {
-                    lastSaturdayOutsideLoop = date;
-                } else {
-                    isPlanned = false;
+                if (isPlanned) {
+                    isPlanned = plannedActivities.find(activity => activity.startDate === date).startTime === activity.startTime;
                 }
+
                 const startTime = activity.startTime;
                 const activityName = activity.name;
                 const totalSteps = activity.steps;
@@ -82,7 +80,22 @@ async function generateCSV(user_id, participantNumber) {
                 // Update the map with the new activity
                 activityMap.get(date).push({ isPlanned });
 
-                const totalPoints = plannedPoints;
+                const totalPoints = plannedPoints
+                
+                // if the sum of the points for the week is greater than 2500, stop awarding points
+                let pointsForWeek = 0;
+                let lastSaturday = new Date(date);
+                lastSaturday.setDate(lastSaturday.getDate() - lastSaturday.getDay());
+                lastSaturday = lastSaturday.toISOString().split('T')[0];
+                if (lastSaturday !== lastSaturdayOutsideLoop) {
+                    lastSaturdayOutsideLoop = lastSaturday;
+                    pointsForWeek = 0;
+                }
+                pointsForWeek += totalPoints;
+                if (pointsForWeek > 2500) {
+                    totalPoints = 0;
+                }
+                
 
                 // Append data to CSV string
                 csvData += `sub_${formattedParticipantNumber},${date},${dayOfWeek},${isPlanned},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned},${totalPoints}\n`;
