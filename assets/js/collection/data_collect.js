@@ -56,8 +56,13 @@ async function generateCSV(user_id, participantNumber) {
                 const dayOfWeekIndex = new Date(date).getDay(); // Get the day of the week as an index (0-6)
                 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dayOfWeek = daysOfWeek[(dayOfWeekIndex + 1) % 7]; // Get the day of the week as a string, with an offset of one day                
-                const isPlanned = plannedActivityDates.includes(date);
-                
+                let isPlanned = plannedActivityDates.includes(date);
+                // Only set the first planned activity as true if there are multiple planned activities for the day
+                if (isPlanned && lastSaturdayOutsideLoop !== date) {
+                    lastSaturdayOutsideLoop = date;
+                } else {
+                    isPlanned = false;
+                }
                 const startTime = activity.startTime;
                 const activityName = activity.name;
                 const totalSteps = activity.steps;
@@ -67,15 +72,17 @@ async function generateCSV(user_id, participantNumber) {
 
                 // Calculate points based on activity type
                 let plannedPoints = 0;
-                let unplannedPoints = 0;
 
-                if (isPlanned) {
-                    plannedPoints = activityMap.get(date).filter(activity => activity.isPlanned).length < 5 ? 500 : 0;
+
+                // only award points if the activity is planned and is a walk
+                if (isPlanned && activityName === "Walk") {
+                    plannedPoints = 500;
                 }
+
                 // Update the map with the new activity
                 activityMap.get(date).push({ isPlanned });
 
-                const totalPoints = plannedPoints + unplannedPoints;
+                const totalPoints = plannedPoints;
 
                 // Append data to CSV string
                 csvData += `sub_${formattedParticipantNumber},${date},${dayOfWeek},${isPlanned},${startTime},${activityName},${totalSteps},${distance},${durationInMinutes},${caloriesBurned},${totalPoints}\n`;
