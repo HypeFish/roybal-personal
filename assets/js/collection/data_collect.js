@@ -29,6 +29,7 @@ async function generateCSV(user_id, participantNumber) {
     }
 
     const combinedData = data.data;
+    console.log(combinedData)
     let csvData =
       "participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned,points\n";
     let lastSaturdayOutsideLoop;
@@ -86,7 +87,12 @@ async function generateCSV(user_id, participantNumber) {
         let plannedPoints = 0;
 
         // only award points if the activity is planned and is a walk
-        if (isPlanned && activityName === "Walk") {
+        if (isPlanned 
+          && activityName === "Walk" 
+          || activityName === "Run" 
+          || activityName === "Hike"
+          || activityName === "Bike"
+          || activityName === "Elliptical") {
           plannedPoints = 500;
         }
 
@@ -187,14 +193,13 @@ async function getParticipants() {
 // Call the function to populate the participant selector
 getParticipants();
 
+//get the data for the selected participant and generate the csv. 
+// The dropdown should be sorted by participant number and the csv should be generated for the selected participant
 document.getElementById("generate-csv").addEventListener("click", function () {
   const participantSelector = document.getElementById("participantSelector");
-  const selectedOption =
-    participantSelector.options[participantSelector.selectedIndex];
-  const selectedUserID = selectedOption.value;
-  const selectedParticipantNumber = selectedOption.getAttribute(
-    "data-participant-number"
-  );
-
+  const selectedUserID = participantSelector.value;
+  const selectedParticipantNumber =
+    participantSelector.options[participantSelector.selectedIndex].dataset
+      .participantNumber;
   generateCSV(selectedUserID, selectedParticipantNumber);
 });
