@@ -27,7 +27,24 @@
             <button type="submit" class="login-button">Login</button>
             <div class="error-message" id="error-message"></div>
         </form>
+        <br></br>
+        <!-- Changed type to "button" and added an id for easier selection in JavaScript -->
+        <button id="survey-button" class="survey-button">Go to Motivation Survey</button>
+
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Select the survey button by its id
+            const surveyButton = document.getElementById("survey-button");
+            
+            // Add event listener to the survey button
+            surveyButton.addEventListener("click", () => {
+                // Redirect to the survey page when the button is clicked
+                window.location.href = "/em";
+            });
+        });
+    </script>
 </body>
 
 </html>

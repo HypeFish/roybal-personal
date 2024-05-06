@@ -181,6 +181,11 @@ app.get("/admin", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// Define a route for serving the "em.html" file
+app.get('/em', (req, res) => {
+  res.sendFile(path.join(__dirname, "assets/pages/em.html"));
+});
+
 //If the user is not logged in, redirect to the login page
 app.get("/", (req, res) => {
   if (req.session?.user) {
@@ -800,10 +805,6 @@ app.get("/api/get_weekly_points", requireUserAuth, async (req, res) => {
 
 app.post("/api/text", (req, res) => {
   const { exercise, text } = req.body;
-
-  // Here you can perform any backend logic with the received data
-  console.log("Exercise:", exercise);
-  console.log("Text:", text);
 
   // Send the information to the database
   textCollection.insertOne({ exercise, text });
