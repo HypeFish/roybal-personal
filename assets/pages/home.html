@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="/assets/css/home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <img src="/assets/images/logo.png" alt="Your Logo" class="logo">
+        <h1>Welcome to the Portal</h1>
+        <div class="buttons">
+            <button onclick="goToEMPage()"><i class="fas fa-chart-line"></i> Go to EM Page</button>
+            <button onclick="goToLoginPage()"><i class="fas fa-user"></i> Go to Roybal Page</button>
+        </div>
+    </div>
+
+    <script>
+        function goToEMPage() {
+            window.location.href = "/login-ema";
+        }
+
+        function goToLoginPage() {
+            window.location.href = "/login";
+        }
+    </script>
+</body>
+</html>

@@ -137,6 +137,23 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.get("/login-ema", (req, res) => {
+  res.sendFile(path.join(__dirname, "assets/pages/login-ema.html"));
+});
+
+
+app.post("/login-ema", async (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+  //check if the user and password are correct
+  // user is ema-survey and password is TBIlab
+  if (username === "ema-survey" && password === "TBIlab") {
+    res.redirect("/em");
+  } else {
+    res.status(401).json({ success: false, error: "Invalid username or password" });
+  }
+});
+
 function requireAuth(req, res, next) {
   if (req.session?.user && req.session?.isAdmin) {
     return next(); // Regular user is authenticated, proceed to the next middleware or route handler
@@ -186,6 +203,10 @@ app.get('/em', (req, res) => {
   res.sendFile(path.join(__dirname, "assets/pages/em.html"));
 });
 
+app.get("/home", (req, res) => {
+  res.sendFile(path.join(__dirname, "assets/pages/home.html"));
+});
+
 //If the user is not logged in, redirect to the login page
 app.get("/", (req, res) => {
   if (req.session?.user) {
@@ -195,7 +216,7 @@ app.get("/", (req, res) => {
       res.redirect("/user_portal");
     }
   } else {
-    res.redirect("/login");
+    res.redirect("/home");
   }
 });
 
