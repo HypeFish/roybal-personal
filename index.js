@@ -22,6 +22,7 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require("twilio")(accountSid, authToken);
 const fs = require("fs");
 const { Twilio } = require("twilio");
+const { send } = require("process");
 
 let access_token;
 let refresh_token;
@@ -35,6 +36,7 @@ let usersCollection;
 let weeklyPointsCollection;
 let healthCollection;
 let textCollection;
+let tipsCollection;
 
 async function connectToDatabase() {
   try {
@@ -47,6 +49,7 @@ async function connectToDatabase() {
     weeklyPointsCollection = client.db("Roybal").collection("weeklyPoints");
     healthCollection = client.db("Roybal").collection("health");
     textCollection = client.db("Roybal").collection("text");
+    tipsCollection = client.db("Roybal").collection("tips");
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -1306,57 +1309,125 @@ async function processPoints() {
 }
 
 async function sendHealthTips() {
+  console.log("Sending health tips...");
   try {
-    const healthContacts = await healthCollection.find().toArray();
-    const healthContactIdentifiers = healthContacts.map(
-      (contact) => contact.identifier
-    );
-    const healthContactIdentifierTypes = healthContacts.map(
-      (contact) => contact.identifier_type
-    );
+    const db = client.db("Roybal");
+    const healthCollection = db.collection("health");
+    const tipsCollection = db.collection("tips");
+    const dataCollection = db.collection("data");
+    const planCollection = db.collection("plan");
 
-    fs.readFile("/assets/tips.json", "utf8", async (err, data) => {
-      if (err) {
-        console.log("Error reading file:", err);
-        return;
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split("T")[0];
+    const users = await planCollection.find().toArray();
+    const plans = await planCollection.find().toArray();
+    const healthContacts = await healthCollection.find().toArray();
+    const tips = await tipsCollection.find().toArray()
+    const tiplist = tips[0].tips
+
+    // go down in order of the list depending on what week it is since the user has started
+    // find the earliest date that the user has started and then find the difference between that date and the current date
+    // divide that difference by 7 and then take the remainder to find the index of the tip
+
+    for (const user of users) {
+      const user_id = user.user_id;
+      const plan = await planCollection.findOne({ user_id });
+      if (!plan) {
+        continue;
+      }
+      const selectedDays = plan.selectedDays;
+      const userDocuments = await dataCollection.find({ user_id }).toArray();
+      let combinedActivities = [];
+
+      for (const document of userDocuments) {
+        combinedActivities.push(...document.activities);
       }
 
-      const tips = JSON.parse(data);
-      const tipsList = tips.tips;
+      const plannedActivities = [];
+      const unplannedActivities = [];
+      const missedPlannedActivities = [];
 
-      //get the first tip from the list, and remove it from the list
-      const tip = tipsList.shift();
-      //add the new list to the json file
-      tips.tips = tipsList;
-      fs.writeFile("/assets/tips.json", JSON.stringify(tips), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing file:", err);
-        }
-      });
+      const today = new Date();
+      const todayISOString = today.toISOString().split("T")[0];
 
-      const tipTitle = tip.title;
-      const tipBody = tip.description;
-      const emailBody = `Good morning!\nThank you for your participation in the Roybal study. Here is your weekly health tip: \n${tipTitle} \n${tipBody} \nBest, \nRoybal Team`;
-      const smsBody = `Good morning! Thank you for your participation in the Roybal study. Here is your weekly health tip: ${tipBody}`;
-      healthContactIdentifiers.forEach(async (identifier, i) => {
-        const identifier_type = healthContactIdentifierTypes[i];
-        try {
-          if (identifier_type === "email") {
-            await sendEmail(identifier, "Your Weekly Health Tip", emailBody);
-            console.log("Sent Email");
+      selectedDays.forEach((day) => {
+        const trimmedDay = day.trim();
+
+        if (trimmedDay <= todayISOString && trimmedDay !== todayISOString) {
+          const plannedActivityOnDay = combinedActivities.find((activity) => {
+            return (
+              activity.startDate.split("T")[0] === trimmedDay &&
+              !plannedActivities.some(
+                (plannedActivity) =>
+                  plannedActivity.startDate.split("T")[0] === trimmedDay
+              )
+            );
+          });
+
+          if (plannedActivityOnDay) {
+            plannedActivities.push(plannedActivityOnDay);
           } else {
-            await sendSMS(identifier, smsBody);
-            console.log("Sent SMS");
+            missedPlannedActivities.push(trimmedDay);
           }
-        } catch (error) {
-          console.error(`Error sending health tip to ${identifier}:`, error);
         }
       });
-    });
-  } catch (error) {
-    console.error("Error fetching data:", error);
+
+      combinedActivities.forEach((activity) => {
+        const activityDate = activity.startDate.split("T")[0];
+        if (
+          !selectedDays.includes(activityDate) &&
+          !plannedActivities.includes(activity)
+        ) {
+          unplannedActivities.push(activity);
+        }
+      });
+
+      const sunday = new Date(today.setDate(today.getDate() - today.getDay()));
+      const saturday = new Date(
+        today.setDate(today.getDate() - today.getDay() + 6)
+      );
+
+      const plannedActivitiesThisWeek = plannedActivities.filter((activity) => {
+        const activityDate = new Date(activity.startDate);
+        return (
+          (activityDate >= sunday && activityDate <= saturday) ||
+          activityDate.toISOString().split("T")[0] ===
+            sunday.toISOString().split("T")[0]
+        );
+      });
+      const plannedPoints = Math.min(plannedActivitiesThisWeek.length, 5) * 500;
+      const points = plannedPoints;
+
+      const userHealthContact = healthContacts.find(
+        (contact) => contact.identifier === user_id
+      );
+
+      if (userHealthContact) {
+        const tipIndex = points % tiplist.length;
+        const tip = tiplist[tipIndex];
+        const identifier = userHealthContact.identifier;
+        const identifier_type = userHealthContact.identifier_type;
+        const tipSMSBody = `Good Morning! Here is your health tip for today: ${tip}`;
+        const tipEmailBody = `Good Morning! \n Here is your health tip for today: ${tip} \n Best, \n Roybal Team`;
+
+        if (identifier_type === "email") {
+          await sendEmail(identifier, "Your Daily Health Tip", tipEmailBody);
+        }
+
+        if (identifier_type === "phone") {
+          await sendSMS(identifier, tipSMSBody);
+        }
+
+        console.log(`Sent health tip to ${identifier}`); 
+      }
+    }
+  }
+  catch (error) {
+    console.error("Error sending health tips:", error);
   }
 }
+
+sendHealthTips();
 
 async function processCallReminder() {
   const currentDate = new Date();
