@@ -1589,10 +1589,6 @@ cron.schedule(
     } catch (error) {
       console.error("Error sending EMA reminder:", error);
     }
-    try {
-    } catch (error) {
-      console.error("Error sending EMA reminder:", error);
-    }
   },
   null,
   true,
