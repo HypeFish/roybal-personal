@@ -92,7 +92,9 @@ async function generateCSV(user_id, participantNumber) {
           || activityName === "Run" 
           || activityName === "Hike"
           || activityName === "Bike"
-          || activityName === "Elliptical") {
+          || activityName === "Elliptical"
+          || activityName === "Outdoor Bike"
+          || activityName === "Sport") {
           plannedPoints = 500;
         }
 
