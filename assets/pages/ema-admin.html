@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="assets/css/index.css"> <!-- Added a new CSS file -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <title>Home</title>
+</head>
+
+
+<body>
+    <div class="container">
+        <h1>Survey Home Page</h1>
+
+        <div class ="add-contact">
+            <h2> Add a Contact </h2>
+            <label for="newPhone">Add Phone:</label>
+            <input type="text" id="newPhone" name="newPhone" class="new-input">
+            <button type="button" id="addContact" title="Add Plan">Add Contact</button>
+        </div>
+        <div class="remove-contact">
+            <h2>Remove a Contact</h2>
+            <label for="removePhone">Remove Phone:</label>
+            <input type="text" id="removePhone" name="removePhone" class="new-input">
+            <button type="button" id="removeContact" title="Remove Contact">Remove Contact</button>
+        </div>
+    </div>
+
+        <div class="logout ">
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+    <script src="assets/js/plan/ema-plan.js"></script>
+
+</body>
+
+
+</html>

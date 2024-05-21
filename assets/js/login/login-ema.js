@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Set flag indicating user is logged in
         localStorage.setItem("isLoggedIn", "true");
         // Redirect to the home page if login is successful
-        window.location.href = "/em";
+        window.location.href = "/ema-redirect";
       } else {
         // Display the error message if login is unsuccessful
         const error = await response.json();

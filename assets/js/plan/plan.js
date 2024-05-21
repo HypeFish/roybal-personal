@@ -246,14 +246,13 @@ async function deleteContact() {
 
   try {
     const identifier = selectedContact;
-    const response = await fetch("/admin/api/delete-contact", {
+    const response = await fetch("/admin/delete-contact", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ identifier }),
     });
-    console.log(await response.json());
     const data = await response.json();
 
     if (data.success) {
@@ -279,7 +278,7 @@ async function deleteHealthContact() {
     const identifier = encodeURIComponent(selectedContact); // Make sure to encode the identifier
 
     const response = await fetch(
-      `/admin/api/delete-health-contact/${identifier}`,
+      `/admin/delete-health-contact/${identifier}`,
       {
         method: "DELETE",
       }

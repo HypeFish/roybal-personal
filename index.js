@@ -37,6 +37,7 @@ let weeklyPointsCollection;
 let healthCollection;
 let textCollection;
 let tipsCollection;
+let surveyCollection;
 
 async function connectToDatabase() {
   try {
@@ -50,6 +51,7 @@ async function connectToDatabase() {
     healthCollection = client.db("Roybal").collection("health");
     textCollection = client.db("Roybal").collection("text");
     tipsCollection = client.db("Roybal").collection("tips");
+    surveyCollection = client.db("Roybal").collection("surveyContacts")
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -90,7 +92,7 @@ app.use((req, res, next) => {
 
 //signout route
 app.get("/logout", (req, res) => {
-  res.redirect("/login");
+  res.redirect("/home");
   req.session.destroy();
 });
 
@@ -124,11 +126,9 @@ app.post("/login", async (req, res) => {
 
     if (admin) {
       req.session.user = username;
-      req.session.isAdmin = true; // Set isAdmin property for admins
       res.redirect("/admin");
     } else if (user) {
       req.session.user = username;
-      req.session.isAdmin = false; // Set isAdmin property for regular users
       res.redirect("/user_portal"); // Redirect to the user portal
     } else {
       res
@@ -144,36 +144,26 @@ app.get("/login-ema", (req, res) => {
   res.sendFile(path.join(__dirname, "assets/pages/login-ema.html"));
 });
 
-
 app.post("/login-ema", async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   //check if the user and password are correct
   // user is ema-survey and password is TBIlab
-  if (username === "ema-survey" && password === "TBIlab") {
-    res.redirect("/em");
+
+  if (username === "survey" && password === "TBIlab") {
+    req.session.user = username
+    res.redirect("/ema");
+  } else if (username === "admin" && password === "TBIlab") {
+    req.session.user = username
+    res.redirect("/ema-admin");
   } else {
-    res.status(401).json({ success: false, error: "Invalid username or password" });
+    res
+      .status(401)
+      .json({ success: false, error: "Invalid username or password" });
   }
 });
 
-function requireAuth(req, res, next) {
-  if (req.session?.user && req.session?.isAdmin) {
-    return next(); // Regular user is authenticated, proceed to the next middleware or route handler
-  } else {
-    return res.redirect("/login"); // User is not authenticated, redirect to login page
-  }
-}
-
-function requireUserAuth(req, res, next) {
-  if (req.session?.user && !req.session?.isAdmin) {
-    return next(); // Regular user is authenticated, proceed to the next middleware or route handler
-  } else {
-    return res.redirect("/login"); // User is not authenticated or is an admin, redirect to login page
-  }
-}
-
-app.get("/user_portal", requireUserAuth, (req, res) => {
+app.get("/user_portal", (req, res) => {
   const user = req.session.user; // Use the user ID from the session
 
   usersCollection
@@ -197,26 +187,42 @@ app.get("/user_portal", requireUserAuth, (req, res) => {
 });
 
 // Serve the index page
-app.get("/admin", requireAuth, (req, res) => {
+app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 // Define a route for serving the "em.html" file
-app.get('/em', (req, res) => {
-  res.sendFile(path.join(__dirname, "assets/pages/em.html"));
+app.get("/ema", (req, res) => {
+  res.sendFile(path.join(__dirname, "assets/pages/ema.html"));
 });
+
+app.get("/ema-admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "assets/pages/ema-admin.html"));
+})
 
 app.get("/home", (req, res) => {
   res.sendFile(path.join(__dirname, "assets/pages/home.html"));
 });
 
-//If the user is not logged in, redirect to the login page
+//If the user is not logged in, redirect to the home page
 app.get("/", (req, res) => {
   if (req.session?.user) {
     if (req.session.user === "cnelab") {
       res.redirect("/admin");
     } else {
       res.redirect("/user_portal");
+    }
+  } else {
+    res.redirect("/home");
+  }
+});
+
+app.get("/ema-redirect", (req, res) => {
+  if (req.session?.user) {
+    if (req.session.user === "admin") {
+      res.redirect("/ema-admin");
+    } else {
+      res.redirect("/ema");
     }
   } else {
     res.redirect("/home");
@@ -633,6 +639,33 @@ app.post("/admin/submit-contact", async (req, res) => {
   }
 });
 
+
+
+app.post("/admin/submit-ema-contact", async (req, res) => {
+  const {contact} = req.body;
+
+  if (contact) {
+    // Check if the contact already exists
+    const existingContact = await surveyCollection.findOne({
+      contact
+    });
+    if (existingContact) {
+      res.json({ success: false, message: "Contact already exists" });
+      return;
+    }
+  }
+  try {
+    // Save the data with the desired structure,
+    await surveyCollection.insertOne({
+      contact
+    });
+    res.json({ success: true, message: "Contact submitted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
 app.get("/admin/get-contacts", async (req, res) => {
   try {
     const contacts = await planCollection.find().toArray();
@@ -750,12 +783,10 @@ app.post("/admin/api/points/:user_id", async (req, res) => {
         .status(200)
         .json({ success: true, message: "Points updated successfully" });
     } else {
-      res
-        .status(300)
-        .json({
-          success: false,
-          message: "No matching planned activity found",
-        });
+      res.status(300).json({
+        success: false,
+        message: "No matching planned activity found",
+      });
     }
   } catch (error) {
     console.error("Error updating points:", error);
@@ -812,7 +843,7 @@ app.get("/api/get_user_data", async (req, res) => {
     });
 });
 
-app.get("/api/get_weekly_points", requireUserAuth, async (req, res) => {
+app.get("/api/get_weekly_points", async (req, res) => {
   const user_id = req.session.user;
 
   try {
@@ -838,7 +869,7 @@ app.post("/api/text", (req, res) => {
 });
 
 // Delete contact route
-app.delete("/admin/api/delete-contact/:identifier", async (req, res) => {
+app.delete("/admin/delete-contact/:identifier", async (req, res) => {
   const identifier = req.params.identifier;
   console.log(identifier);
   try {
@@ -855,8 +886,25 @@ app.delete("/admin/api/delete-contact/:identifier", async (req, res) => {
   }
 });
 
+// Delete ema contact route
+app.delete("/admin/delete-ema-contact/:identifier", async (req, res) => {
+  const contact = req.params.identifier;
+  console.log(contact);
+  try {
+    const result = await surveyCollection.deleteOne({contact});
+    if (result.deletedCount > 0) {
+      res.json({ success: true, message: "Contact deleted successfully" });
+    } else {
+      res.json({ success: false, message: "No matching contact found" });
+    }
+  } catch (error) {
+    console.error("Error deleting contact:", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 // Delete health contact route
-app.delete("/admin/api/delete-health-contact/:identifier", async (req, res) => {
+app.delete("/admin/delete-health-contact/:identifier", async (req, res) => {
   const identifier = req.params.identifier;
 
   try {
@@ -872,6 +920,7 @@ app.delete("/admin/api/delete-health-contact/:identifier", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
+
 
 // Serve the error page
 app.use((req, res) => {
@@ -1322,8 +1371,8 @@ async function sendHealthTips() {
     const users = await planCollection.find().toArray();
     const plans = await planCollection.find().toArray();
     const healthContacts = await healthCollection.find().toArray();
-    const tips = await tipsCollection.find().toArray()
-    const tiplist = tips[0].tips
+    const tips = await tipsCollection.find().toArray();
+    const tiplist = tips[0].tips;
 
     // go down in order of the list depending on what week it is since the user has started
     // find the earliest date that the user has started and then find the difference between that date and the current date
@@ -1418,16 +1467,13 @@ async function sendHealthTips() {
           await sendSMS(identifier, tipSMSBody);
         }
 
-        console.log(`Sent health tip to ${identifier}`); 
+        console.log(`Sent health tip to ${identifier}`);
       }
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error sending health tips:", error);
   }
 }
-
-sendHealthTips();
 
 async function processCallReminder() {
   const currentDate = new Date();
