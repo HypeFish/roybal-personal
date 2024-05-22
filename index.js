@@ -859,10 +859,10 @@ app.get("/api/get_weekly_points", async (req, res) => {
 });
 
 app.post("/api/text", (req, res) => {
-  const { exercise, text } = req.body;
+  const {plannedExercise, performedExercise, text} = req.body;
 
   // Send the information to the database
-  textCollection.insertOne({ exercise, text });
+  textCollection.insertOne({plannedExercise, performedExercise, text});
 
   // Respond with a success message
   res.json({ message: "Data received successfully!" });

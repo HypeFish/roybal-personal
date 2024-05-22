@@ -12,24 +12,32 @@
     <div class="container">
         <h1>Exercise Motivation Survey</h1>
         <div class="input-field">
-            <h2>If you exercised today, what motivated you? If you did not exercise today, why not?</h2>
-            <p>Enter your response below:</p>
-            <input type="radio" id="exercise" name="exercise_option" value="exercise">
-            <label for="exercise">I exercised today</label>
-            <input type="radio" id="no_exercise" name="exercise_option" value="no_exercise">
-            <label for="no_exercise">I did not exercise today</label>
-            <p> Enter your response below:</p>
-            <p id="error-msg" style="color: red;"></p>
-            <input type="text" id="textbox" placeholder="Enter your response here!">
-            <button class="btn" id="submit" type="submit">Submit Entry</button>
-            <button type="submit" class="btn" >
-                <a href="/logout">Logout</a>
-            </button>
+            <h2>Exercise Plan and Performance</h2>
+            <p>Please answer the following questions:</p>
+            <label for="planned_exercise_yes">Did you plan to exercise today?</label><br>
+            <input type="radio" id="planned_exercise_yes" name="planned_exercise" value="yes">
+            <label for="planned_exercise_yes">Yes</label>
+            <input type="radio" id="planned_exercise_no" name="planned_exercise" value="no">
+            <label for="planned_exercise_no">No</label>
+            <br><br>
+            <label for="performed_exercise_yes">Did you perform your exercise today?</label><br>
+            <input type="radio" id="performed_exercise_yes" name="performed_exercise" value="yes">
+            <label for="performed_exercise_yes">Yes</label>
+            <input type="radio" id="performed_exercise_no" name="performed_exercise" value="no">
+            <label for="performed_exercise_no">No</label>
+            <br><br>
+            <label for="motivated_textbox">What motivated you to exercise?</label>
+            <textarea id="motivated_textbox" placeholder="Enter your response here!"></textarea>
+            <br><br>
+            <label for="stopped_textbox">What stopped you from exercising?</label>
+            <textarea id="stopped_textbox" placeholder="Enter your response here!"></textarea>
+            <br><br>
+            <p id="message" style="color: red;"></p>
+            <button class="btn" id="submit" type="button">Submit Entry</button>
+            <button type="button" class="btn" id="back">Logout</button>
         </div>
     </div>
-
     <script src="/assets/js/text-collect/text.js"></script>
 </body>
 
 </html>
-
