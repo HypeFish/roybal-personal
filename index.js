@@ -968,7 +968,7 @@ async function processUser(user_id) {
     const fitbitDataResponse = await collectFitbitData(user_id);
 
     if (fitbitDataResponse.status === 200) {
-      const fitbitData = fitbitDataResponse.data;
+      const fitbitData = await fitbitDataResponse.json();
       await storeDataInDatabase(user_id, fitbitData);
     } else {
       console.error(`HTTP error! status: ${fitbitDataResponse.status}`);
