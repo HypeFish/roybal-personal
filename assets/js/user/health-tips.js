@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const response = await fetch("/assets/tips.json");
       const tips = await response.json();
       console.log(tips);
-      const firstTip = tips.tips[4];
+      const firstTip = tips.tips[0];
       const tipTitle = document.getElementById("tip-title");
       tipTitle.innerText = firstTip.title;
       const tipDescription = document.getElementById("tip-description");
