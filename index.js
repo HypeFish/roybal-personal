@@ -51,7 +51,7 @@ async function connectToDatabase() {
     healthCollection = client.db("Roybal").collection("health");
     textCollection = client.db("Roybal").collection("text");
     tipsCollection = client.db("Roybal").collection("tips");
-    surveyCollection = client.db("Roybal").collection("surveyContacts")
+    surveyCollection = client.db("Roybal").collection("surveyContacts");
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -151,10 +151,10 @@ app.post("/login-ema", async (req, res) => {
   // user is ema-survey and password is TBIlab
 
   if (username === "survey" && password === "TBIlab") {
-    req.session.user = username
+    req.session.user = username;
     res.redirect("/ema");
   } else if (username === "admin" && password === "TBIlab") {
-    req.session.user = username
+    req.session.user = username;
     res.redirect("/ema-admin");
   } else {
     res
@@ -198,7 +198,7 @@ app.get("/ema", (req, res) => {
 
 app.get("/ema-admin", (req, res) => {
   res.sendFile(path.join(__dirname, "assets/pages/ema-admin.html"));
-})
+});
 
 app.get("/home", (req, res) => {
   res.sendFile(path.join(__dirname, "assets/pages/home.html"));
@@ -639,15 +639,13 @@ app.post("/admin/submit-contact", async (req, res) => {
   }
 });
 
-
-
 app.post("/admin/submit-ema-contact", async (req, res) => {
-  const {contact} = req.body;
+  const { contact } = req.body;
 
   if (contact) {
     // Check if the contact already exists
     const existingContact = await surveyCollection.findOne({
-      contact
+      contact,
     });
     if (existingContact) {
       res.json({ success: false, message: "Contact already exists" });
@@ -657,7 +655,7 @@ app.post("/admin/submit-ema-contact", async (req, res) => {
   try {
     // Save the data with the desired structure,
     await surveyCollection.insertOne({
-      contact
+      contact,
     });
     res.json({ success: true, message: "Contact submitted successfully" });
   } catch (error) {
@@ -859,10 +857,10 @@ app.get("/api/get_weekly_points", async (req, res) => {
 });
 
 app.post("/api/text", (req, res) => {
-  const {plannedExercise, performedExercise, text} = req.body;
+  const { plannedExercise, performedExercise, text } = req.body;
 
   // Send the information to the database
-  textCollection.insertOne({plannedExercise, performedExercise, text});
+  textCollection.insertOne({ plannedExercise, performedExercise, text });
 
   // Respond with a success message
   res.json({ message: "Data received successfully!" });
@@ -891,7 +889,7 @@ app.delete("/admin/delete-ema-contact/:identifier", async (req, res) => {
   const contact = req.params.identifier;
   console.log(contact);
   try {
-    const result = await surveyCollection.deleteOne({contact});
+    const result = await surveyCollection.deleteOne({ contact });
     if (result.deletedCount > 0) {
       res.json({ success: true, message: "Contact deleted successfully" });
     } else {
@@ -920,7 +918,6 @@ app.delete("/admin/delete-health-contact/:identifier", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
-
 
 // Serve the error page
 app.use((req, res) => {
@@ -1022,9 +1019,9 @@ async function processPlan(plan) {
   const identifier = plan.identifier;
 
   console.log(`Sending notification to ${identifier}...`);
-  const emailBody = `Good morning! \n Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 500 points that will then turn into compensation! \n Best, \n Roybal Team`;
+  const emailBody = "This is a reminder that you have a planned walk today. Have a great day! \n Best, \n TBI Lab";
   const planSMSBody =
-    "Good morning! Thank you for your participation in the Roybal study. Here is your reminder that you have one planned walk today! If completed you will receive 500 points that will then turn into compensation!";
+    "This is a reminder that you have a planned walk today. Have a great day!"
   try {
     if (identifier_type === "email") {
       await sendEmail(identifier, "Your Planned Activity Today", emailBody);
@@ -1042,9 +1039,9 @@ async function sendReminder(plan) {
 
   console.log(`Sending reminder to ${identifier}...`);
   const reminderSMSBody =
-    "Good Morning! Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking!";
+    "Good Morning! This is a reminder to open your Fit Bit app to sync all of your walking data."
   const reminderEmailBody =
-    "Good Morning! \n Here is your reminder to open the Fit Bit app on your phone so all data syncing occurs and you get your points for walking! \nBest, \n Roybal Team";
+    "Good Morning! \n This is a reminder to open your Fit Bit app to sync all of your walking data. \nBest, \n TBI Lab";
   try {
     if (identifier_type === "email") {
       await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
@@ -1059,9 +1056,9 @@ async function sendReminder(plan) {
 async function sendEmaReminder(identifier, identifier_type) {
   console.log(`Sending ema reminder to ${identifier}...`);
   const emaReminderSMSBody =
-    "Hello! Here is your reminder to complete your exercise survey today! Please log in to the website today! Please go to the website at https://roybal.vercel.app/ to complete your survey!";
+    "Hello! Here is your reminder to complete your exercise survey today! Please log in to the website today! Please go to the website at https://tbilab.vercel.app/ to complete your survey!";
   const emaReminderEmailBody =
-    "Hello! \n Here is your reminder to complete your exercise survey today! Please log in to the website today Please go to the website at https://roybal.vercel.app/ to complete your survey! \n Best, \n Roybal Team";
+    "Hello! \n Here is your reminder to complete your exercise survey today! Please log in to the website today Please go to the website at https://tbilab.vercel.app/ to complete your survey! \n Best, \n TBI Lab";
   try {
     if (identifier_type === "email") {
       await sendEmail(identifier, "Daily Survey", emaReminderEmailBody);
@@ -1457,7 +1454,7 @@ async function sendHealthTips() {
         const identifier = userHealthContact.identifier;
         const identifier_type = userHealthContact.identifier_type;
         const tipSMSBody = `Good Morning! Here is your health tip for today: ${tip}`;
-        const tipEmailBody = `Good Morning! \n Here is your health tip for today: ${tip} \n Best, \n Roybal Team`;
+        const tipEmailBody = `Good Morning! \n Here is your health tip for today: ${tip} \n Best, \n TBI Lab`;
 
         if (identifier_type === "email") {
           await sendEmail(identifier, "Your Daily Health Tip", tipEmailBody);
