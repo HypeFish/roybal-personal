@@ -1613,7 +1613,7 @@ async function sendSurveyReminder() {
   const surveyCollection = client.db("Roybal").collection("surveyContacts");
 
   // Fetch the text message to be sent
-  const textMessage = "Remember to log in and fill out today's survey!"
+  const textMessage = "Remember to log in and fill out today's survey at https://tbilab.vercal.app!"
   if (!textMessage) {
     console.log("No EMA reminder message found.");
     return;
@@ -1639,7 +1639,7 @@ async function sendSurveyReminder() {
 // Task 5: EMA Reminder
 // Fifth task. Runs at Noon every day
 cron.schedule(
-  "0 12 * * *",
+  "0 19 * * *",
   async () => {
     console.log("Running scheduled EMA reminder task...");
     try {
