@@ -1631,7 +1631,6 @@ async function sendSurveyReminder() {
   // Send SMS to each contact
   for (const contact of contacts) {
     let identifier = contact.contact
-
     await sendSMS(identifier, textMessage);
   }
 
