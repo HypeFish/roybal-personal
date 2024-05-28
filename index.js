@@ -1610,7 +1610,6 @@ cron.schedule(
 );
 
 async function sendSurveyReminder() {
-  await client.connect();
   const surveyCollection = client.db("Roybal").collection("surveyContacts");
 
   // Fetch the text message to be sent
@@ -1640,10 +1639,11 @@ async function sendSurveyReminder() {
 // Task 5: EMA Reminder
 // Fifth task. Runs at Noon every day
 cron.schedule(
-  "21 12 * * *",
+  "0 12 * * *",
   async () => {
     console.log("Running scheduled EMA reminder task...");
     try {
+      await client.connect();
       await sendSurveyReminder()
       console.log("EMA reminder sent to all contacts.");
     } catch (error) {
