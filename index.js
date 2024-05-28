@@ -1630,8 +1630,9 @@ async function sendSurveyReminder() {
 
   // Send SMS to each contact
   for (const contact of contacts) {
-    console.log(contact)
-    // await sendSMS(contact, textMessage);
+    let identifier = contact.contact
+    console.log(identifier)
+    await sendSMS(identifier, textMessage);
   }
 
 }
@@ -1657,4 +1658,4 @@ cron.schedule(
   "America/New_York"
 );
 
-
+await sendSurveyReminder()
