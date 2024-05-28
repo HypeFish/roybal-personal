@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitBtn = document.getElementById("submit");
   const errorMsg = document.getElementById("error-msg");
 
+  // get ID and get date
+  
   // Initial state of textboxes
   motivatedTextbox.disabled = true;
   stoppedTextbox.disabled = true;
