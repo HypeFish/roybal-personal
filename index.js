@@ -1657,4 +1657,3 @@ cron.schedule(
   "America/New_York"
 );
 
-await sendSurveyReminder()
