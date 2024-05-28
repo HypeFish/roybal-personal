@@ -1610,27 +1610,41 @@ cron.schedule(
 );
 
 // Task 5: EMA Reminder
+// Task 5: EMA Reminder
 // Fifth task. Runs at Noon every day
 cron.schedule(
   "0 12 * * *",
   async () => {
     console.log("Running scheduled EMA reminder task...");
-    let db = client.db("Roybal");
-    let usersCollection = db.collection("users");
-    let planCollection = db.collection("plan");
     try {
-      const users = await usersCollection.find().toArray();
-      for (const user of users) {
-        const user_id = user.user_id;
-        const plan = await planCollection.findOne({ user_id });
-        if (plan) {
-          const identifier = plan.identifier;
-          const identifier_type = plan.identifier_type;
-          await sendEmaReminder(identifier, identifier_type);
-        }
+      await client.connect();
+      const textCollection = client.db("Roybal").collection("text");
+      const surveyCollection = client.db("Roybal").collection("surveyContacts");
+
+      // Fetch the text message to be sent
+      const textMessage = await textCollection.findOne({ type: "EMA Reminder" });
+      if (!textMessage) {
+        console.log("No EMA reminder message found.");
+        return;
       }
+
+      // Fetch the list of contacts
+      const contacts = await surveyCollection.find().toArray();
+      if (!contacts || contacts.length === 0) {
+        console.log("No contacts found to send EMA reminder.");
+        return;
+      }
+
+      // Send SMS to each contact
+      for (const contact of contacts) {
+        await sendSMS(contact.phone, textMessage.body);
+      }
+
+      console.log("EMA reminder sent to all contacts.");
     } catch (error) {
       console.error("Error sending EMA reminder:", error);
+    } finally {
+      await client.close();
     }
   },
   null,
