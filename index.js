@@ -864,9 +864,12 @@ app.get("/api/get_weekly_points", async (req, res) => {
 
 app.post("/api/text", (req, res) => {
   const { plannedExercise, performedExercise, text } = req.body;
+  const id = req.session.user;
+  const today = new Date();
+  const todayISOString = today.toISOString().split("T")[0];
 
   // Send the information to the database
-  textCollection.insertOne({ plannedExercise, performedExercise, text });
+  textCollection.insertOne({ plannedExercise, performedExercise, text, todayISOString, id });
 
   // Respond with a success message
   res.json({ message: "Data received successfully!" });
