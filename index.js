@@ -1636,7 +1636,6 @@ async function sendSurveyReminder() {
 }
 
 // Task 5: EMA Reminder
-// Task 5: EMA Reminder
 // Fifth task. Runs at Noon every day
 cron.schedule(
   "0 19 * * *",
