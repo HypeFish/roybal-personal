@@ -869,7 +869,7 @@ app.post("/api/text", (req, res) => {
   const todayISOString = today.toISOString().split("T")[0];
 
   // Send the information to the database
-  textCollection.insertOne({ plannedExercise, performedExercise, text, todayISOString, id });
+  textCollection.insertOne({id, date: todayISOString, plannedExercise, performedExercise, text});
 
   // Respond with a success message
   res.json({ message: "Data received successfully!" });
