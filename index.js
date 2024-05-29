@@ -146,11 +146,15 @@ app.get("/login-ema", (req, res) => {
 
 app.post("/login-ema", async (req, res) => {
   const username = req.body.username;
-  const password = req.body.password;
+  
   //check if the user and password are correct
   // user is ema-survey and password is TBIlab
 
-  if (username === "survey" && password === "TBIlab") {
+  let user = surveyCollection.findOne({
+    id: username
+  })
+
+  if (user) {
     req.session.user = username;
     res.redirect("/ema");
   } else if (username === "admin" && password === "TBIlab") {
@@ -202,6 +206,7 @@ app.get("/ema-admin", (req, res) => {
 
 app.get("/home", (req, res) => {
   res.sendFile(path.join(__dirname, "assets/pages/home.html"));
+  req.session.destroy()
 });
 
 //If the user is not logged in, redirect to the home page
@@ -640,7 +645,7 @@ app.post("/admin/submit-contact", async (req, res) => {
 });
 
 app.post("/admin/submit-ema-contact", async (req, res) => {
-  const { contact } = req.body;
+  const { contact, id } = req.body;
 
   if (contact) {
     // Check if the contact already exists
@@ -656,6 +661,7 @@ app.post("/admin/submit-ema-contact", async (req, res) => {
     // Save the data with the desired structure,
     await surveyCollection.insertOne({
       contact,
+      id
     });
     res.json({ success: true, message: "Contact submitted successfully" });
   } catch (error) {

@@ -10,15 +10,17 @@
     <title>Home</title>
 </head>
 
-
 <body>
     <div class="container">
         <h1>Survey Home Page</h1>
 
-        <div class ="add-contact">
-            <h2> Add a Contact </h2>
+        <div class="add-contact">
+            <h2>Add a Contact</h2>
             <label for="newPhone">Add Phone:</label>
             <input type="text" id="newPhone" name="newPhone" class="new-input">
+            <label for="newId">Generated ID:</label>
+            <input type="text" id="newId" name="newId" class="new-input" readonly>
+            <button type="button" id="generateId" title="Generate ID">Generate ID</button>
             <button type="button" id="addContact" title="Add Plan">Add Contact</button>
         </div>
         <div class="remove-contact">
@@ -29,13 +31,11 @@
         </div>
     </div>
 
-        <div class="logout ">
-            <a href="/logout">Logout</a>
-        </div>
+    <div class="logout">
+        <a href="/logout">Logout</a>
     </div>
+
     <script src="assets/js/plan/ema-plan.js"></script>
-
 </body>
-
 
 </html>
