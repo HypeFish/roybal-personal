@@ -1053,23 +1053,6 @@ async function sendReminder(plan) {
   }
 }
 
-async function sendEmaReminder(identifier, identifier_type) {
-  console.log(`Sending ema reminder to ${identifier}...`);
-  const emaReminderSMSBody =
-    "Hello! Here is your reminder to complete your exercise survey today! Please log in to the website today! Please go to the website at https://tbilab.vercel.app/ to complete your survey!";
-  const emaReminderEmailBody =
-    "Hello! \n Here is your reminder to complete your exercise survey today! Please log in to the website today Please go to the website at https://tbilab.vercel.app/ to complete your survey! \n Best, \n TBI Lab";
-  try {
-    if (identifier_type === "email") {
-      await sendEmail(identifier, "Daily Survey", emaReminderEmailBody);
-    } else {
-      await sendSMS(identifier, emaReminderSMSBody);
-    }
-  } catch (error) {
-    console.error(`Error sending reminder to ${identifier}:`, error);
-  }
-}
-
 // Function to collect Fitbit data
 async function collectFitbitData(user_id) {
   // make sure the database is connected
@@ -1495,9 +1478,9 @@ async function sendCallReminder(plan) {
   const identifier = plan.identifier;
 
   const reminderSMSBody =
-    "Good Morning! Here is your reminder that the Roybal Team will be calling you today!";
+    "Good Morning! Here is your reminder that the TBI Lab will be calling you today!";
   const reminderEmailBody =
-    "Good Morning! \n Here is your reminder that the Roybal Team will be calling you today! \n Best, \n Roybal Team";
+    "Good Morning! \n Here is your reminder that the TBI Lab will be calling you today! \n Best, \n TBI Lab";
   try {
     if (identifier_type === "email") {
       await sendEmail(identifier, "Your Daily Reminder", reminderEmailBody);
