@@ -146,12 +146,14 @@ app.get("/login-ema", (req, res) => {
 
 app.post("/login-ema", async (req, res) => {
   const username = req.body.username;
+  const password = req.body.password;
   
   //check if the user and password are correct
   // user is ema-survey and password is TBIlab
 
-  let user = surveyCollection.findOne({
-    id: username
+  let user = await surveyCollection.findOne({
+    id: username,
+    password
   })
 
   if (user) {
@@ -645,7 +647,7 @@ app.post("/admin/submit-contact", async (req, res) => {
 });
 
 app.post("/admin/submit-ema-contact", async (req, res) => {
-  const { contact, id } = req.body;
+  const { contact, id, password } = req.body;
 
   if (contact) {
     // Check if the contact already exists
@@ -661,7 +663,8 @@ app.post("/admin/submit-ema-contact", async (req, res) => {
     // Save the data with the desired structure,
     await surveyCollection.insertOne({
       contact,
-      id
+      id, 
+      password
     });
     res.json({ success: true, message: "Contact submitted successfully" });
   } catch (error) {
