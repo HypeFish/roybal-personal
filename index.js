@@ -1070,6 +1070,9 @@ async function collectFitbitData(user_id) {
   // make sure the database is connected
   const db = client.db("Roybal");
   const participantsCollection = db.collection("participants");
+  const yesterday = new Date(new Date().setDate(new Date().getDate() - 1))
+  .toISOString()
+  .slice(0, 10);
 
   try {
     const tokensResponse = await participantsCollection.findOne({
@@ -1081,10 +1084,6 @@ async function collectFitbitData(user_id) {
     }
 
     const access_token = tokensResponse.access_token;
-
-    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1))
-      .toISOString()
-      .slice(0, 10);
     const fitbitDataResponse = await fetch(
       `https://api.fitbit.com/1/user/${user_id}/activities/date/${yesterday}.json`,
       {
@@ -1507,7 +1506,7 @@ async function sendCallReminder(plan) {
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
 cron.schedule(
-  "55 8 * * *",
+  "10 16 * * *",
   async () => {
     console.log("Running scheduled data fetching task...");
     try {
@@ -1650,4 +1649,3 @@ cron.schedule(
   true,
   "America/New_York"
 );
-
