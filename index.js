@@ -937,7 +937,7 @@ app.use((req, res) => {
 });
 
 // Start the server
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 20048;
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
@@ -1506,7 +1506,7 @@ async function sendCallReminder(plan) {
 // Task 1: Data Fetching
 // Second task. Runs at 8:55 AM every day
 cron.schedule(
-  "10 16 * * *",
+  "55 8 * * *",
   async () => {
     console.log("Running scheduled data fetching task...");
     try {
