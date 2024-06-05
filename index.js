@@ -1607,7 +1607,7 @@ async function sendSurveyReminder() {
   const surveyCollection = client.db("Roybal").collection("surveyContacts");
 
   // Fetch the text message to be sent
-  const textMessage = "Remember to log in and fill out today's survey at https://tbilab.vercal.app!"
+  const textMessage = "Remember to log in and fill out today's survey at https://tbilab.vercel.app!"
   if (!textMessage) {
     console.log("No EMA reminder message found.");
     return;
