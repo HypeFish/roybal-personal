@@ -34,7 +34,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const weekNumber = Math.floor((currentDate - startDate) / (7 * 24 * 60 * 60 * 1000));
 
       // Get the tip index based on the week number and total tips available
-      const tipIndex = weekNumber % tips.tips.length;
+      let tipIndex = weekNumber % tips.tips.length
+      if (isNaN(tipIndex) ||tipIndex < 0) {
+        tipIndex = 0; // Set to the first tip if the index is negative
+      }
+      console.log(tipIndex)
       const currentTip = tips.tips[tipIndex];
 
       // Update the HTML with the current tip
