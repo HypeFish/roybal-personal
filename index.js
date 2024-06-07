@@ -23,6 +23,7 @@ const clientTwilio = require("twilio")(accountSid, authToken);
 const fs = require("fs");
 const { Twilio } = require("twilio");
 const { send } = require("process");
+const { start } = require("repl");
 
 let access_token;
 let refresh_token;
@@ -410,6 +411,9 @@ app.get("/auth/callback", async (req, res) => {
 
     //check if the user is in the user collection
     const user = await usersCollection.findOne({ user_id });
+    const today = new Date()
+    const todayString =  today.toISOString().split("T")[0]
+
     if (!user) {
       await usersCollection.insertOne({
         user_id,
@@ -417,6 +421,7 @@ app.get("/auth/callback", async (req, res) => {
         group: state,
         user: user_id,
         pass: "cnelab",
+        start_date: todayString
       });
     }
   } catch (error) {
@@ -837,6 +842,7 @@ app.get("/api/get_user_data", async (req, res) => {
             //get the dates of the missed planned activities
             missedPlannedActivities: plan.missedPlannedActivities,
             callingDays: plan.callingDays,
+            start_date: user.start_date
           };
         }
         res.json(data);
@@ -1510,7 +1516,9 @@ cron.schedule(
   async () => {
     console.log("Running scheduled data fetching task...");
     try {
+      await client.connect()
       await fetchDataAndProcess();
+      await fetchDataAndProcess()
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -1527,6 +1535,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled plan processing task...");
     try {
+      await client.connect()
       await processPlans();
     } catch (error) {
       console.error("Error processing plans:", error);
@@ -1543,6 +1552,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled call reminder task...");
     try {
+      await client.connect()
       await processCallReminder();
     } catch (error) {
       console.error("Error sending call reminder:", error);
@@ -1559,6 +1569,7 @@ cron.schedule(
   async () => {
     console.log("Sending Reminder");
     try {
+      await client.connect()
       await processReminder();
     } catch (error) {
       console.error("Error sending reminder", error);
@@ -1576,6 +1587,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled points calculation task...");
     try {
+      await client.connect()
       await processPoints();
     } catch (error) {
       console.error("Error calculating and storing points:", error);
@@ -1593,6 +1605,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled health tips task...");
     try {
+      await client.connect()
       await sendHealthTips();
     } catch (error) {
       console.error("Error sending health tips:", error);
