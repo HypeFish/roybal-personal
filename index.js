@@ -43,7 +43,7 @@ let surveyCollection;
 const port = 50000;
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on http://localhost:${port} at ${new Date().toUTCString()}`);
   console.log("Press Ctrl+C to quit.");
 });
 
