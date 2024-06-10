@@ -23,7 +23,6 @@ const clientTwilio = require("twilio")(accountSid, authToken);
 const fs = require("fs");
 const { Twilio } = require("twilio");
 const { send } = require("process");
-const { start } = require("repl");
 
 let access_token;
 let refresh_token;
@@ -39,6 +38,14 @@ let healthCollection;
 let textCollection;
 let tipsCollection;
 let surveyCollection;
+
+// Start the server
+const port = 50000;
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+  console.log("Press Ctrl+C to quit.");
+});
 
 async function connectToDatabase() {
   try {
@@ -411,9 +418,6 @@ app.get("/auth/callback", async (req, res) => {
 
     //check if the user is in the user collection
     const user = await usersCollection.findOne({ user_id });
-    const today = new Date();
-    const todayString = today.toISOString().split("T")[0];
-
     if (!user) {
       await usersCollection.insertOne({
         user_id,
@@ -421,7 +425,6 @@ app.get("/auth/callback", async (req, res) => {
         group: state,
         user: user_id,
         pass: "cnelab",
-        start_date: todayString,
       });
     }
   } catch (error) {
@@ -842,7 +845,6 @@ app.get("/api/get_user_data", async (req, res) => {
             //get the dates of the missed planned activities
             missedPlannedActivities: plan.missedPlannedActivities,
             callingDays: plan.callingDays,
-            start_date: user.start_date,
           };
         }
         res.json(data);
@@ -946,14 +948,6 @@ app.delete("/admin/delete-health-contact/:identifier", async (req, res) => {
 // Serve the error page
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "404.html"));
-});
-
-// Start the server
-const port = process.env.PORT || 20048;
-
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-  console.log("Press Ctrl+C to quit.");
 });
 
 // Cron stuff
@@ -1371,7 +1365,9 @@ async function sendHealthTips() {
     const planCollection = db.collection("plan");
 
     const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split("T")[0];
     const users = await planCollection.find().toArray();
+    const plans = await planCollection.find().toArray();
     const healthContacts = await healthCollection.find().toArray();
     const tips = await tipsCollection.find().toArray();
     const tiplist = tips[0].tips;
