@@ -1364,10 +1364,7 @@ async function sendHealthTips() {
     const dataCollection = db.collection("data");
     const planCollection = db.collection("plan");
 
-    const currentDate = new Date();
-    const formattedDate = currentDate.toISOString().split("T")[0];
     const users = await planCollection.find().toArray();
-    const plans = await planCollection.find().toArray();
     const healthContacts = await healthCollection.find().toArray();
     const tips = await tipsCollection.find().toArray();
     const tiplist = tips[0].tips;
