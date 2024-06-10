@@ -148,14 +148,14 @@ app.get("/login-ema", (req, res) => {
 app.post("/login-ema", async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
-  
+
   //check if the user and password are correct
   // user is ema-survey and password is TBIlab
 
   let user = await surveyCollection.findOne({
     id: username,
-    password
-  })
+    password,
+  });
 
   if (user) {
     req.session.user = username;
@@ -209,7 +209,7 @@ app.get("/ema-admin", (req, res) => {
 
 app.get("/home", (req, res) => {
   res.sendFile(path.join(__dirname, "assets/pages/home.html"));
-  req.session.destroy()
+  req.session.destroy();
 });
 
 //If the user is not logged in, redirect to the home page
@@ -411,8 +411,8 @@ app.get("/auth/callback", async (req, res) => {
 
     //check if the user is in the user collection
     const user = await usersCollection.findOne({ user_id });
-    const today = new Date()
-    const todayString =  today.toISOString().split("T")[0]
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0];
 
     if (!user) {
       await usersCollection.insertOne({
@@ -421,7 +421,7 @@ app.get("/auth/callback", async (req, res) => {
         group: state,
         user: user_id,
         pass: "cnelab",
-        start_date: todayString
+        start_date: todayString,
       });
     }
   } catch (error) {
@@ -668,8 +668,8 @@ app.post("/admin/submit-ema-contact", async (req, res) => {
     // Save the data with the desired structure,
     await surveyCollection.insertOne({
       contact,
-      id, 
-      password
+      id,
+      password,
     });
     res.json({ success: true, message: "Contact submitted successfully" });
   } catch (error) {
@@ -842,7 +842,7 @@ app.get("/api/get_user_data", async (req, res) => {
             //get the dates of the missed planned activities
             missedPlannedActivities: plan.missedPlannedActivities,
             callingDays: plan.callingDays,
-            start_date: user.start_date
+            start_date: user.start_date,
           };
         }
         res.json(data);
@@ -878,7 +878,13 @@ app.post("/api/text", (req, res) => {
   const todayISOString = today.toISOString().split("T")[0];
 
   // Send the information to the database
-  textCollection.insertOne({id, date: todayISOString, plannedExercise, performedExercise, text});
+  textCollection.insertOne({
+    id,
+    date: todayISOString,
+    plannedExercise,
+    performedExercise,
+    text,
+  });
 
   // Respond with a success message
   res.json({ message: "Data received successfully!" });
@@ -1037,9 +1043,10 @@ async function processPlan(plan) {
   const identifier = plan.identifier;
 
   console.log(`Sending notification to ${identifier}...`);
-  const emailBody = "This is a reminder that you have a planned walk today. Have a great day! \n Best, \n TBI Lab";
+  const emailBody =
+    "This is a reminder that you have a planned walk today. Have a great day! \n Best, \n TBI Lab";
   const planSMSBody =
-    "This is a reminder that you have a planned walk today. Have a great day!"
+    "This is a reminder that you have a planned walk today. Have a great day!";
   try {
     if (identifier_type === "email") {
       await sendEmail(identifier, "Your Planned Activity Today", emailBody);
@@ -1057,7 +1064,7 @@ async function sendReminder(plan) {
 
   console.log(`Sending reminder to ${identifier}...`);
   const reminderSMSBody =
-    "Good Morning! This is a reminder to open your Fit Bit app to sync all of your walking data."
+    "Good Morning! This is a reminder to open your Fit Bit app to sync all of your walking data.";
   const reminderEmailBody =
     "Good Morning! \n This is a reminder to open your Fit Bit app to sync all of your walking data. \nBest, \n TBI Lab";
   try {
@@ -1077,8 +1084,8 @@ async function collectFitbitData(user_id) {
   const db = client.db("Roybal");
   const participantsCollection = db.collection("participants");
   const yesterday = new Date(new Date().setDate(new Date().getDate() - 1))
-  .toISOString()
-  .slice(0, 10);
+    .toISOString()
+    .slice(0, 10);
 
   try {
     const tokensResponse = await participantsCollection.findOne({
@@ -1364,9 +1371,7 @@ async function sendHealthTips() {
     const planCollection = db.collection("plan");
 
     const currentDate = new Date();
-    const formattedDate = currentDate.toISOString().split("T")[0];
     const users = await planCollection.find().toArray();
-    const plans = await planCollection.find().toArray();
     const healthContacts = await healthCollection.find().toArray();
     const tips = await tipsCollection.find().toArray();
     const tiplist = tips[0].tips;
@@ -1516,9 +1521,9 @@ cron.schedule(
   async () => {
     console.log("Running scheduled data fetching task...");
     try {
-      await client.connect()
+      await client.connect();
       await fetchDataAndProcess();
-      await fetchDataAndProcess()
+      await fetchDataAndProcess();
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -1535,7 +1540,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled plan processing task...");
     try {
-      await client.connect()
+      await client.connect();
       await processPlans();
     } catch (error) {
       console.error("Error processing plans:", error);
@@ -1552,7 +1557,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled call reminder task...");
     try {
-      await client.connect()
+      await client.connect();
       await processCallReminder();
     } catch (error) {
       console.error("Error sending call reminder:", error);
@@ -1569,7 +1574,7 @@ cron.schedule(
   async () => {
     console.log("Sending Reminder");
     try {
-      await client.connect()
+      await client.connect();
       await processReminder();
     } catch (error) {
       console.error("Error sending reminder", error);
@@ -1587,7 +1592,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled points calculation task...");
     try {
-      await client.connect()
+      await client.connect();
       await processPoints();
     } catch (error) {
       console.error("Error calculating and storing points:", error);
@@ -1605,7 +1610,7 @@ cron.schedule(
   async () => {
     console.log("Running scheduled health tips task...");
     try {
-      await client.connect()
+      await client.connect();
       await sendHealthTips();
     } catch (error) {
       console.error("Error sending health tips:", error);
@@ -1620,7 +1625,8 @@ async function sendSurveyReminder() {
   const surveyCollection = client.db("Roybal").collection("surveyContacts");
 
   // Fetch the text message to be sent
-  const textMessage = "Remember to log in and fill out today's survey at https://tbilab.vercel.app!"
+  const textMessage =
+    "Remember to log in and fill out today's survey at https://tbilab.vercel.app!";
   if (!textMessage) {
     console.log("No EMA reminder message found.");
     return;
@@ -1636,10 +1642,9 @@ async function sendSurveyReminder() {
 
   // Send SMS to each contact
   for (const contact of contacts) {
-    let identifier = contact.contact
+    let identifier = contact.contact;
     await sendSMS(identifier, textMessage);
   }
-
 }
 
 // Task 5: EMA Reminder
@@ -1650,7 +1655,7 @@ cron.schedule(
     console.log("Running scheduled EMA reminder task...");
     try {
       await client.connect();
-      await sendSurveyReminder()
+      await sendSurveyReminder();
       console.log("EMA reminder sent to all contacts.");
     } catch (error) {
       console.error("Error sending EMA reminder:", error);
