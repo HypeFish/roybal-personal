@@ -191,12 +191,12 @@ app.get("/user_portal", (req, res) => {
           res.sendFile(path.join(__dirname, "assets/pages/user.html"));
         }
       } else {
-        res.status(404).sendFile(path.join(__dirname, "404.html"));
+        res.status(200).sendFile(path.join(__dirname, "home.html"));
       }
     })
     .catch((error) => {
       console.error("Error fetching user:", error);
-      res.status(500).sendFile(path.join(__dirname, "500.html"));
+      res.status(500).sendFile(path.join(__dirname, "404.html"));
     });
 });
 
