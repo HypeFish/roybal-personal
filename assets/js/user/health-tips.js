@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const startDate = new Date(data.start_date); // assuming start_date is available in user data
       const currentDate = new Date();
       const weekNumber = Math.floor((currentDate - startDate) / (7 * 24 * 60 * 60 * 1000));
-
+      console.log(weekNumber)
       // Get the tip index based on the week number and total tips available
       let tipIndex = weekNumber % tips.tips.length
       if (isNaN(tipIndex) ||tipIndex < 0) {

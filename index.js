@@ -823,6 +823,7 @@ app.get("/api/get_user_data", async (req, res) => {
           data = {
             user_id: user.user_id,
             number: user.number,
+            start_date: user.start_date,
             selectedDays: [],
             completedPlannedActivities: [],
             completedUnplannedActivities: [],
@@ -833,6 +834,7 @@ app.get("/api/get_user_data", async (req, res) => {
           data = {
             user_id: user.user_id,
             number: user.number,
+            start_date: user.start_date,
             selectedDays: plan.selectedDays,
             //get the dates of the completed planned activities
             completedPlannedActivities: plan.completedPlannedActivities.map(
