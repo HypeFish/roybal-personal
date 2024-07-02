@@ -21,6 +21,7 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require("twilio")(accountSid, authToken);
 
+
 let access_token;
 let refresh_token;
 let user_id;
@@ -40,9 +41,7 @@ let surveyCollection;
 const port = 50000;
 
 app.listen(port, () => {
-  console.log(
-    `Server running on http://localhost:${port} at ${new Date().toUTCString()}`
-  );
+  console.log(`Server running on http://localhost:${port} at ${new Date().toUTCString()}`);
   console.log("Press Ctrl+C to quit.");
 });
 
@@ -283,11 +282,10 @@ app.post("/api/save_survey_contact", async (req, res) => {
 
   try {
     const newContact = {
-      id: username,
-      password,
-      email,
-      contact: phone,
-    };
+       id: username, 
+       password,
+       email,
+       contact: phone };
     await surveyCollection.insertOne(newContact);
     res.status(200).send("Survey contact saved successfully.");
   } catch (error) {
