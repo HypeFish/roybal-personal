@@ -297,7 +297,7 @@ app.post("/api/save_survey_contact", async (req, res) => {
       from: process.env.EMAIL,
       to: email,
       subject: 'Welcome to Our Platform',
-      text: `Hello ${username},\n\nThank you for registering on our platform! Here are your login details:\n\nUsername: ${username}\nPassword: ${password}\n\nYou can access the platform here: ${platformLink}\n\nBest regards,\nYour Company`
+      text: `Hello ${username},\n\nThank you for registering on our platform! Here are your login details:\n\nUsername: ${username}\nPassword: ${password}\n\nYou can access the platform here: ${platformLink}\n\nBest regards,\nTBI Lab`
     };
     await transporter.sendMail(mailOptions);
 
