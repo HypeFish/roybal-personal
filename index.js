@@ -20,9 +20,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const clientTwilio = require("twilio")(accountSid, authToken);
-const fs = require("fs");
-const { Twilio } = require("twilio");
-const { send } = require("process");
 
 let access_token;
 let refresh_token;
@@ -43,7 +40,9 @@ let surveyCollection;
 const port = 50000;
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port} at ${new Date().toUTCString()}`);
+  console.log(
+    `Server running on http://localhost:${port} at ${new Date().toUTCString()}`
+  );
   console.log("Press Ctrl+C to quit.");
 });
 
@@ -273,6 +272,29 @@ async function storeDataInDatabase(user_id, fitbitData) {
     throw error; // Rethrow the error so it can be caught by the caller
   }
 }
+
+// Route to handle data from Qualtrics survey
+app.post("/api/save_survey_contact", async (req, res) => {
+  const { username, password, email, phone } = req.body;
+
+  if (!username || !password || !email || !phone) {
+    return res.status(400).send("All fields are required.");
+  }
+
+  try {
+    const newContact = {
+      id: username,
+      password,
+      email,
+      contact: phone,
+    };
+    await surveyCollection.insertOne(newContact);
+    res.status(200).send("Survey contact saved successfully.");
+  } catch (error) {
+    console.error("Error saving survey contact:", error);
+    res.status(500).send("Internal Server Error.");
+  }
+});
 
 // Add a new route to refresh the access token
 app.post("/admin/api/refresh-token/:user_id", async (req, res) => {
