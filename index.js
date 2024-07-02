@@ -297,13 +297,13 @@ app.post("/api/save_survey_contact", async (req, res) => {
       from: process.env.EMAIL,
       to: email,
       subject: 'Welcome to Our Platform',
-      text: `Hello ${username},\n\nThank you for registering on our platform! Here are your login details:\n\nUsername: ${username}\nPassword: ${password}\n\nYou can access the platform here: ${platformLink}\n\nBest regards,\nTBI Lab`
+      text: `Hello ${username},\n\nThank you for registering on our platform! Here are your login details:\n\nUsername: ${username}\nPassword: ${password}\n\nYou can access the platform here: ${platformLink}. Click on the Survey page button at the home page.\n\nBest regards,\nTBI Lab`
     };
     await transporter.sendMail(mailOptions);
 
     // Send SMS
     await clientTwilio.messages.create({
-      body: `Hello ${username}, thank you for registering on our platform! Here are your login details:\nUsername: ${username}\nPassword: ${password}\nAccess the platform here: ${platformLink}`,
+      body: `Hello ${username}, thank you for registering on our platform! Here are your login details:\nUsername: ${username}\nPassword: ${password}\nAccess the platform here: ${platformLink}. Click on the Survey page button at the home page.`,
       from: process.env.TWILIO_NUMBER,
       to: phone
     });
