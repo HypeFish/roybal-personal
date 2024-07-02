@@ -273,6 +273,7 @@ async function storeDataInDatabase(user_id, fitbitData) {
 }
 
 // Route to handle data from Qualtrics survey
+// Route to handle data from Qualtrics survey
 app.post("/api/save_survey_contact", async (req, res) => {
   const { username, password, email, phone } = req.body;
 
@@ -282,12 +283,32 @@ app.post("/api/save_survey_contact", async (req, res) => {
 
   try {
     const newContact = {
-       id: username, 
-       password,
-       email,
-       contact: phone };
+      id: username,
+      password,
+      email,
+      contact: phone
+    };
     await surveyCollection.insertOne(newContact);
-    res.status(200).send("Survey contact saved successfully.");
+
+    const platformLink = "https://tbilab.vercel.app";
+
+    // Send Email
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: email,
+      subject: 'Welcome to Our Platform',
+      text: `Hello ${username},\n\nThank you for registering on our platform! Here are your login details:\n\nUsername: ${username}\nPassword: ${password}\n\nYou can access the platform here: ${platformLink}\n\nBest regards,\nYour Company`
+    };
+    await transporter.sendMail(mailOptions);
+
+    // Send SMS
+    await clientTwilio.messages.create({
+      body: `Hello ${username}, thank you for registering on our platform! Here are your login details:\nUsername: ${username}\nPassword: ${password}\nAccess the platform here: ${platformLink}`,
+      from: process.env.TWILIO_NUMBER,
+      to: phone
+    });
+
+    res.status(200).send("Survey contact saved successfully and notifications sent.");
   } catch (error) {
     console.error("Error saving survey contact:", error);
     res.status(500).send("Internal Server Error.");
