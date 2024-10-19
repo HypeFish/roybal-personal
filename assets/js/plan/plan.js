@@ -246,12 +246,11 @@ async function deleteContact() {
 
   try {
     const identifier = selectedContact;
-    const response = await fetch("/admin/delete-contact", {
+    const response = await fetch(`/admin/delete-contact/${identifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ identifier }),
     });
     const data = await response.json();
 
@@ -281,6 +280,9 @@ async function deleteHealthContact() {
       `/admin/delete-health-contact/${identifier}`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        }
       }
     );
 
