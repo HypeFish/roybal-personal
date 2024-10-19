@@ -182,6 +182,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               display: true,
               text: "Weeks",
             },
+            ticks: {
+              max: 13,
+            },
           },
           y: {
             title: {
@@ -190,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             },
           },
         },
-      };
+      };      
 
       new Chart(ctx, {
         type: "line",
