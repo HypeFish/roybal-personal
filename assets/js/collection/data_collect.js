@@ -112,9 +112,11 @@ async function generateCSV(user_id, participantNumber) {
       let dailyDuration = activities.reduce((acc, act) => acc + (isNaN(act.durationInMinutes) ? 0 : act.durationInMinutes), 0);
       let dailyStepCount = activities.reduce((acc, act) => acc + (isNaN(act.totalSteps) ? 0 : act.totalSteps), 0);
 
+      // if an activity is planned and the activity duration is 27 mins (3 min buffer), points rewarded
+      // if sum of duration of all activities is 30 mins, points rewarded 
       activities.forEach((activity) => {
         let plannedPoints = 0;
-        if (activity.isPlanned && activity.durationInMinutes > 30.0) {
+        if (activity.isPlanned && activity.durationInMinutes > 27.0) {
           plannedPoints = 500;
           dailyPointsAwarded = true;
         } else if (!dailyPointsAwarded && dailyDuration > 30.0) {
