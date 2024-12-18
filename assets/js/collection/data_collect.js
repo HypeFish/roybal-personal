@@ -32,14 +32,25 @@ async function generateCSV(user_id, participantNumber) {
     let csvData =
       "participant_number,date,day_of_week,planned,start_time,activity_name,total_steps,distance,duration(minutes),calories_burned,points,dailyStepCount\n";
 
-    // // normalize dates as est
-    // function convertToEST(date) {
-    //   return new Date(date.toLocaleString("en-US", { timeZone: "America/New_York" }));
-    // }
+    // normalize dates as est
+    function convertToEST(date) {
+      const options = { timeZone: "America/New_York", hour12: false };
+      
+      const estYear = date.toLocaleString("en-US", { ...options, year: "numeric" });
+      const estMonth = date.toLocaleString("en-US", { ...options, month: "2-digit" });
+      const estDay = date.toLocaleString("en-US", { ...options, day: "2-digit" });
+      const estHours = date.toLocaleString("en-US", { ...options, hour: "2-digit" });
+      const estMinutes = date.toLocaleString("en-US", { ...options, minute: "2-digit" });
+      const estSeconds = date.toLocaleString("en-US", { ...options, second: "2-digit" });
+      const estMilliseconds = date.getMilliseconds().toString().padStart(3, '0');
+  
+      // ISO-like format
+      return `${estYear}-${estMonth}-${estDay}T${estHours}:${estMinutes}:${estSeconds}.${estMilliseconds}-05:00`;
+  }
 
     // Determine the range of dates
-    const startDate = new Date(combinedData[0].date);
-    const endDate = new Date(combinedData[combinedData.length - 1].date);
+    const startDate = convertToEST(new Date(combinedData[0].date));
+    const endDate = convertToEST(new Date(combinedData[combinedData.length - 1].date));
 
     // Helper function to format date as YYYY-MM-DD
     function formatDate(date) {
