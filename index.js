@@ -1378,6 +1378,7 @@ async function processPoints() {
       const plannedActivitiesThisWeek = plannedActivities.filter((activity) => {
         const activityDate = new Date(activity.startDate);
         return (
+          // change dates ???
           (activityDate >= sunday && activityDate <= saturday) ||
           activityDate.toISOString().split("T")[0] ===
             sunday.toISOString().split("T")[0]
