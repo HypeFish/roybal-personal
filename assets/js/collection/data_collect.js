@@ -55,7 +55,7 @@ async function generateCSV(user_id, participantNumber) {
     combinedData.forEach((item) => {
       const date = item.date;
       const dayOfWeekIndex = new Date(date).getDay();
-      const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const daysOfWeek = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
       const dayOfWeek = daysOfWeek[dayOfWeekIndex];
 
       // Initialize map entries if not present
