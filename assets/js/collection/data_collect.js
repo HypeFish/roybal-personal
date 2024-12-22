@@ -91,7 +91,7 @@ async function generateCSV(user_id, participantNumber) {
       if (!activityMap.has(date)) {
         const dayOfWeekIndex = new Date(date).getDay();
         // indexing ?????
-        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         const dayOfWeek = daysOfWeek[dayOfWeekIndex];
         activityMap.set(date, [{
           isPlanned: false,
